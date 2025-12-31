@@ -1,36 +1,231 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏒 Bench Boss - Fantasy Hockey Assistant
 
-## Getting Started
+A professional fantasy hockey management application with enterprise-grade security and real-time NHL data integration.
 
-First, run the development server:
+## 🚀 Features
 
+### Fantasy Hockey Tools
+- **📊 Dashboard** - Overview of your team and weekly projections
+- **⚡ Lineup Optimizer** - Automatically set your best lineup
+- **🤔 Start / Sit** - Compare players for optimal decisions
+- **🔄 Trade Analyzer** - Evaluate trades with data-driven insights
+- **🎯 Waiver Targets** - Discover hidden gems on the waiver wire
+- **👥 Player Explorer** - Browse all NHL players with stats
+- **⚙️ League Settings** - Customize scoring and roster settings
+
+### Security Features
+- **NextAuth.js** - Industry-standard authentication
+- **JWT Tokens** - Stateless, encrypted sessions
+- **bcrypt Hashing** - Secure password storage (10 salt rounds)
+- **httpOnly Cookies** - XSS-proof token storage
+- **CSRF Protection** - Built-in request forgery prevention
+- **Session Management** - 7-day auto-refresh sessions
+
+### NHL Data Integration
+- **Live Roster Data** - All 32 NHL teams
+- **Real-time Stats** - Current season statistics
+- **Team Schedules** - Upcoming games and matchups
+- **Projected Stats** - Weekly performance projections
+
+## 🎯 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- Modern web browser
+
+### Installation
+
+1. **Clone and install dependencies**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd bench-boss
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Set up environment variables**
+```bash
+# Copy the example file
+cp .env.example .env.local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Generate a secure secret
+openssl rand -base64 32
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Edit .env.local and paste your secret
+# NEXTAUTH_SECRET=<your-generated-secret>
+```
 
-## Learn More
+3. **Start the development server**
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Open your browser**
+```
+http://localhost:3000/welcome
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔐 Authentication
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Demo Account
+- **Username**: `demo`
+- **Password**: `demo1234`
 
-## Deploy on Vercel
+### Create New Account
+Sign up with any username and password (minimum 4 characters).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### How It Works
+1. Visit `/welcome` landing page
+2. Click "Get Started" or "Sign In"
+3. Sign in with demo account or create new account
+4. Session stored securely in httpOnly cookie
+5. Access all protected routes (/dashboard, /players, etc.)
+6. Session lasts 7 days with auto-refresh
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📁 Project Structure
+
+```
+bench-boss/
+├── app/                      # Next.js 15 App Router
+│   ├── api/
+│   │   ├── auth/            # NextAuth authentication
+│   │   └── nhl-data/        # NHL API integration
+│   ├── login/               # Login/signup page
+│   ├── welcome/             # Landing page
+│   ├── players/             # Player explorer
+│   ├── startsit/            # Start/sit tool
+│   ├── trades/              # Trade analyzer
+│   ├── waivers/             # Waiver wire
+│   ├── lineup/              # Lineup optimizer
+│   ├── settings/            # League settings
+│   ├── layout.tsx           # Root layout
+│   └── page.tsx             # Dashboard
+├── components/
+│   ├── Layout.tsx           # Main app layout with sidebar
+│   └── ProtectedRoute.tsx   # Route protection wrapper
+├── lib/
+│   ├── auth.ts              # NextAuth configuration
+│   ├── AuthContext.tsx      # Session provider
+│   ├── users.ts             # User management (bcrypt)
+│   ├── nhlApi.ts            # NHL API client
+│   ├── calculator.ts        # Fantasy points calculations
+│   ├── DataContext.tsx      # NHL data provider
+│   ├── liveData.ts          # Data fetching
+│   └── mockdata.ts          # Demo data
+├── .env.local               # Environment variables (gitignored)
+├── .env.example             # Example env configuration
+├── AUTHENTICATION.md        # Detailed auth documentation
+├── SECURITY-IMPROVEMENTS.md # Security features summary
+└── README.md                # This file
+```
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+
+### Backend
+- **Next.js API Routes** - Serverless functions
+- **NextAuth.js** - Authentication
+- **bcryptjs** - Password hashing
+
+### Data
+- **NHL API** - Real-time hockey data
+- **In-memory storage** - Demo user accounts (temporary)
+
+## 📚 Documentation
+
+- **[AUTHENTICATION.md](AUTHENTICATION.md)** - Complete authentication guide
+  - Security architecture
+  - JWT implementation
+  - Production recommendations
+  - Troubleshooting
+
+- **[SECURITY-IMPROVEMENTS.md](SECURITY-IMPROVEMENTS.md)** - Security features
+  - Before/after comparison
+  - Implementation details
+  - Testing checklist
+
+## 🔒 Security
+
+### Current Implementation (Demo)
+- ✅ bcrypt password hashing
+- ✅ httpOnly cookies
+- ✅ JWT tokens with signing
+- ✅ CSRF protection
+- ✅ Session expiration
+- ✅ Secure logout
+- ⚠️ In-memory user storage (not persistent)
+
+### Production Recommendations
+1. **Database** - Add PostgreSQL/MySQL for user persistence
+2. **Stronger Passwords** - Enforce complexity requirements
+3. **Rate Limiting** - Prevent brute force attacks
+4. **2FA** - Two-factor authentication
+5. **OAuth** - Google/GitHub sign-in
+6. **Email Verification** - Verify user emails
+7. **Audit Logging** - Track authentication events
+
+See [AUTHENTICATION.md](AUTHENTICATION.md) for implementation guides.
+
+## 🧪 Testing
+
+### Manual Testing
+```bash
+# Start dev server
+npm run dev
+
+# Test authentication
+1. Visit http://localhost:3000/welcome
+2. Click "Get Started"
+3. Sign in with demo/demo1234
+4. Verify redirect to dashboard
+5. Check session persists on refresh
+6. Sign out and verify redirect
+
+# Test protected routes
+1. Visit http://localhost:3000/players (not logged in)
+2. Verify redirect to /welcome
+3. Sign in
+4. Verify access granted
+```
+
+### Security Checklist
+- [x] Passwords hashed (check database/storage)
+- [x] Sessions use httpOnly cookies
+- [x] CSRF tokens present
+- [x] Session expires after 7 days
+- [x] Protected routes redirect when not authenticated
+- [x] Sign out clears session completely
+
+## 🐛 Troubleshooting
+
+### "NEXTAUTH_SECRET missing"
+Generate a secret: `openssl rand -base64 32` and add to `.env.local`
+
+### "Users lost after restart"
+Expected - using in-memory storage. Implement database for persistence.
+
+### "Cannot access protected routes"
+Sign in first at `/login`
+
+### "Session expired"
+Normal after 7 days. Sign in again.
+
+### More help
+See [AUTHENTICATION.md](AUTHENTICATION.md) troubleshooting section
+
+## 📄 License
+
+MIT License
+
+## 👨‍💻 Built With
+
+- NextAuth.js for production-ready authentication
+- NHL API for real-time hockey data
+- Next.js 15 with App Router
+
+---
+
+**Note**: This is a demo application. For production use, implement the recommendations in [AUTHENTICATION.md](AUTHENTICATION.md) and [SECURITY-IMPROVEMENTS.md](SECURITY-IMPROVEMENTS.md).
