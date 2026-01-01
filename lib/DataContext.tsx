@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Player, Projection } from './calculator';
+import { Player, Projection, LeagueSettings } from './calculator';
+import { ESPNLeagueConfig, ESPNLeagueInfo } from './espnFantasyApi';
 
 interface DataContextType {
   players: Player[];
@@ -14,6 +15,12 @@ interface DataContextType {
   addToMyTeam: (player: Player) => void;
   removeFromMyTeam: (playerId: string) => void;
   setMyTeam: (players: Player[]) => void;
+  espnConfig: ESPNLeagueConfig | null;
+  espnLeagueInfo: ESPNLeagueInfo | null;
+  setESPNConfig: (config: ESPNLeagueConfig | null) => void;
+  syncESPNLeague: (config: ESPNLeagueConfig) => Promise<void>;
+  leagueSettings: LeagueSettings;
+  setLeagueSettings: (settings: LeagueSettings) => void;
 }
 
 const DataContext = createContext<DataContextType>({
@@ -27,6 +34,12 @@ const DataContext = createContext<DataContextType>({
   addToMyTeam: () => {},
   removeFromMyTeam: () => {},
   setMyTeam: () => {},
+  espnConfig: null,
+  espnLeagueInfo: null,
+  setESPNConfig: () => {},
+  syncESPNLeague: async () => {},
+  leagueSettings: {} as LeagueSettings,
+  setLeagueSettings: () => {},
 });
 
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -44,6 +57,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }
     }
     return [];
+  });
+
+  // ESPN integration state
+  const [espnConfig, setESPNConfigState] = useState<ESPNLeagueConfig | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('benchBossESPNConfig');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    return null;
+  });
+
+  const [espnLeagueInfo, setESPNLeagueInfo] = useState<ESPNLeagueInfo | null>(null);
+
+  // League settings state - load from default calculator settings
+  const [leagueSettings, setLeagueSettingsState] = useState<LeagueSettings>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('benchBossLeagueSettings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    }
+    // Import default settings from calculator
+    const { defaultLeagueSettings } = require('./calculator');
+    return defaultLeagueSettings;
   });
 
   useEffect(() => {
@@ -123,6 +162,70 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setESPNConfig = (config: ESPNLeagueConfig | null) => {
+    setESPNConfigState(config);
+    if (typeof window !== 'undefined') {
+      if (config) {
+        localStorage.setItem('benchBossESPNConfig', JSON.stringify(config));
+      } else {
+        localStorage.removeItem('benchBossESPNConfig');
+      }
+    }
+  };
+
+  const syncESPNLeague = async (config: ESPNLeagueConfig) => {
+    try {
+      setIsLoading(true);
+      console.log('Syncing ESPN Fantasy League...');
+
+      const response = await fetch('/api/espn-league', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to sync ESPN league');
+      }
+
+      // Update league info and settings
+      setESPNLeagueInfo(data.leagueInfo);
+      setLeagueSettingsState(data.leagueInfo.settings);
+
+      // Map ESPN roster to our players
+      if (data.teams && data.teams.length > 0) {
+        const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
+
+        // Find the user's team (for now, we'll use the first team)
+        // In production, you'd identify the correct team based on SWID or team selection
+        const myESPNTeam = data.teams[0];
+        const mappedPlayers = mapESPNPlayersToNHL(myESPNTeam.roster, players);
+
+        setMyTeam(mappedPlayers);
+        console.log(`✅ ESPN league synced! Loaded ${mappedPlayers.length} rostered players.`);
+      }
+
+      // Save config
+      setESPNConfig(config);
+
+      console.log(`✅ ESPN league "${data.leagueInfo.name}" connected successfully!`);
+    } catch (error) {
+      console.error('❌ Error syncing ESPN league:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setLeagueSettings = (settings: LeagueSettings) => {
+    setLeagueSettingsState(settings);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('benchBossLeagueSettings', JSON.stringify(settings));
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       players,
@@ -134,7 +237,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       myTeam,
       addToMyTeam,
       removeFromMyTeam,
-      setMyTeam
+      setMyTeam,
+      espnConfig,
+      espnLeagueInfo,
+      setESPNConfig,
+      syncESPNLeague,
+      leagueSettings,
+      setLeagueSettings,
     }}>
       {children}
     </DataContext.Provider>
