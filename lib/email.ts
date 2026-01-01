@@ -1,8 +1,8 @@
 import { randomBytes } from 'crypto';
+import { Resend } from 'resend';
 
-// Email service configuration
-// You can use Resend, SendGrid, NodeMailer, or any email service
-// For this example, we'll set up the structure for Resend
+// Initialize Resend client
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export interface EmailOptions {
   to: string;
@@ -11,31 +11,25 @@ export interface EmailOptions {
 }
 
 /**
- * Send an email using the configured email service
+ * Send an email using the Resend SDK
  */
 export async function sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
   try {
-    // If RESEND_API_KEY is configured, use Resend
-    if (process.env.RESEND_API_KEY) {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.app>',
-          to,
-          subject,
-          html,
-        }),
+    // If Resend is configured, use the SDK
+    if (resend) {
+      const { data, error } = await resend.emails.send({
+        from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.app>',
+        to,
+        subject,
+        html,
       });
 
-      if (!response.ok) {
-        console.error('Failed to send email:', await response.text());
+      if (error) {
+        console.error('Failed to send email:', error);
         return false;
       }
 
+      console.log('✅ Email sent successfully:', data);
       return true;
     }
 

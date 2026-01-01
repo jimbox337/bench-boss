@@ -40,17 +40,32 @@ This will add the new fields to your User table.
 
 ## Email Service Configuration
 
-### Option 1: Resend (Recommended)
+### Resend SDK (Implemented)
 
-Resend is a modern, developer-friendly email service with a generous free tier.
+The email system uses the official Resend Node.js SDK for sending emails.
 
-1. Sign up at [resend.com](https://resend.com/)
-2. Get your API key from the dashboard
-3. Add to your `.env` file:
+**Setup:**
+
+1. Install the SDK (already done):
+   ```bash
+   npm install resend
+   ```
+
+2. Sign up at [resend.com](https://resend.com/)
+
+3. Get your API key from the dashboard
+
+4. Add to your `.env` file:
    ```
    RESEND_API_KEY=re_xxxxxxxxxxxx
    EMAIL_FROM=Bench Boss <noreply@yourdomain.com>
    ```
+
+**Benefits:**
+- Type-safe TypeScript SDK
+- Better error handling
+- Automatic retries
+- Official support from Resend
 
 ### Option 2: Development Mode (No Email Service)
 
