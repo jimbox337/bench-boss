@@ -165,7 +165,19 @@ export default function PlayerExplorer() {
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-bold mr-3">
+                      {player.headshotUrl ? (
+                        <img
+                          src={player.headshotUrl}
+                          alt={player.name}
+                          className="h-10 w-10 rounded-full bg-slate-700 object-cover mr-3"
+                          onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div className={`h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300 font-bold mr-3 ${player.headshotUrl ? 'hidden' : ''}`}>
                         {player.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>

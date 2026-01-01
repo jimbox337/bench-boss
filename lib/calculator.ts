@@ -12,6 +12,7 @@ export interface Player {
   gamesPlayed?: number; // Games played this season
   injuryStatus?: 'Healthy' | 'Day-to-Day' | 'IR' | 'Out' | 'Questionable';
   outlook?: PlayerOutlook;
+  headshotUrl?: string; // NHL player headshot image URL
 }
 
 export interface PlayerOutlook {

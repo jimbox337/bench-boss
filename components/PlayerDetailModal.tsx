@@ -96,20 +96,32 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
         {/* Header */}
         <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 z-10">
           <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-100">{player.name}</h2>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="text-slate-400">{player.nhlTeam}</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-400">{player.positions.join('/')}</span>
-                {player.injuryStatus && (
-                  <>
-                    <span className="text-slate-500">•</span>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getInjuryStatusColor(player.injuryStatus)}`}>
-                      {player.injuryStatus}
-                    </span>
-                  </>
-                )}
+            <div className="flex items-center gap-4">
+              {player.headshotUrl && (
+                <img
+                  src={player.headshotUrl}
+                  alt={player.name}
+                  className="h-20 w-20 rounded-full bg-slate-700 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
+              <div>
+                <h2 className="text-3xl font-bold text-slate-100">{player.name}</h2>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="text-slate-400">{player.nhlTeam}</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-400">{player.positions.join('/')}</span>
+                  {player.injuryStatus && (
+                    <>
+                      <span className="text-slate-500">•</span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getInjuryStatusColor(player.injuryStatus)}`}>
+                        {player.injuryStatus}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <button

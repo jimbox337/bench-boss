@@ -76,6 +76,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
         positions: [s.positionCode],
         isGoalie: false,
         gamesPlayed: s.gamesPlayed,
+        headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${s.playerId}.png`,
         seasonStats: {
           G: s.goals,
           A: s.assists,
@@ -109,6 +110,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
           positions: ['G'],
           isGoalie: true,
           gamesPlayed: g.gamesPlayed,
+          headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${g.playerId}.png`,
         });
       });
     }
