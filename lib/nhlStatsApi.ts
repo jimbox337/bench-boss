@@ -68,15 +68,16 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
     // Convert to our Player format
     const players: Player[] = skaters.map(s => {
       const realtimeStats = realtimeMap.get(s.playerId) || { hits: 0, blockedShots: 0 };
+      const teamAbbrev = s.teamAbbrevs.split(',')[0] || 'UNK';
 
       return {
         id: s.playerId.toString(),
         name: s.skaterFullName,
-        nhlTeam: s.teamAbbrevs.split(',')[0] || 'UNK', // Take first team if traded
+        nhlTeam: teamAbbrev, // Take first team if traded
         positions: [s.positionCode],
         isGoalie: false,
         gamesPlayed: s.gamesPlayed,
-        headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${s.playerId}.png`,
+        headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${teamAbbrev}/${s.playerId}.png`,
         seasonStats: {
           G: s.goals,
           A: s.assists,
@@ -103,14 +104,15 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
       console.log(`✅ Fetched ${goalies.length} goalies`);
 
       goalies.forEach((g: any) => {
+        const teamAbbrev = g.teamAbbrevs.split(',')[0] || 'UNK';
         players.push({
           id: g.playerId.toString(),
           name: g.goalieFullName,
-          nhlTeam: g.teamAbbrevs.split(',')[0] || 'UNK',
+          nhlTeam: teamAbbrev,
           positions: ['G'],
           isGoalie: true,
           gamesPlayed: g.gamesPlayed,
-          headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${g.playerId}.png`,
+          headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${teamAbbrev}/${g.playerId}.png`,
         });
       });
     }
