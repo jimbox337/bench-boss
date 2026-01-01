@@ -94,11 +94,11 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 z-10">
-          <div className="flex items-stretch">
+        <div className="sticky top-0 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 z-10 overflow-hidden">
+          <div className="flex items-stretch relative">
             {/* Headshot */}
             {player.headshotUrl && (
-              <div className="w-48 h-48 bg-slate-700 flex-shrink-0">
+              <div className="w-80 h-80 bg-slate-700 flex-shrink-0 relative">
                 <img
                   src={player.headshotUrl}
                   alt={player.name}
@@ -110,9 +110,15 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
               </div>
             )}
 
+            {/* Slanted dividers */}
+            <div className="absolute left-80 top-0 bottom-0 w-8 -ml-4">
+              <div className="absolute top-0 bottom-0 w-0.5 bg-blue-500 transform -skew-x-12"></div>
+              <div className="absolute top-0 bottom-0 w-0.5 bg-blue-400 transform -skew-x-12 ml-3"></div>
+            </div>
+
             {/* Player Info */}
-            <div className="flex-1 p-6 flex flex-col justify-center">
-              <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 p-8 flex flex-col justify-center ml-8">
+              <div className="flex items-start justify-between">
                 <div>
                   {(() => {
                     const nameParts = player.name.split(' ');
@@ -120,19 +126,19 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
                     const lastName = nameParts[nameParts.length - 1];
                     return (
                       <>
-                        <div className="text-2xl font-medium text-slate-300">{firstName}</div>
-                        <div className="text-5xl font-bold text-slate-100 mb-3">{lastName}</div>
+                        <div className="text-3xl font-medium text-slate-300 mb-1">{firstName}</div>
+                        <div className="text-6xl font-bold text-slate-100 mb-4">{lastName}</div>
                       </>
                     );
                   })()}
-                  <div className="flex items-center gap-4 text-lg">
-                    <span className="text-slate-300">{player.positions.join('/')}</span>
+                  <div className="flex items-center gap-4 text-xl">
+                    <span className="text-slate-300 font-semibold">{player.positions.join('/')}</span>
                     {player.nhlTeam !== 'UNK' && (
                       <>
                         <span className="text-slate-600">•</span>
                         <span className="text-slate-300">#{player.id.slice(-2)}</span>
                         <span className="text-slate-600">•</span>
-                        <span className="text-slate-300">{player.nhlTeam}</span>
+                        <span className="text-slate-300 font-semibold">{player.nhlTeam}</span>
                       </>
                     )}
                     {player.injuryStatus && (
