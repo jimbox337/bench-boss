@@ -11,8 +11,7 @@ export interface User {
 
 // Helper to check if we're in a build environment
 const isBuildTime = () => {
-  return process.env.NEXT_PHASE === 'phase-production-build' ||
-         process.env.VERCEL_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('postgres');
+  return process.env.NEXT_PHASE === 'phase-production-build';
 };
 
 export async function createUser(username: string, password: string): Promise<User | null> {
