@@ -14,7 +14,10 @@ export default function ProtectedRoute({
   redirectTo = '/welcome'
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { data: session, status } = useAuth();
+
+  const isLoading = status === 'loading';
+  const isAuthenticated = !!session;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
