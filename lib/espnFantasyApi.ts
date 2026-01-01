@@ -30,6 +30,7 @@ export interface ESPNTeam {
   id: number;
   name: string;
   abbrev: string;
+  logo?: string;
   roster: ESPNRosterEntry[];
 }
 
@@ -241,6 +242,7 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
         id: team.id,
         name: team.name || team.location + ' ' + team.nickname,
         abbrev: team.abbrev || '',
+        logo: team.logo || undefined,
         roster,
       });
     }

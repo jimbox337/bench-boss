@@ -11,10 +11,32 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  username    String   @unique
-  password    String   // bcrypt hashed
-  leagueName  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                        String    @id @default(cuid())
+  username                  String    @unique
+  email                     String    @unique
+  name                      String
+  password                  String    // bcrypt hashed
+  profilePicture            String?   // URL to profile picture
+  emailVerified             DateTime? // When email was verified
+  emailVerificationToken    String?   @unique
+  emailVerificationExpires  DateTime?
+  resetPasswordToken        String?   @unique
+  resetPasswordExpires      DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  teams                     Team[]
+}
+
+model Team {
+  id              String   @id @default(cuid())
+  name            String
+  platform        String   // ESPN, Yahoo, Custom, etc.
+  logo            String?  // Team logo URL
+  espnLeagueId    String?
+  espnTeamId      String?
+  isActive        Boolean  @default(true)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

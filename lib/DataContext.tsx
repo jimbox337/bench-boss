@@ -17,8 +17,10 @@ interface DataContextType {
   setMyTeam: (players: Player[]) => void;
   espnConfig: ESPNLeagueConfig | null;
   espnLeagueInfo: ESPNLeagueInfo | null;
+  espnTeams: any[];
   setESPNConfig: (config: ESPNLeagueConfig | null) => void;
   syncESPNLeague: (config: ESPNLeagueConfig) => Promise<void>;
+  selectESPNTeam: (teamId: number) => void;
   leagueSettings: LeagueSettings;
   setLeagueSettings: (settings: LeagueSettings) => void;
 }
@@ -36,8 +38,10 @@ const DataContext = createContext<DataContextType>({
   setMyTeam: () => {},
   espnConfig: null,
   espnLeagueInfo: null,
+  espnTeams: [],
   setESPNConfig: () => {},
   syncESPNLeague: async () => {},
+  selectESPNTeam: () => {},
   leagueSettings: {} as LeagueSettings,
   setLeagueSettings: () => {},
 });
@@ -71,6 +75,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   });
 
   const [espnLeagueInfo, setESPNLeagueInfo] = useState<ESPNLeagueInfo | null>(null);
+  const [espnTeams, setESPNTeams] = useState<any[]>([]);
 
   // League settings state - load from default calculator settings
   const [leagueSettings, setLeagueSettingsState] = useState<LeagueSettings>(() => {
@@ -194,17 +199,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setESPNLeagueInfo(data.leagueInfo);
       setLeagueSettingsState(data.leagueInfo.settings);
 
-      // Map ESPN roster to our players
+      // Store all teams for user selection
       if (data.teams && data.teams.length > 0) {
-        const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
+        setESPNTeams(data.teams);
+        console.log(`✅ Found ${data.teams.length} teams in league`);
 
-        // Find the user's team (for now, we'll use the first team)
-        // In production, you'd identify the correct team based on SWID or team selection
-        const myESPNTeam = data.teams[0];
-        const mappedPlayers = mapESPNPlayersToNHL(myESPNTeam.roster, players);
+        // Don't auto-select team - let user choose
+        // Unless they've already selected one before
+        const savedTeamId = typeof window !== 'undefined'
+          ? localStorage.getItem('benchBossESPNTeamId')
+          : null;
 
-        setMyTeam(mappedPlayers);
-        console.log(`✅ ESPN league synced! Loaded ${mappedPlayers.length} rostered players.`);
+        if (savedTeamId) {
+          const savedTeam = data.teams.find((t: any) => t.id === parseInt(savedTeamId));
+          if (savedTeam) {
+            const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
+            const mappedPlayers = mapESPNPlayersToNHL(savedTeam.roster, players);
+            setMyTeam(mappedPlayers);
+            console.log(`✅ Auto-loaded saved team: ${savedTeam.name}`);
+          }
+        }
       }
 
       // Save config
@@ -217,6 +231,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const selectESPNTeam = async (teamId: number) => {
+    const team = espnTeams.find(t => t.id === teamId);
+    if (!team) {
+      console.error('Team not found');
+      return;
+    }
+
+    console.log(`Selecting team: ${team.name}`);
+    const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
+    const mappedPlayers = mapESPNPlayersToNHL(team.roster, players);
+
+    setMyTeam(mappedPlayers);
+
+    // Save selection
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('benchBossESPNTeamId', teamId.toString());
+    }
+
+    console.log(`✅ Loaded ${mappedPlayers.length} players from ${team.name}`);
   };
 
   const setLeagueSettings = (settings: LeagueSettings) => {
@@ -240,8 +275,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setMyTeam,
       espnConfig,
       espnLeagueInfo,
+      espnTeams,
       setESPNConfig,
       syncESPNLeague,
+      selectESPNTeam,
       leagueSettings,
       setLeagueSettings,
     }}>

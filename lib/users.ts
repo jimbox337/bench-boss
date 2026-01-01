@@ -1,11 +1,15 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import { generateToken, sendVerificationEmail } from './email';
 
 export interface User {
   id: string;
   username: string;
+  email: string;
+  name: string;
   password: string; // hashed
-  leagueName: string;
+  profilePicture: string | null;
+  emailVerified: Date | null;
   createdAt: Date;
 }
 
@@ -14,7 +18,12 @@ const isBuildTime = () => {
   return process.env.NEXT_PHASE === 'phase-production-build';
 };
 
-export async function createUser(username: string, password: string): Promise<User | null> {
+export async function createUser(
+  username: string,
+  email: string,
+  name: string,
+  password: string
+): Promise<User | null> {
   if (isBuildTime()) {
     console.log('Skipping user creation during build');
     return null;
@@ -22,24 +31,47 @@ export async function createUser(username: string, password: string): Promise<Us
 
   try {
     // Check if user already exists
-    const existing = await prisma.user.findUnique({
+    const existingUsername = await prisma.user.findUnique({
       where: { username: username.toLowerCase() }
     });
 
-    if (existing) {
+    if (existingUsername) {
+      return null;
+    }
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (existingEmail) {
       return null;
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate email verification token
+    const verificationToken = generateToken();
+    const verificationExpires = new Date();
+    verificationExpires.setHours(verificationExpires.getHours() + 24); // 24 hour expiry
+
     // Create user in database
     const user = await prisma.user.create({
       data: {
         username: username.toLowerCase(),
+        email: email.toLowerCase(),
+        name: name,
         password: hashedPassword,
-        leagueName: `${username}'s League`,
+        profilePicture: null,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
       },
+    });
+
+    // Send verification email (don't wait for it to complete)
+    sendVerificationEmail(user.email, user.name, verificationToken).catch((error) => {
+      console.error('Failed to send verification email:', error);
     });
 
     return user;

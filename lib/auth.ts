@@ -8,6 +8,8 @@ export const authOptions: NextAuthOptions = {
       name: 'Credentials',
       credentials: {
         username: { label: 'Username', type: 'text' },
+        email: { label: 'Email', type: 'email' },
+        name: { label: 'Name', type: 'text' },
         password: { label: 'Password', type: 'password' },
         isSignUp: { label: 'Sign Up', type: 'text' },
       },
@@ -20,21 +22,30 @@ export const authOptions: NextAuthOptions = {
 
         if (isSignUp) {
           // Sign up flow
+          if (!credentials.email || !credentials.name) {
+            throw new Error('Please enter email and name');
+          }
+
           if (credentials.password.length < 4) {
             throw new Error('Password must be at least 4 characters');
           }
 
-          const newUser = await createUser(credentials.username, credentials.password);
+          const newUser = await createUser(
+            credentials.username,
+            credentials.email,
+            credentials.name,
+            credentials.password
+          );
 
           if (!newUser) {
-            throw new Error('Username already exists');
+            throw new Error('Username or email already exists');
           }
 
           return {
             id: newUser.id,
-            name: newUser.username,
-            email: newUser.username, // Using username as email for demo
-            leagueName: newUser.leagueName,
+            name: newUser.name,
+            email: newUser.email,
+            image: newUser.profilePicture,
           };
         } else {
           // Sign in flow
@@ -52,9 +63,9 @@ export const authOptions: NextAuthOptions = {
 
           return {
             id: user.id,
-            name: user.username,
-            email: user.username,
-            leagueName: user.leagueName,
+            name: user.name,
+            email: user.email,
+            image: user.profilePicture,
           };
         }
       },
@@ -84,7 +95,7 @@ export const authOptions: NextAuthOptions = {
       // Add custom fields to JWT
       if (user) {
         token.id = user.id;
-        token.leagueName = (user as any).leagueName;
+        token.picture = user.image;
       }
       return token;
     },
@@ -92,7 +103,7 @@ export const authOptions: NextAuthOptions = {
       // Add custom fields to session
       if (session.user) {
         (session.user as any).id = token.id;
-        (session.user as any).leagueName = token.leagueName;
+        session.user.image = token.picture as string | null | undefined;
       }
       return session;
     },

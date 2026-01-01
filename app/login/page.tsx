@@ -8,10 +8,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('signup') === 'true') {
@@ -30,6 +33,20 @@ function LoginForm() {
       return;
     }
 
+    if (isSignUp) {
+      if (!email.trim() || !email.includes('@')) {
+        setError('Please enter a valid email address');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!name.trim()) {
+        setError('Please enter your name');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     if (password.length < 4) {
       setError('Password must be at least 4 characters');
       setIsLoading(false);
@@ -39,6 +56,8 @@ function LoginForm() {
     try {
       const result = await signIn('credentials', {
         username,
+        email: isSignUp ? email : undefined,
+        name: isSignUp ? name : undefined,
         password,
         isSignUp: isSignUp.toString(),
         redirect: false,
@@ -48,7 +67,14 @@ function LoginForm() {
         setError(result.error);
         setIsLoading(false);
       } else if (result?.ok) {
-        router.push('/');
+        if (isSignUp) {
+          // Show verification message for new signups
+          setShowVerificationMessage(true);
+          setIsLoading(false);
+        } else {
+          // Redirect to dashboard for login
+          router.push('/');
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -72,6 +98,21 @@ function LoginForm() {
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
 
+          {showVerificationMessage && (
+            <div className="bg-green-900/30 border border-green-600 text-green-200 px-4 py-3 rounded-lg mb-4">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">✅</span>
+                <div>
+                  <p className="font-semibold mb-1">Account created successfully!</p>
+                  <p className="text-sm">
+                    We've sent a verification email to <strong>{email}</strong>.
+                    Please check your inbox and click the verification link to activate your account.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-900/30 border border-red-600 text-red-200 px-4 py-3 rounded-lg mb-4">
               {error}
@@ -79,6 +120,38 @@ function LoginForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="Enter your full name"
+                    required={isSignUp}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    placeholder="Enter your email"
+                    required={isSignUp}
+                  />
+                </div>
+              </>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Username
@@ -93,9 +166,19 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-300">
+                  Password
+                </label>
+                {!isSignUp && (
+                  <a
+                    href="/forgot-password"
+                    className="text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    Forgot password?
+                  </a>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}

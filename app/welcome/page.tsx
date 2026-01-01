@@ -1,99 +1,140 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useData } from '@/lib/DataContext';
+import { useEffect } from 'react';
 
 export default function WelcomePage() {
   const router = useRouter();
+  const { myTeam, espnConfig } = useData();
+
+  // Redirect if user already has a team or ESPN config
+  useEffect(() => {
+    if (myTeam.length > 0 || espnConfig) {
+      router.push('/');
+    }
+  }, [myTeam, espnConfig, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-8">
+    <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="max-w-4xl w-full">
-        {/* Hero Section */}
+        {/* Header */}
         <div className="text-center mb-12">
-          <div className="text-6xl mb-4">🏒</div>
-          <h1 className="text-6xl font-bold text-white mb-4">
-            Bench Boss
+          <h1 className="text-6xl font-bold text-slate-100 mb-4">
+            Welcome to Bench Boss
           </h1>
-          <p className="text-2xl text-blue-200 mb-8">
-            Your Ultimate Fantasy Hockey Assistant
-          </p>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-            Optimize your lineup, analyze trades, find waiver wire gems, and dominate your league with real-time NHL data and advanced analytics.
+          <p className="text-xl text-slate-300">
+            Your ultimate fantasy hockey decision-making tool
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
-            <div className="text-4xl mb-3">⚡</div>
-            <h3 className="text-xl font-bold text-white mb-2">Lineup Optimizer</h3>
-            <p className="text-slate-300 text-sm">
-              Automatically set your best lineup based on projections and matchups
-            </p>
+        {/* Options */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* ESPN Option */}
+          <div className="bg-gradient-to-br from-red-900/30 to-slate-800 rounded-xl shadow-xl border border-red-700/50 p-8 hover:border-red-600 transition-all">
+            <div className="flex flex-col h-full">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center mb-4 p-2">
+                  <img
+                    src="https://a.espncdn.com/redesign/assets/img/logos/espn-logo-white.svg"
+                    alt="ESPN Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-100 mb-3">
+                  Connect ESPN League
+                </h2>
+                <p className="text-slate-300 mb-4">
+                  Automatically import your ESPN Fantasy Hockey league settings, scoring format, and roster.
+                </p>
+              </div>
+
+              <div className="mt-auto space-y-3">
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Auto-sync league settings and scoring
+                </div>
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Import your team roster instantly
+                </div>
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Choose from all teams in your league
+                </div>
+
+                <button
+                  onClick={() => router.push('/settings')}
+                  className="w-full mt-6 px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                >
+                  Connect ESPN
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
-            <div className="text-4xl mb-3">🔄</div>
-            <h3 className="text-xl font-bold text-white mb-2">Trade Analyzer</h3>
-            <p className="text-slate-300 text-sm">
-              Evaluate trades instantly with data-driven insights
-            </p>
-          </div>
+          {/* Custom Team Option */}
+          <div className="bg-slate-800 rounded-xl shadow-xl border border-slate-700 p-8 hover:border-slate-600 transition-all">
+            <div className="flex flex-col h-full">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-100 mb-3">
+                  Build Custom Team
+                </h2>
+                <p className="text-slate-300 mb-4">
+                  Manually select players and customize your league settings for maximum flexibility.
+                </p>
+              </div>
 
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 text-center">
-            <div className="text-4xl mb-3">🎯</div>
-            <h3 className="text-xl font-bold text-white mb-2">Waiver Targets</h3>
-            <p className="text-slate-300 text-sm">
-              Discover hidden gems before your competition
-            </p>
+              <div className="mt-auto space-y-3">
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Browse 800+ NHL players
+                </div>
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Customize league settings manually
+                </div>
+                <div className="flex items-start text-sm text-slate-400">
+                  <svg className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Perfect for Yahoo, custom leagues
+                </div>
+
+                <button
+                  onClick={() => router.push('/players')}
+                  className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Browse Players
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        {/* Skip Option */}
+        <div className="text-center mt-8">
           <button
-            onClick={() => router.push('/login?signup=true')}
-            className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl"
+            onClick={() => router.push('/')}
+            className="text-slate-400 hover:text-slate-200 text-sm transition-colors"
           >
-            Get Started
+            Skip for now, I'll set this up later
           </button>
-          <button
-            onClick={() => router.push('/login')}
-            className="w-full sm:w-auto px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg rounded-lg transition-all border border-slate-600"
-          >
-            Sign In
-          </button>
-        </div>
-
-        {/* Features List */}
-        <div className="mt-16 bg-slate-800/30 backdrop-blur-sm border border-slate-700 rounded-xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">What You Get</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">Real-time NHL player data and stats</span>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">Weekly projections and rankings</span>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">Start/Sit recommendations</span>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">Player comparison tools</span>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">League settings customization</span>
-            </div>
-            <div className="flex items-start space-x-3">
-              <span className="text-green-400 text-xl">✓</span>
-              <span className="text-slate-200">Advanced analytics dashboard</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

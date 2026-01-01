@@ -5,7 +5,7 @@ import { defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 
 export default function Settings() {
-  const { espnConfig, espnLeagueInfo, syncESPNLeague, leagueSettings, setLeagueSettings } = useData();
+  const { espnConfig, espnLeagueInfo, espnTeams, syncESPNLeague, selectESPNTeam, leagueSettings, setLeagueSettings, myTeam } = useData();
 
   const [leagueName, setLeagueName] = useState('My League');
   const [platform, setPlatform] = useState('ESPN');
@@ -132,6 +132,55 @@ export default function Settings() {
                 <span className="text-slate-400">Scoring:</span>
                 <span className="ml-2 text-slate-100 font-medium">{espnLeagueInfo.settings.scoringType}</span>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Team Selection */}
+        {espnTeams.length > 0 && (
+          <div className="bg-slate-900/50 rounded-lg p-4 mb-4">
+            <h4 className="text-sm font-semibold text-slate-200 mb-3">Select Your Team</h4>
+            <div className="space-y-2">
+              {espnTeams.map((team) => {
+                const isSelected = myTeam.length > 0 && typeof window !== 'undefined' && localStorage.getItem('benchBossESPNTeamId') === team.id.toString();
+                return (
+                  <button
+                    key={team.id}
+                    onClick={() => selectESPNTeam(team.id)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
+                      isSelected
+                        ? 'bg-green-900/30 border-green-600 text-green-100'
+                        : 'bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {team.logo && (
+                          <img
+                            src={team.logo}
+                            alt={`${team.name} logo`}
+                            className="w-10 h-10 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div>
+                          <div className="font-medium">{team.name}</div>
+                          <div className="text-xs text-slate-400 mt-1">
+                            {team.roster?.length || 0} players
+                          </div>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span className="px-2 py-1 bg-green-600 text-white text-xs font-medium rounded">
+                          Selected
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
