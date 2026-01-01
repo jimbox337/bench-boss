@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { myTeam } from '@/lib/mockdata';
 import { analyzeTrade, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 
 export default function TradeAnalyzer() {
-  const { players, projections } = useData();
+  const { players, projections, myTeam } = useData();
   const [playersOut, setPlayersOut] = useState<string[]>([myTeam[2]?.id || '']);
   const [playersIn, setPlayersIn] = useState<string[]>([myTeam[0]?.id || '']);
   const [analyzed, setAnalyzed] = useState(false);

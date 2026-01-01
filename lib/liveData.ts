@@ -28,9 +28,7 @@ export async function loadLiveData() {
     return { players: data.players, projections: data.projections };
   } catch (error) {
     console.error('Failed to load live data:', error);
-    // Fallback to mock data
-    const { mockPlayers, mockProjections } = await import('./mockdata');
-    return { players: mockPlayers, projections: mockProjections };
+    return { players: [], projections: [] };
   }
 }
 
