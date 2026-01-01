@@ -42,10 +42,11 @@ Go to **Settings** → **Environment Variables** and add:
    - Value: (paste the generated secret)
    - Environment: Production, Preview, Development
 
-2. **NEXTAUTH_URL**
-   - Value: `https://your-app-name.vercel.app` (your actual Vercel URL)
+2. **NEXTAUTH_URL** *(Optional - auto-detected on Vercel)*
+   - **You can skip this!** NextAuth automatically detects your Vercel URL
+   - Only set manually if you have a custom domain
+   - Value: `https://your-custom-domain.com`
    - Environment: Production
-   - Note: For Preview, you can use the auto-generated preview URL
 
 3. **GROQ_API_KEY**
    - Value: Your Groq API key from [console.groq.com](https://console.groq.com)
