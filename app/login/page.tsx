@@ -132,16 +132,6 @@ function LoginForm() {
             </button>
           </div>
         </div>
-
-        {/* Demo Info */}
-        <div className="mt-6 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4">
-          <p className="text-xs text-slate-400 text-center mb-2">
-            <span className="font-semibold text-slate-300">Demo Account:</span> username: <code className="text-blue-400">demo</code>, password: <code className="text-blue-400">demo1234</code>
-          </p>
-          <p className="text-xs text-slate-400 text-center">
-            Or create a new account with any username and password (4+ characters)
-          </p>
-        </div>
       </div>
     </div>
   );

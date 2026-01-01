@@ -88,21 +88,3 @@ export async function getUserById(id: string): Promise<User | null> {
     return null;
   }
 }
-
-// For demo purposes - create a default user on server start (skip during build)
-if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
-  // Only run in development, not during build
-  if (!process.env.VERCEL_ENV) {
-    (async () => {
-      try {
-        const existing = await findUserByUsername('demo');
-        if (!existing) {
-          await createUser('demo', 'demo1234');
-          console.log('✅ Demo user created: username=demo, password=demo1234');
-        }
-      } catch (error) {
-        console.error('Error creating demo user:', error);
-      }
-    })();
-  }
-}
