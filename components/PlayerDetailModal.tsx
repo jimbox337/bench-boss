@@ -98,7 +98,13 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
           {/* Background split with slanted edge */}
           <div className="absolute inset-0 flex">
             <div className="w-64 bg-slate-950"></div>
-            <div className="w-8 bg-gradient-to-r from-slate-950 to-slate-800 transform skew-x-12 -ml-4"></div>
+            <div className="w-8 transform skew-x-12 -ml-4">
+              {/* Slanted dividers with gradient - positioned on the skewed transition */}
+              <div className="absolute top-0 bottom-0 left-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
+              <div className="absolute top-0 bottom-0 left-3 w-0.5 bg-gradient-to-b from-blue-400 to-purple-400"></div>
+              {/* Gradient background between dividers */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 to-slate-800"></div>
+            </div>
             <div className="flex-1 bg-slate-800"></div>
           </div>
 
@@ -116,12 +122,6 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
                 />
               </div>
             )}
-
-            {/* Slanted dividers with gradient */}
-            <div className="absolute left-64 top-0 bottom-0 w-8 -ml-4">
-              <div className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 transform -skew-x-12"></div>
-              <div className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 to-purple-400 transform -skew-x-12 ml-3"></div>
-            </div>
 
             {/* Player Info */}
             <div className="flex-1 p-8 flex flex-col justify-center ml-8">
