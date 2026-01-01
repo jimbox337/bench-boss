@@ -23,19 +23,41 @@ Navigate to Settings, enter your League ID, and click "Connect ESPN League".
 
 ### 3. For Private Leagues
 
-If your league is **private**, you'll also need to provide two cookies from ESPN:
+If your league is **private**, you'll also need to provide two cookies from ESPN.
 
 #### How to Get Your ESPN Cookies:
 
-1. **Open ESPN Fantasy** in your browser and log in
-2. **Open Developer Tools** (Press F12 or right-click → Inspect)
-3. Go to the **Application** tab (Chrome) or **Storage** tab (Firefox)
-4. Navigate to **Cookies** → **https://fantasy.espn.com**
-5. Find and copy these two values:
-   - `espn_s2` - A long string of characters
-   - `SWID` - Looks like `{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}`
+1. **Open ESPN Fantasy** in your browser (Chrome, Firefox, Edge, etc.)
+2. **Make sure you're logged in** to your ESPN account
+3. **Navigate to your fantasy hockey league page**
+4. **Open Developer Tools**:
+   - Chrome/Edge: Press `F12` or `Ctrl+Shift+I` (Windows) / `Cmd+Option+I` (Mac)
+   - Firefox: Press `F12` or `Ctrl+Shift+K` (Windows) / `Cmd+Option+K` (Mac)
+   - Or right-click anywhere on the page → "Inspect"
 
-6. Paste these values in the corresponding fields in the Settings page
+5. **Find the Application/Storage tab**:
+   - Chrome/Edge: Click the "Application" tab
+   - Firefox: Click the "Storage" tab
+
+6. **Navigate to Cookies**:
+   - In the left sidebar, expand "Cookies"
+   - Click on `https://fantasy.espn.com`
+
+7. **Copy these two cookie values**:
+   - Find `espn_s2` - Copy the entire value (it's a very long string)
+   - Find `SWID` - Copy the value (looks like `{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}`)
+
+8. **Paste into Bench Boss Settings**:
+   - Go to Settings in Bench Boss
+   - Scroll to "For Private Leagues (Optional)"
+   - Paste `espn_s2` value into the first field
+   - Paste `SWID` value into the second field
+   - Click "Connect ESPN League"
+
+#### Important Notes:
+- These cookies expire periodically (usually after a few weeks)
+- If connection fails, try getting fresh cookies
+- Keep these cookies private - they give access to your ESPN account
 
 ## What Gets Imported
 
