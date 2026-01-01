@@ -52,7 +52,7 @@ export default function WelcomePage() {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/login?signup=true')}
             className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all shadow-lg hover:shadow-xl"
           >
             Get Started
