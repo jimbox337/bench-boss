@@ -84,25 +84,39 @@ export default function WaiverWire() {
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-xl font-bold">{target.player.name}</h3>
-                      {isTopPick && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                          🔥 TOP PICK
-                        </span>
-                      )}
-                      {proj.gamesPlayed >= 4 && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">
-                          📅 {proj.gamesPlayed} GAMES
-                        </span>
-                      )}
+                  <div className="flex items-center gap-4 flex-1">
+                    {/* Player Headshot */}
+                    {target.player.headshotUrl && (
+                      <img
+                        src={target.player.headshotUrl}
+                        alt={target.player.name}
+                        className="h-16 w-16 rounded-full bg-slate-700 object-cover flex-shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
+
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-xl font-bold">{target.player.name}</h3>
+                        {isTopPick && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                            🔥 TOP PICK
+                          </span>
+                        )}
+                        {proj.gamesPlayed >= 4 && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">
+                            📅 {proj.gamesPlayed} GAMES
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-400">
+                        {target.player.nhlTeam} • {target.player.positions.join('/')} • {target.reasoning}
+                      </p>
                     </div>
-                    <p className="text-sm text-slate-400">
-                      {target.player.nhlTeam} • {target.player.positions.join('/')} • {target.reasoning}
-                    </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <p className={`text-3xl font-bold ${isTopPick ? 'text-blue-600' : 'text-purple-600'}`}>
                       {target.value.toFixed(1)}
                     </p>
