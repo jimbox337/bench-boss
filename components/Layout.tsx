@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react';
 
 const navItems = [
   { icon: '📊', name: 'Dashboard', path: '/' },
+  { icon: '👕', name: 'My Team', path: '/myteam' },
   { icon: '⚡', name: 'Lineup Optimizer', path: '/lineup' },
   { icon: '🤔', name: 'Start / Sit', path: '/startsit' },
   { icon: '🔄', name: 'Trade Analyzer', path: '/trades' },

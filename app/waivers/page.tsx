@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { freeAgents } from '@/lib/mockdata';
 import { rankWaiverTargets, defaultLeagueSettings, calculateFantasyPoints } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 
 export default function WaiverWire() {
-  const { projections } = useData();
+  const { players, projections, myTeam } = useData();
   const [timeframe, setTimeframe] = useState('next_7');
   const [sortBy, setSortBy] = useState('best_overall');
   const [position, setPosition] = useState('all');
 
+  // Free agents are all players not on my team
+  const freeAgents = players.filter(p => !myTeam.some(tp => tp.id === p.id));
   const targets = rankWaiverTargets(freeAgents, projections, defaultLeagueSettings);
 
   return (

@@ -10,6 +10,19 @@ export interface Player {
   isGoalie: boolean;
   seasonStats?: SkaterStats; // Actual season stats
   gamesPlayed?: number; // Games played this season
+  injuryStatus?: 'Healthy' | 'Day-to-Day' | 'IR' | 'Out' | 'Questionable';
+  outlook?: PlayerOutlook;
+}
+
+export interface PlayerOutlook {
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  trend: 'Hot' | 'Cold' | 'Steady';
+  fantasyValue: 'Must-Start' | 'Start' | 'Flex' | 'Bench' | 'Drop';
+  restOfSeasonProjection: string;
+  injuryRisk: 'Low' | 'Moderate' | 'High';
+  generatedAt: Date;
 }
 
 export interface SkaterStats {

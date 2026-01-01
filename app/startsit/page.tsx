@@ -1,21 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { myTeam } from '@/lib/mockdata';
+import { useState, useMemo } from 'react';
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 
 export default function StartSit() {
   const { players, projections } = useData();
-  const [player1Id, setPlayer1Id] = useState(myTeam[0]?.id || '');
-  const [player2Id, setPlayer2Id] = useState(myTeam[1]?.id || '');
+  const [player1Name, setPlayer1Name] = useState('');
+  const [player2Name, setPlayer2Name] = useState('');
   const [timeframe, setTimeframe] = useState('next_7');
+  const [showPlayer1Suggestions, setShowPlayer1Suggestions] = useState(false);
+  const [showPlayer2Suggestions, setShowPlayer2Suggestions] = useState(false);
 
-  const player1 = players.find(p => p.id === player1Id);
-  const player2 = players.find(p => p.id === player2Id);
+  // Filter players based on search input
+  const player1Suggestions = useMemo(() => {
+    if (!player1Name || player1Name.length < 2) return [];
+    return players
+      .filter(p => p.name.toLowerCase().includes(player1Name.toLowerCase()))
+      .slice(0, 10);
+  }, [player1Name, players]);
 
-  const proj1 = projections.find(p => p.playerId === player1Id);
-  const proj2 = projections.find(p => p.playerId === player2Id);
+  const player2Suggestions = useMemo(() => {
+    if (!player2Name || player2Name.length < 2) return [];
+    return players
+      .filter(p => p.name.toLowerCase().includes(player2Name.toLowerCase()))
+      .slice(0, 10);
+  }, [player2Name, players]);
+
+  // Find exact matches
+  const player1 = players.find(p => p.name.toLowerCase() === player1Name.toLowerCase());
+  const player2 = players.find(p => p.name.toLowerCase() === player2Name.toLowerCase());
+
+  const proj1 = player1 ? projections.find(p => p.playerId === player1.id) : undefined;
+  const proj2 = player2 ? projections.find(p => p.playerId === player2.id) : undefined;
   
   const points1 = proj1 ? calculateFantasyPoints(proj1, defaultLeagueSettings) : 0;
   const points2 = proj2 ? calculateFantasyPoints(proj2, defaultLeagueSettings) : 0;
@@ -31,29 +48,67 @@ export default function StartSit() {
       <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-6">
         <h3 className="text-lg font-bold text-slate-100 mb-4">Compare Players</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-slate-300 mb-2">Player 1</label>
-            <select
+            <input
+              type="text"
               className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
-              value={player1Id}
-              onChange={(e) => setPlayer1Id(e.target.value)}
-            >
-              {myTeam.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              placeholder="Enter player name..."
+              value={player1Name}
+              onChange={(e) => {
+                setPlayer1Name(e.target.value);
+                setShowPlayer1Suggestions(true);
+              }}
+              onFocus={() => setShowPlayer1Suggestions(true)}
+              onBlur={() => setTimeout(() => setShowPlayer1Suggestions(false), 200)}
+            />
+            {showPlayer1Suggestions && player1Suggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {player1Suggestions.map(p => (
+                  <div
+                    key={p.id}
+                    className="px-4 py-2 hover:bg-slate-600 cursor-pointer text-slate-100"
+                    onClick={() => {
+                      setPlayer1Name(p.name);
+                      setShowPlayer1Suggestions(false);
+                    }}
+                  >
+                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions.join('/')})</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-slate-300 mb-2">Player 2</label>
-            <select
+            <input
+              type="text"
               className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
-              value={player2Id}
-              onChange={(e) => setPlayer2Id(e.target.value)}
-            >
-              {myTeam.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              placeholder="Enter player name..."
+              value={player2Name}
+              onChange={(e) => {
+                setPlayer2Name(e.target.value);
+                setShowPlayer2Suggestions(true);
+              }}
+              onFocus={() => setShowPlayer2Suggestions(true)}
+              onBlur={() => setTimeout(() => setShowPlayer2Suggestions(false), 200)}
+            />
+            {showPlayer2Suggestions && player2Suggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {player2Suggestions.map(p => (
+                  <div
+                    key={p.id}
+                    className="px-4 py-2 hover:bg-slate-600 cursor-pointer text-slate-100"
+                    onClick={() => {
+                      setPlayer2Name(p.name);
+                      setShowPlayer2Suggestions(false);
+                    }}
+                  >
+                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions.join('/')})</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">Timeframe</label>

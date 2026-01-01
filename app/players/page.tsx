@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { myTeam } from '@/lib/mockdata';
 import { useData } from '@/lib/DataContext';
 
 export default function PlayerExplorer() {
-  const { players } = useData();
+  const { players, myTeam } = useData();
   const [search, setSearch] = useState('');
   const [position, setPosition] = useState('all');
   const [sortBy, setSortBy] = useState('proj_pts');

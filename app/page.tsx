@@ -1,11 +1,10 @@
 'use client';
 
-import { myTeam } from '@/lib/mockdata';
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 
 export default function Dashboard() {
-  const { players, projections, isLoading, isLiveData } = useData();
+  const { players, projections, isLoading, isLiveData, myTeam } = useData();
 
   // Calculate total projected points for the week
   const totalPoints = myTeam.reduce((sum, player) => {
@@ -13,14 +12,6 @@ export default function Dashboard() {
     if (!proj) return sum;
     return sum + calculateFantasyPoints(proj, defaultLeagueSettings);
   }, 0);
-
-  const categoryStrengths = [
-    { name: 'Goals (G)', strength: 75, status: 'Strong' },
-    { name: 'Assists (A)', strength: 68, status: 'Strong' },
-    { name: 'Power Play Points (PPP)', strength: 50, status: 'Average' },
-    { name: 'Shots on Goal (SOG)', strength: 35, status: 'Weak' },
-    { name: 'Hits (HIT)', strength: 32, status: 'Weak' },
-  ];
 
   return (
     <div className="p-8">
@@ -69,44 +60,78 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Team Strengths */}
-      <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-8">
-        <h3 className="text-xl font-bold text-slate-100 mb-4">Category Outlook</h3>
-        <div className="space-y-3">
-          {categoryStrengths.map((cat) => (
-            <div key={cat.name}>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-slate-300">{cat.name}</span>
-                <span className={
-                  cat.status === 'Strong' ? 'text-green-400' :
-                  cat.status === 'Weak' ? 'text-red-400' : 'text-yellow-400'
-                }>
-                  {cat.status} {cat.status === 'Strong' ? '✓' : cat.status === 'Weak' ? '✗' : '~'}
-                </span>
-              </div>
-              <div className="w-full bg-slate-700 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full ${
-                    cat.status === 'Strong' ? 'bg-green-500' :
-                    cat.status === 'Weak' ? 'bg-red-500' : 'bg-yellow-500'
-                  }`}
-                  style={{ width: `${cat.strength}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
+      {/* My Team Roster */}
+      {myTeam.length > 0 && (
+        <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-8">
+          <h3 className="text-xl font-bold text-slate-100 mb-4">My Roster</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-700 border-b border-slate-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Player</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Team</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Pos</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">GP</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">G</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">A</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">PTS</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">SOG</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-700">
+                {myTeam.slice(0, 10).map((player) => (
+                  <tr key={player.id} className="hover:bg-slate-700 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">
+                      {player.name}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
+                      {player.nhlTeam}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
+                      {player.positions.join('/')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                      {player.gamesPlayed || 0}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                      {player.seasonStats?.G || 0}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                      {player.seasonStats?.A || 0}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-400">
+                      {player.seasonStats?.PTS || 0}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                      {player.seasonStats?.SOG || 0}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {myTeam.length > 10 && (
+            <p className="text-sm text-slate-400 mt-4 text-center">
+              Showing 10 of {myTeam.length} players. <a href="/myteam" className="text-blue-400 hover:underline">View all</a>
+            </p>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Recommendations */}
-      <div className="bg-blue-900/30 border border-blue-700 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-blue-200 mb-3">💡 Quick Recommendations</h3>
-        <ul className="space-y-2 text-sm text-slate-300">
-          <li>• <strong className="text-blue-300">Waiver Priority:</strong> Pick up Troy Terry (ANA) - Strong SOG/HIT contributor</li>
-          <li>• <strong className="text-blue-300">Lineup Alert:</strong> Bench Mika Zibanejad tonight (vs tough defense)</li>
-          <li>• <strong className="text-blue-300">Stream Target:</strong> Martin Necas has 4 games this week</li>
-        </ul>
-      </div>
+      {/* Empty State */}
+      {myTeam.length === 0 && !isLoading && (
+        <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center">
+          <div className="text-6xl mb-4">👕</div>
+          <h3 className="text-xl font-bold text-slate-100 mb-2">No Team Yet</h3>
+          <p className="text-slate-400 mb-6">Add players to your roster to get started</p>
+          <a
+            href="/myteam"
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Build My Team
+          </a>
+        </div>
+      )}
     </div>
   );
 }

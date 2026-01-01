@@ -183,34 +183,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Import Players */}
-      <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 p-6 mb-6">
-        <h3 className="text-xl font-bold mb-4">Import Players</h3>
-        <p className="text-sm text-slate-400 mb-4">Paste your roster and free agents below (format: Name, Team, Position)</p>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-300 mb-2">My Team Roster</label>
-          <textarea
-            className="w-full border border-slate-600 rounded-lg px-4 py-2 font-mono text-sm"
-            rows={6}
-            placeholder="Connor McDavid, EDM, C&#10;Nikita Kucherov, TBL, RW&#10;Nathan MacKinnon, COL, C&#10;..."
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-300 mb-2">Free Agents Available</label>
-          <textarea
-            className="w-full border border-slate-600 rounded-lg px-4 py-2 font-mono text-sm"
-            rows={6}
-            placeholder="Troy Terry, ANA, RW&#10;Martin Necas, CAR, C/RW&#10;..."
-          />
-        </div>
-
-        <button className="bg-gray-700 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-          Import Players
-        </button>
-      </div>
-
       {/* Save Button */}
       <div className="flex justify-end space-x-3">
         <button className="px-6 py-2 border border-slate-600 rounded-lg font-medium hover:bg-slate-700 transition-colors">

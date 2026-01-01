@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { fetchNHLRoster, generateProjections } from '@/lib/nhlApi';
+import { loadFastNHLData } from '@/lib/nhlStatsApi';
 
 export async function GET() {
   try {
-    console.log('API Route: Fetching live NHL data...');
+    console.log('API Route: Fetching live NHL data using fast bulk endpoint...');
 
-    const players = await fetchNHLRoster();
-    const projections = await generateProjections(players, 7);
+    const { players, projections } = await loadFastNHLData();
+
+    console.log(`API Route: Successfully loaded ${players.length} players`);
 
     return NextResponse.json({
       players,

@@ -6,6 +6,7 @@ A professional fantasy hockey management application with enterprise-grade secur
 
 ### Fantasy Hockey Tools
 - **📊 Dashboard** - Overview of your team and weekly projections
+- **🤖 AI Player Analysis** - Click any player to get AI-powered insights, outlook, and injury risk assessment
 - **⚡ Lineup Optimizer** - Automatically set your best lineup
 - **🤔 Start / Sit** - Compare players for optimal decisions
 - **🔄 Trade Analyzer** - Evaluate trades with data-driven insights
@@ -49,9 +50,12 @@ cp .env.example .env.local
 # Generate a secure secret
 openssl rand -base64 32
 
-# Edit .env.local and paste your secret
+# Edit .env.local and add:
 # NEXTAUTH_SECRET=<your-generated-secret>
+# GROQ_API_KEY=<your-groq-api-key>
 ```
+
+Get your **FREE** Groq API key from [https://console.groq.com/](https://console.groq.com/)
 
 3. **Start the development server**
 ```bash
@@ -129,10 +133,37 @@ bench-boss/
 - **Next.js API Routes** - Serverless functions
 - **NextAuth.js** - Authentication
 - **bcryptjs** - Password hashing
+- **Groq API** - FREE AI-powered player analysis (Llama 3.1 70B)
 
 ### Data
 - **NHL API** - Real-time hockey data
-- **In-memory storage** - Demo user accounts (temporary)
+- **Prisma + SQLite** - Database ORM and local storage
+- **In-memory caching** - Fast data access
+
+## 🤖 AI Player Analysis
+
+### Features
+Click on any player in your team roster to get:
+- **AI-Powered Outlook** - Comprehensive analysis using Llama 3.1 70B
+- **Fantasy Value Rating** - Must-Start, Start, Flex, Bench, or Drop
+- **Trend Analysis** - Hot 🔥, Cold 🥶, or Steady ➡️
+- **Strengths & Weaknesses** - Key performance indicators
+- **Rest of Season Projection** - What to expect going forward
+- **Injury Risk Assessment** - Low, Moderate, or High
+- **Real-time Season Stats** - Games played, points, goals, assists, and more
+
+### How It Works
+1. Navigate to "My Team" page
+2. Click on any player row
+3. AI analyzes current stats, trends, and context
+4. Get actionable insights in seconds
+
+### API Usage
+The AI analysis uses the **FREE** Groq API with the following model:
+- **Model**: `llama-3.1-70b-versatile` (Meta's Llama 3.1 70B)
+- **Max Tokens**: 1500 per request
+- **Cost**: **$0.00** - Completely FREE! 🎉
+- **Rate Limits**: 30 requests/minute (very generous)
 
 ## 📚 Documentation
 
