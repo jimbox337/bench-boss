@@ -40,28 +40,55 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
     const skatersData = await skatersRes.json();
     const skaters: NHLStatsPlayer[] = skatersData.data || [];
 
-    console.log(`✅ Fetched ${skaters.length} skaters`);
+    console.log(`✅ Fetched ${skaters.length} skaters from summary`);
+
+    // Fetch realtime stats for hits and blocks
+    console.log('Fetching realtime stats for hits and blocks...');
+    const realtimeUrl = `${NHL_STATS_API}/skater/realtime?cayenneExp=seasonId=20252026 and gameTypeId=2&limit=-1`;
+    const realtimeRes = await fetch(realtimeUrl);
+
+    const realtimeMap = new Map<number, { hits: number; blockedShots: number }>();
+
+    if (realtimeRes.ok) {
+      const realtimeData = await realtimeRes.json();
+      const realtimeStats = realtimeData.data || [];
+
+      realtimeStats.forEach((stat: any) => {
+        realtimeMap.set(stat.playerId, {
+          hits: stat.hits || 0,
+          blockedShots: stat.blockedShots || 0
+        });
+      });
+
+      console.log(`✅ Fetched realtime stats for ${realtimeMap.size} skaters`);
+    } else {
+      console.warn('⚠️ Failed to fetch realtime stats, hits and blocks will be 0');
+    }
 
     // Convert to our Player format
-    const players: Player[] = skaters.map(s => ({
-      id: s.playerId.toString(),
-      name: s.skaterFullName,
-      nhlTeam: s.teamAbbrevs.split(',')[0] || 'UNK', // Take first team if traded
-      positions: [s.positionCode],
-      isGoalie: false,
-      gamesPlayed: s.gamesPlayed,
-      seasonStats: {
-        G: s.goals,
-        A: s.assists,
-        PTS: s.points,
-        plusMinus: s.plusMinus,
-        PPP: s.ppPoints,
-        SOG: s.shots,
-        HIT: s.hits,
-        BLK: s.blockedShots,
-        PIM: s.penaltyMinutes,
-      }
-    }));
+    const players: Player[] = skaters.map(s => {
+      const realtimeStats = realtimeMap.get(s.playerId) || { hits: 0, blockedShots: 0 };
+
+      return {
+        id: s.playerId.toString(),
+        name: s.skaterFullName,
+        nhlTeam: s.teamAbbrevs.split(',')[0] || 'UNK', // Take first team if traded
+        positions: [s.positionCode],
+        isGoalie: false,
+        gamesPlayed: s.gamesPlayed,
+        seasonStats: {
+          G: s.goals,
+          A: s.assists,
+          PTS: s.points,
+          plusMinus: s.plusMinus,
+          PPP: s.ppPoints,
+          SOG: s.shots,
+          HIT: realtimeStats.hits,
+          BLK: realtimeStats.blockedShots,
+          PIM: s.penaltyMinutes,
+        }
+      };
+    });
 
     // Also fetch goalies
     console.log('Fetching all NHL goalie stats...');
