@@ -13,9 +13,11 @@ https://fantasy.espn.com/hockey/league?leagueId=123456&seasonId=2025
                                             This is your League ID
 ```
 
-### 2. Get Your Season ID
+Just copy the numbers after `leagueId=` in your browser's address bar.
 
-The Season ID is typically the current year (e.g., 2025 for the 2024-25 season).
+### 2. Enter the Season Year
+
+The season year is just the current year (e.g., **2025** for the 2024-25 NHL season). You can also see this in your ESPN league URL after `seasonId=`.
 
 ### 3. For Public Leagues
 

@@ -155,7 +155,7 @@ export default function Settings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Season ID <span className="text-red-400">*</span>
+                Season Year <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -164,6 +164,9 @@ export default function Settings() {
                 onChange={(e) => setESPNSeasonId(e.target.value)}
                 className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none"
               />
+              <p className="text-xs text-slate-400 mt-1">
+                Current season year (e.g., 2025 for 2024-25 season)
+              </p>
             </div>
           </div>
 
