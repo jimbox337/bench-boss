@@ -8,26 +8,20 @@ Bench Boss now supports direct integration with ESPN Fantasy Hockey leagues! Thi
 
 Your ESPN League ID can be found in your league's URL:
 ```
-https://fantasy.espn.com/hockey/league?leagueId=123456&seasonId=2025
+https://fantasy.espn.com/hockey/league?leagueId=123456
                                                 ^^^^^^
                                             This is your League ID
 ```
 
 Just copy the numbers after `leagueId=` in your browser's address bar.
 
-### 2. Enter the Season Year
+### 2. For Public Leagues
 
-The season year is just the current year (e.g., **2025** for the 2024-25 NHL season). You can also see this in your ESPN league URL after `seasonId=`.
+If your league is **public**, you only need your League ID!
 
-### 3. For Public Leagues
+Navigate to Settings, enter your League ID, and click "Connect ESPN League".
 
-If your league is **public**, you only need:
-- League ID
-- Season ID
-
-Navigate to Settings and enter these values, then click "Connect ESPN League".
-
-### 4. For Private Leagues
+### 3. For Private Leagues
 
 If your league is **private**, you'll also need to provide two cookies from ESPN:
 

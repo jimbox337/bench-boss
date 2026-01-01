@@ -50,8 +50,8 @@ export default function Settings() {
   }, [espnConfig, espnLeagueInfo]);
 
   const handleESPNSync = async () => {
-    if (!espnLeagueId || !espnSeasonId) {
-      setSyncError('Please enter both League ID and Season ID');
+    if (!espnLeagueId) {
+      setSyncError('Please enter your League ID');
       return;
     }
 
@@ -61,7 +61,7 @@ export default function Settings() {
     try {
       await syncESPNLeague({
         leagueId: espnLeagueId,
-        seasonId: parseInt(espnSeasonId),
+        seasonId: parseInt(espnSeasonId), // Defaults to 2025
         espnS2: espnS2 || undefined,
         swid: espnSWID || undefined,
       });
@@ -137,37 +137,20 @@ export default function Settings() {
         )}
 
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                League ID <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 123456"
-                value={espnLeagueId}
-                onChange={(e) => setESPNLeagueId(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-              <p className="text-xs text-slate-400 mt-1">
-                Find this in your ESPN league URL
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Season Year <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 2025"
-                value={espnSeasonId}
-                onChange={(e) => setESPNSeasonId(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none"
-              />
-              <p className="text-xs text-slate-400 mt-1">
-                Current season year (e.g., 2025 for 2024-25 season)
-              </p>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              League ID <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., 123456"
+              value={espnLeagueId}
+              onChange={(e) => setESPNLeagueId(e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Find this in your ESPN league URL after "leagueId="
+            </p>
           </div>
 
           <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
