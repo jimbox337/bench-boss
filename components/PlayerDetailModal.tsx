@@ -94,44 +94,67 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 z-10">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              {player.headshotUrl && (
+        <div className="sticky top-0 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 z-10">
+          <div className="flex items-stretch">
+            {/* Headshot */}
+            {player.headshotUrl && (
+              <div className="w-48 h-48 bg-slate-700 flex-shrink-0">
                 <img
                   src={player.headshotUrl}
                   alt={player.name}
-                  className="h-20 w-20 rounded-full bg-slate-700 object-cover"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-              )}
-              <div>
-                <h2 className="text-3xl font-bold text-slate-100">{player.name}</h2>
-                <div className="flex items-center gap-3 mt-2">
-                  <span className="text-slate-400">{player.nhlTeam}</span>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-slate-400">{player.positions.join('/')}</span>
-                  {player.injuryStatus && (
-                    <>
-                      <span className="text-slate-500">•</span>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${getInjuryStatusColor(player.injuryStatus)}`}>
-                        {player.injuryStatus}
-                      </span>
-                    </>
-                  )}
+              </div>
+            )}
+
+            {/* Player Info */}
+            <div className="flex-1 p-6 flex flex-col justify-center">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  {(() => {
+                    const nameParts = player.name.split(' ');
+                    const firstName = nameParts.slice(0, -1).join(' ');
+                    const lastName = nameParts[nameParts.length - 1];
+                    return (
+                      <>
+                        <div className="text-2xl font-medium text-slate-300">{firstName}</div>
+                        <div className="text-5xl font-bold text-slate-100 mb-3">{lastName}</div>
+                      </>
+                    );
+                  })()}
+                  <div className="flex items-center gap-4 text-lg">
+                    <span className="text-slate-300">{player.positions.join('/')}</span>
+                    {player.nhlTeam !== 'UNK' && (
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-300">#{player.id.slice(-2)}</span>
+                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-300">{player.nhlTeam}</span>
+                      </>
+                    )}
+                    {player.injuryStatus && (
+                      <>
+                        <span className="text-slate-600">•</span>
+                        <span className={`px-2 py-1 rounded text-sm font-medium ${getInjuryStatusColor(player.injuryStatus)}`}>
+                          {player.injuryStatus}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
         </div>
 
