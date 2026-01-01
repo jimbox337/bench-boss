@@ -94,11 +94,18 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-slate-900 border-b border-slate-700 z-10 overflow-hidden">
-          <div className="flex items-stretch relative">
+        <div className="sticky top-0 border-b border-slate-700 z-10 overflow-hidden relative">
+          {/* Background split with slanted edge */}
+          <div className="absolute inset-0 flex">
+            <div className="w-64 bg-slate-950"></div>
+            <div className="w-8 bg-gradient-to-r from-slate-950 to-slate-800 transform skew-x-12 -ml-4"></div>
+            <div className="flex-1 bg-slate-800"></div>
+          </div>
+
+          <div className="flex items-stretch relative z-10">
             {/* Headshot */}
             {player.headshotUrl && (
-              <div className="w-64 h-64 bg-slate-700 flex-shrink-0 relative">
+              <div className="w-64 h-64 flex-shrink-0 relative">
                 <img
                   src={player.headshotUrl}
                   alt={player.name}
@@ -117,7 +124,7 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
             </div>
 
             {/* Player Info */}
-            <div className="flex-1 p-8 flex flex-col justify-center ml-8 bg-gradient-to-r from-slate-900 to-slate-800">
+            <div className="flex-1 p-8 flex flex-col justify-center ml-8">
               <div className="flex items-start justify-between">
                 <div>
                   {(() => {
