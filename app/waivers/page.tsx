@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { rankWaiverTargets, defaultLeagueSettings, calculateFantasyPoints } from '@/lib/calculator';
+import { rankWaiverTargets, defaultLeagueSettings, calculateFantasyPoints, Player } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import PlayerDetailModal from '@/components/PlayerDetailModal';
 
 export default function WaiverWire() {
   const { players, projections, myTeam } = useData();
   const [timeframe, setTimeframe] = useState('next_7');
   const [sortBy, setSortBy] = useState('best_overall');
   const [position, setPosition] = useState('all');
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   // Free agents are all players not on my team
   const freeAgents = players.filter(p => !myTeam.some(tp => tp.id === p.id));
@@ -73,11 +75,12 @@ export default function WaiverWire() {
           const proj = target.projection;
           
           return (
-            <div 
+            <div
               key={target.player.id}
-              className={`bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow ${
+              className={`bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
                 isTopPick ? 'border-2 border-blue-500' : 'border border-slate-700'
               }`}
+              onClick={() => setSelectedPlayer(target.player)}
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -139,6 +142,15 @@ export default function WaiverWire() {
           );
         })}
       </div>
+
+      {/* Player Detail Modal */}
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          isOpen={!!selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   );
 }

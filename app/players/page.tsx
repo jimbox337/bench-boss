@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useData } from '@/lib/DataContext';
+import { Player } from '@/lib/calculator';
+import PlayerDetailModal from '@/components/PlayerDetailModal';
 
 export default function PlayerExplorer() {
   const { players, myTeam } = useData();
@@ -9,6 +11,7 @@ export default function PlayerExplorer() {
   const [position, setPosition] = useState('all');
   const [sortBy, setSortBy] = useState('proj_pts');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -157,7 +160,8 @@ export default function PlayerExplorer() {
               {filteredPlayers.map(({ player, isMyPlayer }) => (
                 <tr
                   key={player.id}
-                  className={`hover:bg-slate-750 transition-colors ${isMyPlayer ? 'bg-blue-900/20' : ''}`}
+                  className={`hover:bg-slate-750 transition-colors cursor-pointer ${isMyPlayer ? 'bg-blue-900/20' : ''}`}
+                  onClick={() => setSelectedPlayer(player)}
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center">
@@ -190,6 +194,15 @@ export default function PlayerExplorer() {
           </table>
         </div>
       </div>
+
+      {/* Player Detail Modal */}
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          isOpen={!!selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   );
 }
