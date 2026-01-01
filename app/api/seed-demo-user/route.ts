@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createUser, findUserByUsername } from '@/lib/users';
 import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 /**
- * API endpoint to create a demo user with detailed diagnostics
- * Visit this URL in your browser: https://your-app.vercel.app/api/seed-demo-user
+ * API endpoint to create/reset demo user
+ * Visit: /api/seed-demo-user to create demo user
+ * Visit: /api/seed-demo-user?reset=true to delete and recreate
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const shouldReset = searchParams.get('reset') === 'true';
+
   const diagnostics: any = {
     env: {
       NEXT_PHASE: process.env.NEXT_PHASE,
@@ -25,36 +30,41 @@ export async function GET() {
       createdAt: existingUser.createdAt
     } : null;
 
-    if (existingUser) {
+    // If reset requested, delete existing user
+    if (shouldReset && existingUser) {
+      await prisma.user.delete({
+        where: { id: existingUser.id }
+      });
+      diagnostics.deleted = true;
+    } else if (existingUser) {
+      // User exists and no reset requested
       return NextResponse.json({
         success: true,
-        message: 'Demo user already exists!',
+        message: 'Demo user already exists! Add ?reset=true to recreate it.',
         username: 'demo',
         password: 'demo1234',
         diagnostics
       });
     }
 
-    // Try to create user
-    const user = await createUser('demo', 'demo1234');
-    diagnostics.creationAttempt = user ? 'Success' : 'Returned null';
-
-    if (user) {
-      return NextResponse.json({
-        success: true,
-        message: 'Demo user created successfully!',
+    // Create new demo user
+    const hashedPassword = await bcrypt.hash('demo1234', 10);
+    const user = await prisma.user.create({
+      data: {
         username: 'demo',
-        password: 'demo1234',
-        userId: user.id,
-        diagnostics
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        message: 'User creation returned null (likely blocked by build-time check)',
-        diagnostics
-      }, { status: 500 });
-    }
+        password: hashedPassword,
+        leagueName: "Demo's League",
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Demo user created successfully!',
+      username: 'demo',
+      password: 'demo1234',
+      userId: user.id,
+      diagnostics
+    });
   } catch (error) {
     console.error('Error creating demo user:', error);
     diagnostics.error = error instanceof Error ? error.message : 'Unknown error';
