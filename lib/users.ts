@@ -9,7 +9,18 @@ export interface User {
   createdAt: Date;
 }
 
+// Helper to check if we're in a build environment
+const isBuildTime = () => {
+  return process.env.NEXT_PHASE === 'phase-production-build' ||
+         process.env.VERCEL_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('postgres');
+};
+
 export async function createUser(username: string, password: string): Promise<User | null> {
+  if (isBuildTime()) {
+    console.log('Skipping user creation during build');
+    return null;
+  }
+
   try {
     // Check if user already exists
     const existing = await prisma.user.findUnique({
@@ -40,6 +51,11 @@ export async function createUser(username: string, password: string): Promise<Us
 }
 
 export async function findUserByUsername(username: string): Promise<User | null> {
+  if (isBuildTime()) {
+    console.log('Skipping user lookup during build');
+    return null;
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { username: username.toLowerCase() }
@@ -57,6 +73,11 @@ export async function validatePassword(user: User, password: string): Promise<bo
 }
 
 export async function getUserById(id: string): Promise<User | null> {
+  if (isBuildTime()) {
+    console.log('Skipping user lookup during build');
+    return null;
+  }
+
   try {
     const user = await prisma.user.findUnique({
       where: { id }
