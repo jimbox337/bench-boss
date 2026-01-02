@@ -71,9 +71,18 @@ export async function createUser(
     });
 
     // Send verification email (don't wait for it to complete)
-    sendVerificationEmail(user.email, user.name, verificationToken).catch((error) => {
-      console.error('Failed to send verification email:', error);
-    });
+    console.log('📧 Attempting to send verification email to:', user.email);
+    sendVerificationEmail(user.email, user.name, verificationToken)
+      .then((success) => {
+        if (success) {
+          console.log('✅ Verification email sent successfully to:', user.email);
+        } else {
+          console.error('❌ Verification email failed to send to:', user.email);
+        }
+      })
+      .catch((error) => {
+        console.error('❌ Failed to send verification email to:', user.email, error);
+      });
 
     return user;
   } catch (error) {
