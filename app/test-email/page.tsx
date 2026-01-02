@@ -15,13 +15,137 @@ export default function TestEmailPage() {
     setResult('');
 
     try {
+      // Build Supercell-style email template
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+              }
+              .email-wrapper {
+                max-width: 600px;
+                margin: 0 auto;
+                background: #ffffff;
+                border-radius: 20px;
+                overflow: hidden;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+              }
+              .header {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+              }
+              .header::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+                animation: pulse 4s ease-in-out infinite;
+              }
+              @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+              }
+              .logo {
+                font-size: 60px;
+                margin-bottom: 10px;
+                position: relative;
+                z-index: 1;
+                text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+              }
+              .header-title {
+                color: #ffffff;
+                font-size: 28px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                position: relative;
+                z-index: 1;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+              }
+              .content {
+                padding: 40px 30px;
+                background: #ffffff;
+              }
+              .content-title {
+                font-size: 28px;
+                font-weight: 800;
+                color: #1e293b;
+                margin-bottom: 20px;
+                text-align: center;
+              }
+              .message {
+                font-size: 16px;
+                line-height: 1.8;
+                color: #475569;
+                margin-bottom: 20px;
+                text-align: center;
+              }
+              .footer {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+                padding: 30px;
+                text-align: center;
+              }
+              .footer-text {
+                color: #cbd5e1;
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 10px;
+              }
+              .footer-brand {
+                color: #ffffff;
+                font-size: 16px;
+                font-weight: 700;
+                margin-top: 15px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="email-wrapper">
+              <div class="header">
+                <div class="logo">🏒</div>
+                <div class="header-title">Bench Boss</div>
+              </div>
+
+              <div class="content">
+                <div class="content-title">${subject}</div>
+                <p class="message">${message}</p>
+              </div>
+
+              <div class="footer">
+                <div class="footer-brand">🏒 BENCH BOSS</div>
+                <p class="footer-text" style="font-size: 12px; margin-top: 10px;">
+                  © 2026 Bench Boss. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to,
           subject,
-          html: `<h1>${subject}</h1><p>${message}</p>`,
+          html,
         }),
       });
 
@@ -116,7 +240,7 @@ export default function TestEmailPage() {
         <div className="mt-6 p-4 bg-slate-750 rounded-lg border border-slate-600">
           <p className="text-xs text-slate-400">
             <strong>Note:</strong> This uses your Resend API key to send emails.
-            The email will be sent from: <code className="text-blue-400">{process.env.NEXT_PUBLIC_EMAIL_FROM || 'Bench Boss <noreply@benchboss.app>'}</code>
+            The email will be sent from: <code className="text-blue-400">{process.env.NEXT_PUBLIC_EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>'}</code>
           </p>
         </div>
       </div>

@@ -18,7 +18,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
     // If Resend is configured, use the SDK
     if (resend) {
       const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.app>',
+        from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>',
         to,
         subject,
         html,
@@ -64,74 +64,186 @@ export async function sendVerificationEmail(email: string, name: string, token: 
     <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
           }
-          .container {
-            background-color: #f8fafc;
-            border-radius: 12px;
-            padding: 40px;
-            border: 1px solid #e2e8f0;
+          .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          }
+          .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+          }
+          .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+          }
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
           }
           .logo {
-            font-size: 32px;
-            margin-bottom: 20px;
+            font-size: 60px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
           }
-          h1 {
-            color: #1e293b;
+          .header-title {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          }
+          .content {
+            padding: 40px 30px;
+            background: #ffffff;
+          }
+          .greeting {
             font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
             margin-bottom: 20px;
           }
-          p {
+          .message {
+            font-size: 16px;
+            line-height: 1.6;
             color: #475569;
             margin-bottom: 16px;
           }
+          .button-container {
+            text-align: center;
+            margin: 30px 0;
+          }
           .button {
             display: inline-block;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 32px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: #ffffff;
+            padding: 18px 50px;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+          }
+          .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(245, 158, 11, 0.6);
+          }
+          .divider {
+            margin: 30px 0;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
             font-weight: 600;
+          }
+          .link-box {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 16px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #1e293b;
             margin: 20px 0;
           }
           .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            color: #64748b;
-            font-size: 14px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 30px;
+            text-align: center;
           }
-          .code {
-            background-color: #f1f5f9;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            color: #0f172a;
-            margin: 16px 0;
+          .footer-text {
+            color: #cbd5e1;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+          }
+          .footer-brand {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 15px;
+          }
+          .emoji-accent {
+            font-size: 24px;
+            margin: 0 5px;
           }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="logo">🏒 Bench Boss</div>
-          <h1>Verify Your Email Address</h1>
-          <p>Hi ${name},</p>
-          <p>Thanks for signing up for Bench Boss! Please verify your email address to get started with managing your fantasy hockey team.</p>
-          <p>Click the button below to verify your email:</p>
-          <a href="${verificationUrl}" class="button">Verify Email Address</a>
-          <p>Or copy and paste this link into your browser:</p>
-          <div class="code">${verificationUrl}</div>
-          <p>This link will expire in 24 hours.</p>
+        <div class="email-wrapper">
+          <div class="header">
+            <div class="logo">🏒</div>
+            <div class="header-title">Bench Boss</div>
+          </div>
+
+          <div class="content">
+            <div class="greeting">Hey ${name}! <span class="emoji-accent">👋</span></div>
+
+            <p class="message">
+              Welcome to <strong>Bench Boss</strong>! You're one step away from dominating your fantasy hockey league.
+            </p>
+
+            <p class="message">
+              Click the button below to verify your email and unlock your account:
+            </p>
+
+            <div class="button-container">
+              <a href="${verificationUrl}" class="button">Verify Email</a>
+            </div>
+
+            <div class="divider">━━━ OR ━━━</div>
+
+            <p class="message" style="text-align: center; font-size: 14px;">
+              Copy and paste this link into your browser:
+            </p>
+
+            <div class="link-box">${verificationUrl}</div>
+
+            <p class="message" style="font-size: 14px; color: #64748b; margin-top: 30px;">
+              ⏱️ This link expires in <strong>24 hours</strong>
+            </p>
+          </div>
+
           <div class="footer">
-            <p>If you didn't create an account with Bench Boss, you can safely ignore this email.</p>
+            <p class="footer-text">
+              If you didn't create an account, you can safely ignore this email.
+            </p>
+            <div class="footer-brand">🏒 BENCH BOSS</div>
+            <p class="footer-text" style="font-size: 12px; margin-top: 10px;">
+              © 2026 Bench Boss. All rights reserved.
+            </p>
           </div>
         </div>
       </body>
@@ -140,7 +252,7 @@ export async function sendVerificationEmail(email: string, name: string, token: 
 
   return sendEmail({
     to: email,
-    subject: 'Verify your Bench Boss email address',
+    subject: '🏒 Verify your Bench Boss account!',
     html,
   });
 }
@@ -156,83 +268,211 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
     <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
           }
-          .container {
-            background-color: #f8fafc;
-            border-radius: 12px;
-            padding: 40px;
-            border: 1px solid #e2e8f0;
+          .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          }
+          .header {
+            background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+          }
+          .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+          }
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
           }
           .logo {
-            font-size: 32px;
-            margin-bottom: 20px;
+            font-size: 60px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
           }
-          h1 {
-            color: #1e293b;
+          .header-title {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          }
+          .content {
+            padding: 40px 30px;
+            background: #ffffff;
+          }
+          .greeting {
             font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
             margin-bottom: 20px;
           }
-          p {
+          .message {
+            font-size: 16px;
+            line-height: 1.6;
             color: #475569;
             margin-bottom: 16px;
           }
+          .button-container {
+            text-align: center;
+            margin: 30px 0;
+          }
           .button {
             display: inline-block;
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 32px;
+            background: linear-gradient(135deg, #dc2626 0%, #f59e0b 100%);
+            color: #ffffff;
+            padding: 18px 50px;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+          }
+          .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(220, 38, 38, 0.6);
+          }
+          .divider {
+            margin: 30px 0;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
             font-weight: 600;
+          }
+          .link-box {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 16px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #1e293b;
             margin: 20px 0;
+          }
+          .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+          }
+          .warning-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #92400e;
+            margin-bottom: 8px;
+          }
+          .warning-text {
+            font-size: 14px;
+            color: #78350f;
+            line-height: 1.5;
           }
           .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            color: #64748b;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 30px;
+            text-align: center;
+          }
+          .footer-text {
+            color: #cbd5e1;
             font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
           }
-          .code {
-            background-color: #f1f5f9;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            color: #0f172a;
-            margin: 16px 0;
+          .footer-brand {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 15px;
           }
-          .warning {
-            background-color: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 12px;
-            margin: 20px 0;
-            border-radius: 4px;
+          .emoji-accent {
+            font-size: 24px;
+            margin: 0 5px;
           }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="logo">🏒 Bench Boss</div>
-          <h1>Reset Your Password</h1>
-          <p>Hi ${name},</p>
-          <p>We received a request to reset your password for your Bench Boss account. Click the button below to create a new password:</p>
-          <a href="${resetUrl}" class="button">Reset Password</a>
-          <p>Or copy and paste this link into your browser:</p>
-          <div class="code">${resetUrl}</div>
-          <p>This link will expire in 1 hour for security reasons.</p>
-          <div class="warning">
-            <strong>⚠️ Security Notice:</strong> If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+        <div class="email-wrapper">
+          <div class="header">
+            <div class="logo">🔐</div>
+            <div class="header-title">Password Reset</div>
           </div>
+
+          <div class="content">
+            <div class="greeting">Hey ${name}! <span class="emoji-accent">👋</span></div>
+
+            <p class="message">
+              We received a request to reset your password for your <strong>Bench Boss</strong> account.
+            </p>
+
+            <p class="message">
+              No worries! Click the button below to create a new password:
+            </p>
+
+            <div class="button-container">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+
+            <div class="divider">━━━ OR ━━━</div>
+
+            <p class="message" style="text-align: center; font-size: 14px;">
+              Copy and paste this link into your browser:
+            </p>
+
+            <div class="link-box">${resetUrl}</div>
+
+            <p class="message" style="font-size: 14px; color: #64748b; margin-top: 20px;">
+              ⏱️ This link expires in <strong>1 hour</strong> for security
+            </p>
+
+            <div class="warning-box">
+              <div class="warning-title">⚠️ Security Notice</div>
+              <div class="warning-text">
+                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+              </div>
+            </div>
+          </div>
+
           <div class="footer">
-            <p>For security, we never send your password in email.</p>
+            <p class="footer-text">
+              For security, we never send your password in email.
+            </p>
+            <div class="footer-brand">🏒 BENCH BOSS</div>
+            <p class="footer-text" style="font-size: 12px; margin-top: 10px;">
+              © 2026 Bench Boss. All rights reserved.
+            </p>
           </div>
         </div>
       </body>
@@ -241,7 +481,7 @@ export async function sendPasswordResetEmail(email: string, name: string, token:
 
   return sendEmail({
     to: email,
-    subject: 'Reset your Bench Boss password',
+    subject: '🔐 Reset your Bench Boss password',
     html,
   });
 }

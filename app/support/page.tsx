@@ -117,7 +117,7 @@ export default function SupportPage() {
           </p>
           <div className="flex gap-3">
             <a
-              href="mailto:support@benchboss.app"
+              href="mailto:support@benchboss.pro"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
               Email Support
