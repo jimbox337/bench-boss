@@ -20,10 +20,10 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
       console.log('📧 Sending email via Resend SDK...');
       console.log('  To:', to);
       console.log('  Subject:', subject);
-      console.log('  From:', process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>');
+      console.log('  From:', process.env.EMAIL_FROM || 'Bench Boss <onboarding@resend.dev>');
 
       const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>',
+        from: process.env.EMAIL_FROM || 'Bench Boss <onboarding@resend.dev>',
         to,
         subject,
         html,
