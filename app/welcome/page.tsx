@@ -3,18 +3,23 @@
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useData } from '@/lib/DataContext';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function WelcomePage() {
   const router = useRouter();
   const { status } = useSession();
   const { myTeam, espnConfig } = useData();
+  const hasRedirected = useRef(false);
 
   // Redirect if user already has a team or ESPN config
   useEffect(() => {
+    if (hasRedirected.current) return;
+
     if (myTeam && myTeam.length > 0) {
+      hasRedirected.current = true;
       router.push('/');
     } else if (espnConfig) {
+      hasRedirected.current = true;
       router.push('/');
     }
   }, [myTeam, espnConfig, router]);
