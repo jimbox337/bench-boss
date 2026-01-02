@@ -16,6 +16,7 @@ model User {
   email                     String    @unique
   name                      String
   password                  String    // bcrypt hashed
+  role                      String    @default("user") // user or admin
   profilePicture            String?   // URL to profile picture
   emailVerified             DateTime? // When email was verified
   emailVerificationToken    String?   @unique

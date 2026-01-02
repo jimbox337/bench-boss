@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string;
   password: string; // hashed
+  role: string; // user or admin
   profilePicture: string | null;
   emailVerified: Date | null;
   createdAt: Date;

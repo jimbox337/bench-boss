@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     // Check if user is admin
     const userId = (session.user as any).id;
     const user = await getUserById(userId);
-    if (!user || !isAdmin(user.username)) {
+    if (!user || !isAdmin(user)) {
       return NextResponse.json(
         { success: false, error: 'Forbidden - Admin access only' },
         { status: 403 }

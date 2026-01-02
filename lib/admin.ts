@@ -1,9 +1,9 @@
-/**
- * Check if a user is an admin
- */
-export function isAdmin(username?: string | null): boolean {
-  if (!username) return false;
+import { User } from './users';
 
-  const adminUsernames = process.env.ADMIN_USERNAMES?.split(',').map(u => u.trim().toLowerCase()) || [];
-  return adminUsernames.includes(username.toLowerCase());
+/**
+ * Check if a user is an admin based on their role
+ */
+export function isAdmin(user?: User | null): boolean {
+  if (!user) return false;
+  return user.role === 'admin';
 }
