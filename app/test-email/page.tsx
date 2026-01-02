@@ -9,6 +9,38 @@ export default function TestEmailPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState('');
 
+  const handleTestVerification = async () => {
+    if (!to) {
+      setResult('❌ Please enter an email address');
+      return;
+    }
+
+    setIsLoading(true);
+    setResult('');
+
+    try {
+      console.log('📧 Sending verification email to:', to);
+      const response = await fetch('/api/test-verification-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: to }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setResult(`✅ Verification email sent successfully to ${to}! Check your inbox.`);
+      } else {
+        setResult(`❌ Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      setResult(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -233,8 +265,26 @@ export default function TestEmailPage() {
             disabled={isLoading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Sending...' : 'Send Email'}
+            {isLoading ? 'Sending...' : 'Send Custom Email'}
           </button>
+
+          {/* Test Verification Email Button */}
+          <div className="mt-4 pt-4 border-t border-slate-600">
+            <p className="text-sm text-slate-400 mb-3">
+              Or test the actual verification email template:
+            </p>
+            <button
+              type="button"
+              onClick={handleTestVerification}
+              disabled={isLoading || !to}
+              className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Sending...' : '🏒 Send Verification Email'}
+            </button>
+            <p className="text-xs text-slate-500 mt-2">
+              This will send the real verification email template to the email address above
+            </p>
+          </div>
         </form>
 
         <div className="mt-6 p-4 bg-slate-750 rounded-lg border border-slate-600">

@@ -17,6 +17,11 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
   try {
     // If Resend is configured, use the SDK
     if (resend) {
+      console.log('📧 Sending email via Resend SDK...');
+      console.log('  To:', to);
+      console.log('  Subject:', subject);
+      console.log('  From:', process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>');
+
       const { data, error } = await resend.emails.send({
         from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>',
         to,
@@ -25,23 +30,24 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
       });
 
       if (error) {
-        console.error('Failed to send email:', error);
+        console.error('❌ Resend API Error:', error);
         return false;
       }
 
-      console.log('✅ Email sent successfully:', data);
+      console.log('✅ Email sent successfully! Email ID:', data?.id);
       return true;
+    } else {
+      console.error('❌ Resend SDK not initialized - RESEND_API_KEY is missing from environment variables');
     }
 
     // If no email service is configured, log to console (development mode)
     console.log('📧 Email would be sent in production:');
     console.log('To:', to);
     console.log('Subject:', subject);
-    console.log('HTML:', html);
 
-    return true;
+    return false;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ Error sending email:', error);
     return false;
   }
 }
