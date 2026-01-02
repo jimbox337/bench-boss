@@ -19,6 +19,89 @@ const isBuildTime = () => {
   return process.env.NEXT_PHASE === 'phase-production-build';
 };
 
+export async function createPendingUser(
+  username: string,
+  email: string,
+  name: string,
+  password: string
+): Promise<{ id: string; email: string; name: string } | null> {
+  if (isBuildTime()) {
+    console.log('Skipping pending user creation during build');
+    return null;
+  }
+
+  try {
+    // Check if user already exists (in both User and PendingUser tables)
+    const existingUser = await prisma.user.findUnique({
+      where: { username: username.toLowerCase() }
+    });
+
+    const existingPendingUser = await prisma.pendingUser.findUnique({
+      where: { username: username.toLowerCase() }
+    });
+
+    if (existingUser || existingPendingUser) {
+      return null;
+    }
+
+    // Check if email already exists (in both tables)
+    const existingEmailUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    const existingEmailPending = await prisma.pendingUser.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (existingEmailUser || existingEmailPending) {
+      return null;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Generate email verification token
+    const verificationToken = generateToken();
+    const verificationExpires = new Date();
+    verificationExpires.setHours(verificationExpires.getHours() + 24); // 24 hour expiry
+
+    // Create pending user in database
+    const pendingUser = await prisma.pendingUser.create({
+      data: {
+        username: username.toLowerCase(),
+        email: email.toLowerCase(),
+        name: name,
+        password: hashedPassword,
+        verificationToken: verificationToken,
+        verificationExpires: verificationExpires,
+      },
+    });
+
+    // Send verification email (don't wait for it to complete)
+    console.log('📧 Attempting to send verification email to:', pendingUser.email);
+    sendVerificationEmail(pendingUser.email, pendingUser.name, verificationToken)
+      .then((success) => {
+        if (success) {
+          console.log('✅ Verification email sent successfully to:', pendingUser.email);
+        } else {
+          console.error('❌ Verification email failed to send to:', pendingUser.email);
+        }
+      })
+      .catch((error) => {
+        console.error('❌ Failed to send verification email to:', pendingUser.email, error);
+      });
+
+    return {
+      id: pendingUser.id,
+      email: pendingUser.email,
+      name: pendingUser.name,
+    };
+  } catch (error) {
+    console.error('Error creating pending user:', error);
+    return null;
+  }
+}
+
 export async function createUser(
   username: string,
   email: string,
@@ -52,12 +135,7 @@ export async function createUser(
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate email verification token
-    const verificationToken = generateToken();
-    const verificationExpires = new Date();
-    verificationExpires.setHours(verificationExpires.getHours() + 24); // 24 hour expiry
-
-    // Create user in database
+    // Create user in database with verified email
     const user = await prisma.user.create({
       data: {
         username: username.toLowerCase(),
@@ -65,24 +143,9 @@ export async function createUser(
         name: name,
         password: hashedPassword,
         profilePicture: null,
-        emailVerificationToken: verificationToken,
-        emailVerificationExpires: verificationExpires,
+        emailVerified: new Date(), // Auto-verify when created this way
       },
     });
-
-    // Send verification email (don't wait for it to complete)
-    console.log('📧 Attempting to send verification email to:', user.email);
-    sendVerificationEmail(user.email, user.name, verificationToken)
-      .then((success) => {
-        if (success) {
-          console.log('✅ Verification email sent successfully to:', user.email);
-        } else {
-          console.error('❌ Verification email failed to send to:', user.email);
-        }
-      })
-      .catch((error) => {
-        console.error('❌ Failed to send verification email to:', user.email, error);
-      });
 
     return user;
   } catch (error) {

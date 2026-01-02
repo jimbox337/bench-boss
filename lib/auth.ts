@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import { findUserByUsername, findUserByEmail, validatePassword, createUser } from './users';
+import { findUserByUsername, findUserByEmail, validatePassword, createPendingUser } from './users';
 import { prisma } from './prisma';
 
 export const authOptions: NextAuthOptions = {
@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
         const isSignUp = credentials.isSignUp === 'true';
 
         if (isSignUp) {
-          // Sign up flow
+          // Sign up flow - create pending user
           if (!credentials.email || !credentials.name) {
             throw new Error('Please enter email and name');
           }
@@ -39,22 +39,23 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Password must be at least 4 characters');
           }
 
-          const newUser = await createUser(
+          const pendingUser = await createPendingUser(
             credentials.username,
             credentials.email,
             credentials.name,
             credentials.password
           );
 
-          if (!newUser) {
+          if (!pendingUser) {
             throw new Error('Username or email already exists');
           }
 
+          // Return pending user info (won't actually log them in)
           return {
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            image: newUser.profilePicture,
+            id: pendingUser.id,
+            name: pendingUser.name,
+            email: pendingUser.email,
+            image: null,
           };
         } else {
           // Sign in flow

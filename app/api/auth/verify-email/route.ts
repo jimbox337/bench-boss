@@ -13,12 +13,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user with this verification token
-    const user = await prisma.user.findUnique({
-      where: { emailVerificationToken: token },
+    // Find pending user with this verification token
+    const pendingUser = await prisma.pendingUser.findUnique({
+      where: { verificationToken: token },
     });
 
-    if (!user) {
+    if (!pendingUser) {
       return NextResponse.json(
         { success: false, error: 'Invalid verification token' },
         { status: 400 }
@@ -26,33 +26,40 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if token has expired
-    if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
+    if (pendingUser.verificationExpires < new Date()) {
+      // Delete expired pending user
+      await prisma.pendingUser.delete({
+        where: { id: pendingUser.id },
+      });
+
       return NextResponse.json(
-        { success: false, error: 'Verification token has expired' },
+        { success: false, error: 'Verification token has expired. Please sign up again.' },
         { status: 400 }
       );
     }
 
-    // Check if already verified
-    if (user.emailVerified) {
-      return NextResponse.json(
-        { success: true, message: 'Email already verified' }
-      );
-    }
-
-    // Update user - mark as verified and clear token
-    await prisma.user.update({
-      where: { id: user.id },
+    // Create actual user from pending user
+    const user = await prisma.user.create({
       data: {
-        emailVerified: new Date(),
-        emailVerificationToken: null,
-        emailVerificationExpires: null,
+        username: pendingUser.username,
+        email: pendingUser.email,
+        name: pendingUser.name,
+        password: pendingUser.password, // Already hashed
+        emailVerified: new Date(), // Mark as verified immediately
+        profilePicture: null,
       },
     });
 
+    // Delete the pending user
+    await prisma.pendingUser.delete({
+      where: { id: pendingUser.id },
+    });
+
+    console.log('✅ User created and verified:', user.email);
+
     return NextResponse.json({
       success: true,
-      message: 'Email verified successfully',
+      message: 'Email verified successfully! You can now log in.',
     });
   } catch (error) {
     console.error('Error verifying email:', error);
