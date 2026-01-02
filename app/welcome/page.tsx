@@ -1,11 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useData } from '@/lib/DataContext';
 import { useEffect } from 'react';
 
 export default function WelcomePage() {
   const router = useRouter();
+  const { status } = useSession();
   const { myTeam, espnConfig } = useData();
 
   // Redirect if user already has a team or ESPN config
@@ -30,8 +32,53 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        {/* Options */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Step 1: Create Account or Login */}
+        {status === 'unauthenticated' && (
+          <div className="bg-gradient-to-br from-purple-900/30 to-slate-800 rounded-xl shadow-xl border border-purple-700/50 p-8 mb-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold text-slate-100 mb-3">
+                Step 1: Create Your Account
+              </h2>
+              <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
+                Sign up to save your teams, track your players, and get personalized recommendations across all your devices.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => router.push('/login?signup=true')}
+                  className="px-8 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                >
+                  Create Account
+                </button>
+                <button
+                  onClick={() => router.push('/login')}
+                  className="px-8 py-3 bg-slate-700 text-white rounded-lg font-semibold hover:bg-slate-600 transition-colors"
+                >
+                  Log In
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Sync League (only shown when logged in) */}
+        {status === 'authenticated' && (
+          <>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-slate-100 mb-2">
+                Step 2: Set Up Your Team
+              </h2>
+              <p className="text-slate-400">
+                Choose how you want to get started
+              </p>
+            </div>
+
+            {/* Options */}
+            <div className="grid md:grid-cols-2 gap-6">
           {/* ESPN Option */}
           <div className="bg-gradient-to-br from-red-900/30 to-slate-800 rounded-xl shadow-xl border border-red-700/50 p-8 hover:border-red-600 transition-all">
             <div className="flex flex-col h-full">
@@ -127,17 +174,19 @@ export default function WelcomePage() {
               </div>
             </div>
           </div>
-        </div>
+            </div>
 
-        {/* Skip Option */}
-        <div className="text-center mt-8">
-          <button
-            onClick={() => router.push('/')}
-            className="text-slate-400 hover:text-slate-200 text-sm transition-colors"
-          >
-            Skip for now, I'll set this up later
-          </button>
-        </div>
+            {/* Skip Option */}
+            <div className="text-center mt-8">
+              <button
+                onClick={() => router.push('/')}
+                className="text-slate-400 hover:text-slate-200 text-sm transition-colors"
+              >
+                Skip for now, I'll set this up later
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
