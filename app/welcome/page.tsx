@@ -9,20 +9,9 @@ export default function WelcomePage() {
   const router = useRouter();
   const { status } = useSession();
   const { myTeam, espnConfig } = useData();
-  const hasRedirected = useRef(false);
 
-  // Redirect if user already has a team or ESPN config
-  useEffect(() => {
-    if (hasRedirected.current) return;
-
-    if (myTeam && myTeam.length > 0) {
-      hasRedirected.current = true;
-      router.push('/');
-    } else if (espnConfig) {
-      hasRedirected.current = true;
-      router.push('/');
-    }
-  }, [myTeam, espnConfig, router]);
+  // Don't auto-redirect on welcome page
+  // This page is intentionally for setting up teams, even if one exists
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
