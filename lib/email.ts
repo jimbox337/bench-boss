@@ -64,7 +64,12 @@ export function generateToken(): string {
  * Send email verification email
  */
 export async function sendVerificationEmail(email: string, name: string, token: string): Promise<boolean> {
-  const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+  // Use Vercel URL in production, or NEXTAUTH_URL, or localhost as fallback
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
@@ -268,7 +273,12 @@ export async function sendVerificationEmail(email: string, name: string, token: 
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, name: string, token: string): Promise<boolean> {
-  const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+  // Use Vercel URL in production, or NEXTAUTH_URL, or localhost as fallback
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   const html = `
     <!DOCTYPE html>
