@@ -10,6 +10,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -39,6 +41,11 @@ function LoginForm() {
         setIsLoading(false);
         return;
       }
+      if (!firstName.trim()) {
+        setError('Please enter your first name');
+        setIsLoading(false);
+        return;
+      }
     }
 
     if (password.length < 4) {
@@ -48,10 +55,14 @@ function LoginForm() {
     }
 
     try {
+      const fullName = lastName.trim()
+        ? `${firstName.trim()} ${lastName.trim()}`
+        : firstName.trim();
+
       const result = await signIn('credentials', {
         username,
         email: isSignUp ? email : undefined,
-        name: isSignUp ? email.split('@')[0] : undefined, // Auto-generate name from email
+        name: isSignUp ? fullName : undefined,
         password,
         isSignUp: isSignUp.toString(),
         redirect: false,
@@ -137,19 +148,49 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {isSignUp && (
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
-                  placeholder="Enter your email"
-                  required={isSignUp}
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
+                    placeholder="Enter your email"
+                    required={isSignUp}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
+                      placeholder="First name"
+                      required={isSignUp}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Last Name <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
+                      placeholder="Last name"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             <div>

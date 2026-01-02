@@ -1,15 +1,61 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useData } from '@/lib/DataContext';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
 import { Player } from '@/lib/calculator';
 
 export default function MyTeam() {
+  const router = useRouter();
   const { players, myTeam, addToMyTeam, removeFromMyTeam } = useData();
   const [search, setSearch] = useState('');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+
+  // Show empty state if no team
+  if (myTeam.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-12">
+            {/* Icon */}
+            <div className="w-24 h-24 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-slate-100 mb-3">
+              No Team Yet
+            </h2>
+
+            {/* Description */}
+            <p className="text-slate-400 mb-8 text-lg">
+              Get started by adding your fantasy hockey team. Connect your ESPN league or build a custom team.
+            </p>
+
+            {/* Action Button */}
+            <button
+              onClick={() => router.push('/teams/new')}
+              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-lg inline-flex items-center gap-2"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Your First Team
+            </button>
+
+            {/* Help Text */}
+            <p className="text-slate-500 mt-6 text-sm">
+              You can always add more teams later from the settings page
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const availablePlayers = players.filter(p => !myTeam.some(tp => tp.id === p.id));
 
