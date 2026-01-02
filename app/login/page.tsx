@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import BenchBossLogo from '@/components/BenchBossLogo';
 
 function LoginForm() {
   const router = useRouter();
@@ -76,17 +77,10 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-8">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏒</div>
-          <h1 className="text-4xl font-bold text-white mb-2">Bench Boss</h1>
-          <p className="text-slate-300">Fantasy Hockey Assistant</p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-8">
+    <div className="min-h-screen flex">
+      {/* Left Side - Login Form (50%) */}
+      <div className="w-1/2 bg-slate-800 flex items-center justify-center p-12">
+        <div className="max-w-md w-full">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
@@ -212,6 +206,13 @@ function LoginForm() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Right Side - Logo (50%) */}
+      <div className="w-1/2 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col items-center justify-center">
+        <BenchBossLogo size={300} />
+        <h1 className="text-5xl font-bold text-white mt-8 mb-3">Bench Boss</h1>
+        <p className="text-xl text-slate-300">Fantasy Hockey Assistant</p>
       </div>
     </div>
   );

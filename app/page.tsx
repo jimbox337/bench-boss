@@ -2,9 +2,13 @@
 
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { players, projections, isLoading, isLiveData, myTeam } = useData();
+  const { data: session } = useSession();
+  const router = useRouter();
 
   // Calculate total projected points for the week
   const totalPoints = myTeam.reduce((sum, player) => {
@@ -124,12 +128,18 @@ export default function Dashboard() {
           <div className="text-6xl mb-4">👕</div>
           <h3 className="text-xl font-bold text-slate-100 mb-2">No Team Yet</h3>
           <p className="text-slate-400 mb-6">Add players to your roster to get started</p>
-          <a
-            href="/myteam"
+          <button
+            onClick={() => {
+              if (!session) {
+                router.push('/login');
+              } else {
+                router.push('/myteam');
+              }
+            }}
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             Build My Team
-          </a>
+          </button>
         </div>
       )}
     </div>
