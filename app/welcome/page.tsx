@@ -10,7 +10,9 @@ export default function WelcomePage() {
 
   // Redirect if user already has a team or ESPN config
   useEffect(() => {
-    if (myTeam.length > 0 || espnConfig) {
+    if (myTeam && myTeam.length > 0) {
+      router.push('/');
+    } else if (espnConfig) {
       router.push('/');
     }
   }, [myTeam, espnConfig, router]);
