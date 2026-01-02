@@ -20,17 +20,18 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
       console.log('📧 Sending email via Resend SDK...');
       console.log('  To:', to);
       console.log('  Subject:', subject);
-      console.log('  From:', process.env.EMAIL_FROM || 'Bench Boss <onboarding@resend.dev>');
+      console.log('  From:', process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>');
 
       const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_FROM || 'Bench Boss <onboarding@resend.dev>',
+        from: process.env.EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>',
         to,
         subject,
         html,
       });
 
       if (error) {
-        console.error('❌ Resend API Error:', error);
+        console.error('❌ Resend API Error:', JSON.stringify(error, null, 2));
+        console.error('Full error object:', error);
         return false;
       }
 
