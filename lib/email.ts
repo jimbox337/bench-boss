@@ -64,10 +64,10 @@ export function generateToken(): string {
  * Send email verification email
  */
 export async function sendVerificationEmail(email: string, name: string, token: string): Promise<boolean> {
-  // Use Vercel URL in production, or NEXTAUTH_URL, or localhost as fallback
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  // Use NEXTAUTH_URL if set, otherwise fall back to VERCEL_URL or localhost
+  const baseUrl = process.env.NEXTAUTH_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+    || 'http://localhost:3000';
 
   const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
@@ -273,10 +273,10 @@ export async function sendVerificationEmail(email: string, name: string, token: 
  * Send password reset email
  */
 export async function sendPasswordResetEmail(email: string, name: string, token: string): Promise<boolean> {
-  // Use Vercel URL in production, or NEXTAUTH_URL, or localhost as fallback
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  // Use NEXTAUTH_URL if set, otherwise fall back to VERCEL_URL or localhost
+  const baseUrl = process.env.NEXTAUTH_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+    || 'http://localhost:3000';
 
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
