@@ -2,14 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
+import { isAdmin } from '@/lib/admin';
+import { getUserById } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Unauthorized - Please log in' },
         { status: 401 }
+      );
+    }
+
+    // Check if user is admin
+    const user = await getUserById(session.user.id);
+    if (!user || !isAdmin(user.username)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden - Admin access only' },
+        { status: 403 }
       );
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -12,9 +12,33 @@ export default function TestEmailPage() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState('');
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
+
+  // Check admin status
+  useEffect(() => {
+    if (status === 'authenticated') {
+      // Try to make a request to verify admin access
+      fetch('/api/test-verification-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@test.com' }),
+      })
+        .then(res => {
+          if (res.status === 403) {
+            // Not an admin, redirect to home
+            router.push('/');
+          } else {
+            setIsCheckingAdmin(false);
+          }
+        })
+        .catch(() => {
+          setIsCheckingAdmin(false);
+        });
+    }
+  }, [status, router]);
 
   // Redirect if not logged in
-  if (status === 'loading') {
+  if (status === 'loading' || isCheckingAdmin) {
     return (
       <div className="p-8 max-w-2xl mx-auto">
         <div className="text-slate-400">Loading...</div>
