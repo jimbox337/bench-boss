@@ -1,9 +1,15 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { findUserByUsername, validatePassword, createUser } from './users';
+import GoogleProvider from 'next-auth/providers/google';
+import { findUserByUsername, findUserByEmail, validatePassword, createUser } from './users';
+import { prisma } from './prisma';
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -91,6 +97,45 @@ export const authOptions: NextAuthOptions = {
 
   // Callbacks
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Handle Google OAuth sign-in
+      if (account?.provider === 'google' && profile?.email) {
+        try {
+          // Check if user exists with this email
+          let existingUser = await findUserByEmail(profile.email);
+
+          if (!existingUser) {
+            // Create new user from Google account
+            const username = profile.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            existingUser = await prisma.user.create({
+              data: {
+                username: `${username}_${Date.now()}`, // Ensure unique username
+                email: profile.email.toLowerCase(),
+                name: profile.name || profile.email.split('@')[0],
+                password: '', // No password for OAuth users
+                profilePicture: (profile as any).picture || null,
+                emailVerified: new Date(), // Auto-verify Google emails
+              },
+            });
+          } else if (!existingUser.emailVerified) {
+            // Auto-verify email for existing users signing in with Google
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: { emailVerified: new Date() },
+            });
+          }
+
+          // Update user object with database ID
+          user.id = existingUser.id;
+        } catch (error) {
+          console.error('Error handling Google sign-in:', error);
+          return false;
+        }
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       // Add custom fields to JWT
       if (user) {

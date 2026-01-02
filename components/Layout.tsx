@@ -16,7 +16,7 @@ const navItems = [
   { icon: '⚙️', name: 'League Settings', path: '/settings' },
 ];
 
-const publicRoutes = ['/welcome', '/login'];
+const publicRoutes = ['/login'];
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -40,13 +40,6 @@ export default function Layout({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Redirect logic
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && !publicRoutes.includes(pathname)) {
-      router.push('/welcome');
-    }
-  }, [isLoading, isAuthenticated, pathname, router]);
-
   // If on public routes, show without sidebar
   if (publicRoutes.includes(pathname)) {
     return <>{children}</>;
@@ -62,11 +55,6 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
-  }
-
-  // If not authenticated, show nothing (redirect will happen)
-  if (!isAuthenticated) {
-    return null;
   }
 
   return (
@@ -101,37 +89,46 @@ export default function Layout({ children }: { children: ReactNode }) {
             })}
           </div>
 
-          {/* User Profile Dropdown */}
+          {/* User Profile Dropdown or Get Started Button */}
           <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 hover:bg-slate-700 rounded-lg p-1 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-bold border-2 border-transparent hover:border-blue-400 transition-all">
-                {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                ) : null}
-                <div className={`text-lg ${session?.user?.image ? 'hidden' : ''}`}>
-                  {session?.user?.name?.charAt(0).toUpperCase()}
-                </div>
-              </div>
-              <svg
-                className="w-4 h-4 text-slate-400 hidden md:block"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {isAuthenticated ? (
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-2 hover:bg-slate-700 rounded-lg p-1 transition-colors"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-bold border-2 border-transparent hover:border-blue-400 transition-all">
+                  {session?.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`text-lg ${session?.user?.image ? 'hidden' : ''}`}>
+                    {session?.user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+                <svg
+                  className="w-4 h-4 text-slate-400 hidden md:block"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push('/login')}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+              >
+                Get Started
+              </button>
+            )}
 
             {/* Dropdown Menu - Two Column Layout */}
             {isDropdownOpen && (
@@ -184,7 +181,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       <button
                         onClick={() => {
                           setIsDropdownOpen(false);
-                          router.push('/welcome');
+                          router.push('/settings');
                         }}
                         className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left border border-dashed border-slate-600"
                       >
@@ -243,7 +240,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       <div className="border-t border-slate-700 my-2"></div>
 
                       <button
-                        onClick={() => signOut({ callbackUrl: '/welcome' })}
+                        onClick={() => signOut({ callbackUrl: '/' })}
                         className="w-full flex items-center gap-3 px-2 py-2 text-sm text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

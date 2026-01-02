@@ -100,6 +100,24 @@ export async function findUserByUsername(username: string): Promise<User | null>
   }
 }
 
+export async function findUserByEmail(email: string): Promise<User | null> {
+  if (isBuildTime()) {
+    console.log('Skipping user lookup during build');
+    return null;
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    return user;
+  } catch (error) {
+    console.error('Error finding user by email:', error);
+    return null;
+  }
+}
+
 export async function validatePassword(user: User, password: string): Promise<boolean> {
   return bcrypt.compare(password, user.password);
 }
