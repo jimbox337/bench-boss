@@ -8,7 +8,7 @@ import { getUserById } from '@/lib/users';
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Please log in' },
         { status: 401 }
@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
-    const user = await getUserById(session.user.id);
+    const userId = (session.user as any).id;
+    const user = await getUserById(userId);
     if (!user || !isAdmin(user.username)) {
       return NextResponse.json(
         { success: false, error: 'Forbidden - Admin access only' },
