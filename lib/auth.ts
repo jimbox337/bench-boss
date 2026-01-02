@@ -95,11 +95,21 @@ export const authOptions: NextAuthOptions = {
   // Custom pages
   pages: {
     signIn: '/login',
-    error: '/login',
   },
 
   // Callbacks
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle OAuth errors by redirecting to login
+      if (url.includes('error=OAuthSignin') || url.includes('error=Configuration')) {
+        return `${baseUrl}/login`;
+      }
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
     async signIn({ user, account, profile }) {
       // Handle Google OAuth sign-in
       if (account?.provider === 'google' && profile?.email) {
