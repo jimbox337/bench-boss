@@ -79,14 +79,14 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form (50%) */}
-      <div className="w-1/2 bg-slate-800 flex items-center justify-center p-12">
+      <div className="w-1/2 bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center p-12">
         <div className="max-w-md w-full">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          <h2 className="text-3xl font-bold text-slate-800 mb-8 text-center">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
 
           {showVerificationMessage && (
-            <div className="bg-green-900/30 border border-green-600 text-green-200 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded-lg mb-4 shadow-sm">
               <div className="flex items-start gap-3">
                 <span className="text-xl">✅</span>
                 <div>
@@ -101,7 +101,7 @@ function LoginForm() {
           )}
 
           {error && (
-            <div className="bg-red-900/30 border border-red-600 text-red-200 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg mb-4 shadow-sm">
               {error}
             </div>
           )}
@@ -126,26 +126,26 @@ function LoginForm() {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-600"></div>
+                  <div className="w-full border-t border-gray-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-800 text-slate-400">Or continue with email</span>
+                  <span className="px-2 bg-gradient-to-br from-slate-50 to-gray-100 text-slate-600">Or continue with email</span>
                 </div>
               </div>
             </>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {isSignUp && (
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
                   placeholder="Enter your email"
                   required={isSignUp}
                 />
@@ -153,27 +153,27 @@ function LoginForm() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Username
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
                 placeholder="Enter your username"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-slate-300">
+                <label className="block text-sm font-semibold text-slate-700">
                   Password
                 </label>
                 {!isSignUp && (
                   <a
                     href="/forgot-password"
-                    className="text-xs text-blue-400 hover:text-blue-300"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Forgot password?
                   </a>
@@ -183,7 +183,7 @@ function LoginForm() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="w-full bg-white border-2 border-gray-300 text-slate-800 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none transition-colors"
                 placeholder="Enter your password"
               />
             </div>
@@ -191,7 +191,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {isLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </button>
@@ -200,7 +200,7 @@ function LoginForm() {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-blue-400 hover:text-blue-300 text-sm"
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
@@ -209,9 +209,8 @@ function LoginForm() {
       </div>
 
       {/* Right Side - Logo (50%) */}
-      <div className="w-1/2 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col items-center justify-center">
+      <div className="w-1/2 bg-white flex flex-col items-center justify-center">
         <BenchBossLogo size={500} />
-        <p className="text-2xl text-slate-300 mt-8">Fantasy Hockey Assistant</p>
       </div>
     </div>
   );
@@ -220,8 +219,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-slate-800">Loading...</div>
       </div>
     }>
       <LoginForm />
