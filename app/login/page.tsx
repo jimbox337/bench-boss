@@ -210,9 +210,8 @@ function LoginForm() {
 
       {/* Right Side - Logo (50%) */}
       <div className="w-1/2 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col items-center justify-center">
-        <BenchBossLogo size={300} />
-        <h1 className="text-5xl font-bold text-white mt-8 mb-3">Bench Boss</h1>
-        <p className="text-xl text-slate-300">Fantasy Hockey Assistant</p>
+        <BenchBossLogo size={500} />
+        <p className="text-2xl text-slate-300 mt-8">Fantasy Hockey Assistant</p>
       </div>
     </div>
   );
