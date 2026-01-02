@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 import { Player, Projection, LeagueSettings } from './calculator';
 import { ESPNLeagueConfig, ESPNLeagueInfo } from './espnFantasyApi';
 
@@ -47,48 +48,84 @@ const DataContext = createContext<DataContextType>({
 });
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const { data: session, status } = useSession();
   const [players, setPlayers] = useState<Player[]>([]);
   const [projections, setProjections] = useState<Projection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLiveData, setIsLiveData] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [myTeam, setMyTeamState] = useState<Player[]>(() => {
-    // Load from localStorage if available
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('benchBossMyTeam');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
-    return [];
-  });
+  const [myTeam, setMyTeamState] = useState<Player[]>([]);
+  const [teamDataLoaded, setTeamDataLoaded] = useState(false);
 
   // ESPN integration state
-  const [espnConfig, setESPNConfigState] = useState<ESPNLeagueConfig | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('benchBossESPNConfig');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
-    return null;
-  });
+  const [espnConfig, setESPNConfigState] = useState<ESPNLeagueConfig | null>(null);
 
   const [espnLeagueInfo, setESPNLeagueInfo] = useState<ESPNLeagueInfo | null>(null);
   const [espnTeams, setESPNTeams] = useState<any[]>([]);
 
   // League settings state - load from default calculator settings
   const [leagueSettings, setLeagueSettingsState] = useState<LeagueSettings>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('benchBossLeagueSettings');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    }
     // Import default settings from calculator
     const { defaultLeagueSettings } = require('./calculator');
     return defaultLeagueSettings;
   });
+
+  // Load team data from database when user logs in
+  useEffect(() => {
+    async function loadTeamFromDatabase() {
+      if (status === 'loading' || teamDataLoaded) return;
+
+      if (status === 'authenticated' && session?.user) {
+        try {
+          console.log('📦 Loading team data from database...');
+          const response = await fetch('/api/team');
+          const data = await response.json();
+
+          if (data.team) {
+            const team = data.team;
+            console.log('✅ Team data loaded from database:', team.name);
+
+            // Restore roster
+            if (team.roster && Array.isArray(team.roster)) {
+              setMyTeamState(team.roster as Player[]);
+            }
+
+            // Restore league settings
+            if (team.leagueSettings) {
+              setLeagueSettingsState(team.leagueSettings as LeagueSettings);
+            }
+
+            // Restore ESPN config
+            if (team.espnLeagueId) {
+              setESPNConfigState({
+                leagueId: team.espnLeagueId,
+                seasonId: team.seasonId || new Date().getFullYear(),
+                espnS2: team.espnS2 || undefined,
+                swid: team.swid || undefined,
+              });
+            }
+
+            setTeamDataLoaded(true);
+          } else {
+            console.log('📝 No team data found for user');
+            setTeamDataLoaded(true);
+          }
+        } catch (error) {
+          console.error('❌ Error loading team from database:', error);
+          setTeamDataLoaded(true);
+        }
+      } else if (status === 'unauthenticated') {
+        // Clear data when logged out
+        setMyTeamState([]);
+        setESPNConfigState(null);
+        const { defaultLeagueSettings } = require('./calculator');
+        setLeagueSettingsState(defaultLeagueSettings);
+        setTeamDataLoaded(false);
+      }
+    }
+
+    loadTeamFromDatabase();
+  }, [status, session, teamDataLoaded]);
 
   useEffect(() => {
     // Auto-load real NHL data using fast API
@@ -144,38 +181,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const saveTeamToDatabase = async (roster: Player[]) => {
+    if (status !== 'authenticated') return;
+
+    try {
+      await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: espnLeagueInfo?.name || 'My Team',
+          platform: espnConfig ? 'ESPN' : 'Custom',
+          espnLeagueId: espnConfig?.leagueId,
+          espnTeamId: localStorage.getItem('benchBossESPNTeamId') || undefined,
+          espnS2: espnConfig?.espnS2,
+          swid: espnConfig?.swid,
+          seasonId: espnConfig?.seasonId,
+          roster,
+          leagueSettings,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save team to database:', error);
+    }
+  };
+
   const addToMyTeam = (player: Player) => {
     const newTeam = [...myTeam, player];
     setMyTeamState(newTeam);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('benchBossMyTeam', JSON.stringify(newTeam));
-    }
+    saveTeamToDatabase(newTeam);
   };
 
   const removeFromMyTeam = (playerId: string) => {
     const newTeam = myTeam.filter(p => p.id !== playerId);
     setMyTeamState(newTeam);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('benchBossMyTeam', JSON.stringify(newTeam));
-    }
+    saveTeamToDatabase(newTeam);
   };
 
   const setMyTeam = (players: Player[]) => {
     setMyTeamState(players);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('benchBossMyTeam', JSON.stringify(players));
-    }
+    saveTeamToDatabase(players);
   };
 
   const setESPNConfig = (config: ESPNLeagueConfig | null) => {
     setESPNConfigState(config);
-    if (typeof window !== 'undefined') {
-      if (config) {
-        localStorage.setItem('benchBossESPNConfig', JSON.stringify(config));
-      } else {
-        localStorage.removeItem('benchBossESPNConfig');
-      }
-    }
   };
 
   const syncESPNLeague = async (config: ESPNLeagueConfig) => {
@@ -244,9 +292,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
     const mappedPlayers = mapESPNPlayersToNHL(team.roster, players);
 
-    setMyTeam(mappedPlayers);
+    // Update local state
+    setMyTeamState(mappedPlayers);
 
-    // Save selection
+    // Save to database
+    if (status === 'authenticated' && espnConfig) {
+      try {
+        await fetch('/api/team', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: team.name,
+            platform: 'ESPN',
+            logo: team.logo,
+            espnLeagueId: espnConfig.leagueId,
+            espnTeamId: teamId.toString(),
+            espnS2: espnConfig.espnS2,
+            swid: espnConfig.swid,
+            seasonId: espnConfig.seasonId,
+            roster: mappedPlayers,
+            leagueSettings,
+          }),
+        });
+        console.log('✅ Team saved to database');
+      } catch (error) {
+        console.error('Failed to save team to database:', error);
+      }
+    }
+
+    // Also save teamId to localStorage for backwards compatibility
     if (typeof window !== 'undefined') {
       localStorage.setItem('benchBossESPNTeamId', teamId.toString());
     }
@@ -256,9 +330,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const setLeagueSettings = (settings: LeagueSettings) => {
     setLeagueSettingsState(settings);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('benchBossLeagueSettings', JSON.stringify(settings));
-    }
+    // Settings will be saved to database when team is saved
   };
 
   return (

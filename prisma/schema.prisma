@@ -35,7 +35,13 @@ model Team {
   logo            String?  // Team logo URL
   espnLeagueId    String?
   espnTeamId      String?
+  espnS2          String?  // ESPN private league cookie
+  swid            String?  // ESPN private league cookie
+  seasonId        Int?     // ESPN season year
   isActive        Boolean  @default(true)
+  roster          Json?    // Array of Player objects
+  leagueSettings  Json?    // League scoring settings
+  lastSyncedAt    DateTime? // Last time ESPN data was synced
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
