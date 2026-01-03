@@ -5,13 +5,15 @@ import { useState } from 'react';
 
 export default function NewTeam() {
   const router = useRouter();
-  const [selectedPlatform, setSelectedPlatform] = useState<'espn' | 'custom' | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<'espn' | 'yahoo' | 'custom' | null>(null);
 
-  const handlePlatformSelect = (platform: 'espn' | 'custom') => {
+  const handlePlatformSelect = (platform: 'espn' | 'yahoo' | 'custom') => {
     setSelectedPlatform(platform);
 
     if (platform === 'espn') {
       router.push('/teams/espn');
+    } else if (platform === 'yahoo') {
+      router.push('/teams/yahoo');
     } else if (platform === 'custom') {
       router.push('/teams/custom');
     }
@@ -131,26 +133,31 @@ export default function NewTeam() {
           </button>
         </div>
 
-        {/* Yahoo Coming Soon */}
-        <div className="mt-6 bg-slate-800/50 border border-slate-700 rounded-xl p-6 opacity-60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-600/30 rounded-lg flex items-center justify-center">
-                <svg className="w-8 h-8 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-                  <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fontWeight="bold">
-                    Y!
-                  </text>
-                </svg>
+        {/* Yahoo Option */}
+        <div className="mt-6">
+          <button
+            onClick={() => handlePlatformSelect('yahoo')}
+            className="group w-full bg-gradient-to-br from-purple-900/30 to-slate-800 hover:from-purple-900/50 hover:to-slate-700 border-2 border-purple-700/50 hover:border-purple-600 rounded-2xl p-6 transition-all duration-300 text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fontWeight="bold">
+                      Y!
+                    </text>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">Yahoo Fantasy</h3>
+                  <p className="text-slate-400 text-sm">Connect your Yahoo league</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-300">Yahoo Fantasy</h3>
-                <p className="text-slate-500 text-sm">Coming Soon</p>
-              </div>
+              <span className="text-purple-400 font-semibold group-hover:text-purple-300 transition-colors">
+                Connect Yahoo →
+              </span>
             </div>
-            <span className="px-3 py-1 bg-purple-600/20 text-purple-400 text-xs font-medium rounded-lg">
-              In Development
-            </span>
-          </div>
+          </button>
         </div>
 
         <div className="mt-8 text-center">

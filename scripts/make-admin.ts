@@ -2,26 +2,43 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function makeAdmin() {
+async function main() {
+  // Find user by username or email
   const username = process.argv[2];
 
   if (!username) {
-    console.error('Usage: npx tsx scripts/make-admin.ts <username>');
+    console.error('Usage: npx tsx scripts/make-admin.ts <username-or-email>');
     process.exit(1);
   }
 
-  try {
-    const user = await prisma.user.update({
-      where: { username: username.toLowerCase() },
-      data: { role: 'admin' },
-    });
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { username: username },
+        { email: username },
+      ],
+    },
+  });
 
-    console.log(`✅ User "${user.username}" is now an admin!`);
-  } catch (error) {
-    console.error('❌ Error:', error);
-  } finally {
-    await prisma.$disconnect();
+  if (!user) {
+    console.error(`User not found: ${username}`);
+    process.exit(1);
   }
+
+  // Update user to admin
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { role: 'admin' },
+  });
+
+  console.log(`✅ User ${user.username} (${user.email}) is now an admin!`);
 }
 
-makeAdmin();
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
