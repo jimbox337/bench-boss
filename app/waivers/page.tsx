@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { rankWaiverTargets, defaultLeagueSettings, calculateFantasyPoints, Player } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function WaiverWire() {
   const { players, projections, myTeam } = useData();
@@ -17,6 +18,7 @@ export default function WaiverWire() {
   const targets = rankWaiverTargets(freeAgents, projections, defaultLeagueSettings);
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <h2 className="text-3xl font-bold text-slate-100 mb-6">Waiver Wire Targets</h2>
 
@@ -166,5 +168,6 @@ export default function WaiverWire() {
         />
       )}
     </div>
+    </ProtectedRoute>
   );
 }

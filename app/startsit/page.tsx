@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function StartSit() {
   const { players, projections } = useData();
@@ -41,6 +42,7 @@ export default function StartSit() {
   const winnerProj = points1 > points2 ? proj1 : proj2;
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <h2 className="text-3xl font-bold text-slate-100 mb-6">Start / Sit Tool</h2>
 
@@ -215,5 +217,6 @@ export default function StartSit() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

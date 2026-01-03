@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { calculateFantasyPoints, defaultLeagueSettings, optimizeLineup } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function LineupOptimizer() {
   const { projections, myTeam } = useData();
@@ -16,6 +17,7 @@ export default function LineupOptimizer() {
   const lineup = optimizeLineup(myTeam, projections, defaultLeagueSettings);
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <h2 className="text-3xl font-bold text-slate-100 mb-6">Lineup Optimizer</h2>
 
@@ -135,5 +137,6 @@ export default function LineupOptimizer() {
         </div>
       )}
     </div>
+    </ProtectedRoute>
   );
 }

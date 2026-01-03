@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import BenchBossLogo from './BenchBossLogo';
 
 const navItems = [
   { icon: '📊', name: 'Dashboard', path: '/' },
@@ -89,10 +90,13 @@ export default function Layout({ children }: { children: ReactNode }) {
       <nav className="bg-slate-800 border-b border-slate-700 py-2 z-50">
         <div className="flex items-center justify-between h-full px-4">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl">🏒</span>
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          >
+            <BenchBossLogo size={32} />
             <span className="text-lg font-bold text-slate-100 hidden lg:inline">Bench Boss</span>
-          </div>
+          </button>
 
           {/* Navigation Icons */}
           <div className="flex items-center space-x-1 flex-1 justify-center">

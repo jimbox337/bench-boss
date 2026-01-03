@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useData } from '@/lib/DataContext';
 import { Player } from '@/lib/calculator';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function PlayerExplorer() {
   const { players, myTeam } = useData();
@@ -50,6 +51,7 @@ export default function PlayerExplorer() {
     });
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <h2 className="text-3xl font-bold text-slate-100 mb-6">Player Explorer</h2>
 
@@ -216,5 +218,6 @@ export default function PlayerExplorer() {
         />
       )}
     </div>
+    </ProtectedRoute>
   );
 }

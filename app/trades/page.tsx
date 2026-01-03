@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { analyzeTrade, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function TradeAnalyzer() {
   const { players, projections, myTeam } = useData();
@@ -20,6 +21,7 @@ export default function TradeAnalyzer() {
   const analysis = analyzeTrade(playersOutObjs, playersInObjs, projections, defaultLeagueSettings);
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <h2 className="text-3xl font-bold text-slate-100 mb-6">Trade Analyzer</h2>
 
@@ -155,5 +157,6 @@ export default function TradeAnalyzer() {
         </>
       )}
     </div>
+    </ProtectedRoute>
   );
 }

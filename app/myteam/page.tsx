@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useData } from '@/lib/DataContext';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
 import { Player } from '@/lib/calculator';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function MyTeam() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function MyTeam() {
   // Show empty state if no team
   if (myTeam.length === 0) {
     return (
+      <ProtectedRoute requiresTeam={true}>
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="max-w-2xl w-full text-center">
           <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-12">
@@ -54,6 +56,7 @@ export default function MyTeam() {
           </div>
         </div>
       </div>
+      </ProtectedRoute>
     );
   }
 
@@ -73,6 +76,7 @@ export default function MyTeam() {
   };
 
   return (
+    <ProtectedRoute requiresTeam={true}>
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -242,5 +246,6 @@ export default function MyTeam() {
         />
       )}
     </div>
+    </ProtectedRoute>
   );
 }
