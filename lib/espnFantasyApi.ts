@@ -238,11 +238,28 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
         }
       }
 
+      // ESPN team structure can have multiple name formats:
+      // - team.name (direct name)
+      // - team.location + team.nickname (separate fields)
+      // - team.teamLocation + team.teamNickname (alternate fields)
+      let teamName = team.name;
+      if (!teamName) {
+        const location = team.location || team.teamLocation || '';
+        const nickname = team.nickname || team.teamNickname || '';
+        if (location && nickname) {
+          teamName = `${location} ${nickname}`;
+        } else if (location || nickname) {
+          teamName = location || nickname;
+        } else {
+          teamName = `Team ${team.id}`;
+        }
+      }
+
       teams.push({
         id: team.id,
-        name: team.name || (team.location && team.nickname ? `${team.location} ${team.nickname}` : team.location || team.nickname || `Team ${team.id}`),
-        abbrev: team.abbrev || '',
-        logo: team.logo || undefined,
+        name: teamName,
+        abbrev: team.abbrev || team.teamAbbrev || '',
+        logo: team.logo || team.logoUrl || undefined,
         roster,
       });
     }

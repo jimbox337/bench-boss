@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     let teams;
     try {
       teams = await fetchESPNTeams(espnConfig);
+      console.log('Fetched teams from ESPN:', JSON.stringify(teams, null, 2));
     } catch (error: any) {
       console.error('Error fetching ESPN teams:', error);
       return NextResponse.json({
