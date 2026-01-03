@@ -26,10 +26,10 @@ export async function GET() {
     });
 
     if (!team) {
-      return NextResponse.json({ team: null });
+      return NextResponse.json({ success: true, team: null });
     }
 
-    return NextResponse.json({ team });
+    return NextResponse.json({ success: true, team });
   } catch (error) {
     console.error('Error fetching team:', error);
     return NextResponse.json({ error: 'Failed to fetch team' }, { status: 500 });
@@ -118,10 +118,10 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ team });
+    return NextResponse.json({ success: true, team });
   } catch (error) {
     console.error('Error saving team:', error);
-    return NextResponse.json({ error: 'Failed to save team' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to save team' }, { status: 500 });
   }
 }
 
