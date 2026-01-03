@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import BenchBossLogo from '@/components/BenchBossLogo';
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
@@ -11,6 +12,7 @@ export default function VerifyEmailPage() {
 
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [message, setMessage] = useState('');
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     if (!token) {
@@ -33,11 +35,6 @@ export default function VerifyEmailPage() {
         if (data.success) {
           setStatus('success');
           setMessage(data.message || 'Your email has been verified successfully!');
-
-          // Redirect to login after 3 seconds
-          setTimeout(() => {
-            router.push('/login');
-          }, 3000);
         } else {
           setStatus('error');
           setMessage(data.error || 'Failed to verify email');
@@ -51,56 +48,82 @@ export default function VerifyEmailPage() {
     verifyEmail();
   }, [token, router]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (status === 'success') {
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            router.push('/login');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [status, router]);
+
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-8 max-w-md w-full">
-        <div className="text-center">
+    <div className="min-h-screen flex">
+      {/* Left Side - Verification Status (50%) */}
+      <div className="w-1/2 bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center p-12">
+        <div className="max-w-md w-full text-center">
           <div className="text-6xl mb-6">
             {status === 'verifying' && '⏳'}
             {status === 'success' && '✅'}
             {status === 'error' && '❌'}
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-100 mb-4">
+          <h1 className="text-3xl font-bold text-slate-800 mb-4">
             {status === 'verifying' && 'Verifying Your Email'}
             {status === 'success' && 'Email Verified!'}
             {status === 'error' && 'Verification Failed'}
           </h1>
 
-          <p className="text-slate-300 mb-6">
+          <p className="text-slate-700 mb-6 text-lg">
             {status === 'verifying' && 'Please wait while we verify your email address...'}
             {status === 'success' && message}
             {status === 'error' && message}
           </p>
 
           {status === 'success' && (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-400">
-                Redirecting to login in 3 seconds...
-              </p>
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-300 rounded-lg p-4">
+                <p className="text-blue-800 font-semibold text-lg">
+                  Redirecting in {countdown}...
+                </p>
+              </div>
               <Link
                 href="/login"
-                className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
               >
-                Go to Login
+                Go to Login Now
               </Link>
             </div>
           )}
 
           {status === 'error' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Link
                 href="/login"
-                className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
               >
                 Back to Login
               </Link>
-              <p className="text-xs text-slate-400 mt-4">
-                Need help? <Link href="/support" className="text-blue-400 hover:underline">Contact Support</Link>
+              <p className="text-sm text-slate-600 mt-4">
+                Need help? <Link href="/support" className="text-blue-600 hover:underline font-medium">Contact Support</Link>
               </p>
             </div>
           )}
         </div>
+      </div>
+
+      {/* Right Side - Logo (50%) */}
+      <div className="w-1/2 bg-white flex flex-col items-center justify-center">
+        <BenchBossLogo size={500} />
       </div>
     </div>
   );
