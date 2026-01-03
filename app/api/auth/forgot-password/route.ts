@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Send password reset email
-    await sendPasswordResetEmail(user.email, user.name, resetToken);
+    const displayName = user.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user.firstName;
+    await sendPasswordResetEmail(user.email, displayName, resetToken);
 
     return NextResponse.json({
       success: true,

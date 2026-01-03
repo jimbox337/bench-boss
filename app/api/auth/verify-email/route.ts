@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       data: {
         username: pendingUser.username,
         email: pendingUser.email,
-        name: pendingUser.name,
+        firstName: pendingUser.firstName,
+        lastName: pendingUser.lastName,
         password: pendingUser.password, // Already hashed
         emailVerified: new Date(), // Mark as verified immediately
         profilePicture: null,

@@ -6,7 +6,8 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string | null;
   password: string; // hashed
   role: string; // user or admin
   profilePicture: string | null;
@@ -22,9 +23,10 @@ const isBuildTime = () => {
 export async function createPendingUser(
   username: string,
   email: string,
-  name: string,
+  firstName: string,
+  lastName: string | null,
   password: string
-): Promise<{ id: string; email: string; name: string } | null> {
+): Promise<{ id: string; email: string; firstName: string; lastName: string | null } | null> {
   if (isBuildTime()) {
     console.log('Skipping pending user creation during build');
     return null;
@@ -70,7 +72,8 @@ export async function createPendingUser(
       data: {
         username: username.toLowerCase(),
         email: email.toLowerCase(),
-        name: name,
+        firstName: firstName,
+        lastName: lastName,
         password: hashedPassword,
         verificationToken: verificationToken,
         verificationExpires: verificationExpires,
@@ -79,7 +82,10 @@ export async function createPendingUser(
 
     // Send verification email (don't wait for it to complete)
     console.log('📧 Attempting to send verification email to:', pendingUser.email);
-    sendVerificationEmail(pendingUser.email, pendingUser.name, verificationToken)
+    const displayName = pendingUser.lastName
+      ? `${pendingUser.firstName} ${pendingUser.lastName}`
+      : pendingUser.firstName;
+    sendVerificationEmail(pendingUser.email, displayName, verificationToken)
       .then((success) => {
         if (success) {
           console.log('✅ Verification email sent successfully to:', pendingUser.email);
@@ -94,7 +100,8 @@ export async function createPendingUser(
     return {
       id: pendingUser.id,
       email: pendingUser.email,
-      name: pendingUser.name,
+      firstName: pendingUser.firstName,
+      lastName: pendingUser.lastName,
     };
   } catch (error) {
     console.error('Error creating pending user:', error);
@@ -105,7 +112,8 @@ export async function createPendingUser(
 export async function createUser(
   username: string,
   email: string,
-  name: string,
+  firstName: string,
+  lastName: string | null,
   password: string
 ): Promise<User | null> {
   if (isBuildTime()) {
@@ -140,7 +148,8 @@ export async function createUser(
       data: {
         username: username.toLowerCase(),
         email: email.toLowerCase(),
-        name: name,
+        firstName: firstName,
+        lastName: lastName,
         password: hashedPassword,
         profilePicture: null,
         emailVerified: new Date(), // Auto-verify when created this way

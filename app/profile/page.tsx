@@ -8,19 +8,79 @@ export default function ProfilePage() {
   const { data: session, update } = useSession();
   const router = useRouter();
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [profilePictureUrl, setProfilePictureUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (session?.user) {
-      setName(session.user.name || '');
-      setEmail(session.user.email || '');
-      setProfilePictureUrl(session.user.image || '');
-    }
+    const fetchUserData = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch('/api/user/profile');
+          const data = await response.json();
+
+          if (data.success) {
+            setFirstName(data.user.firstName || '');
+            setLastName(data.user.lastName || '');
+            setEmail(data.user.email || '');
+            setUsername(data.user.username || '');
+            setProfilePictureUrl(data.user.profilePicture || '');
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        } finally {
+          setIsFetching(false);
+        }
+      }
+    };
+
+    fetchUserData();
   }, [session]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage('Image must be less than 2MB');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      setMessage('Please upload an image file');
+      return;
+    }
+
+    setIsUploading(true);
+    setMessage('');
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProfilePictureUrl(base64String);
+        setIsUploading(false);
+        setMessage('Image uploaded! Click Save Changes to update your profile.');
+      };
+      reader.onerror = () => {
+        setMessage('Failed to read image file');
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setMessage('Failed to upload image');
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +92,8 @@ export default function ProfilePage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
+          firstName,
+          lastName,
           email,
           profilePicture: profilePictureUrl,
         }),
@@ -87,38 +148,88 @@ export default function ProfilePage() {
                 />
               ) : null}
               <div className={`w-full h-full flex items-center justify-center text-4xl font-bold text-white ${profilePictureUrl ? 'hidden' : ''}`}>
-                {name?.charAt(0)?.toUpperCase() || session?.user?.name?.charAt(0)?.toUpperCase() || '?'}
+                {firstName?.charAt(0)?.toUpperCase() || '?'}
               </div>
             </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Profile Picture URL
-              </label>
-              <input
-                type="url"
-                value={profilePictureUrl}
-                onChange={(e) => setProfilePictureUrl(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
-                placeholder="https://example.com/your-photo.jpg"
-              />
-              <p className="text-xs text-slate-400 mt-1">
-                Enter a URL to an image to use as your profile picture
-              </p>
+            <div className="w-full space-y-4">
+              {/* Upload from Computer */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Upload Profile Picture
+                </label>
+                <div className="flex items-center gap-3">
+                  <label
+                    htmlFor="file-upload"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? 'Uploading...' : 'Choose File'}
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  <span className="text-xs text-slate-400">Max 2MB</span>
+                </div>
+              </div>
+
+              {/* OR Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-600"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-slate-800 text-slate-400">OR</span>
+                </div>
+              </div>
+
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Profile Picture URL
+                </label>
+                <input
+                  type="url"
+                  value={profilePictureUrl?.startsWith('data:') ? '' : profilePictureUrl}
+                  onChange={(e) => setProfilePictureUrl(e.target.value)}
+                  className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+                  placeholder="https://example.com/your-photo.jpg"
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  Or enter a URL to an image
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                First Name
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Last Name <span className="text-slate-400">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
           </div>
 
           {/* Email */}
@@ -142,7 +253,7 @@ export default function ProfilePage() {
             </label>
             <input
               type="text"
-              value={session?.user?.email?.split('@')[0] || ''}
+              value={username}
               className="w-full bg-slate-700/50 border border-slate-600 text-slate-400 rounded-lg px-4 py-2 cursor-not-allowed"
               disabled
             />

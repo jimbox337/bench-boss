@@ -23,10 +23,37 @@ export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [hasTeam, setHasTeam] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
+
+  // Fetch user data and team info
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch('/api/user/profile');
+          const data = await response.json();
+
+          if (data.success) {
+            setUsername(data.user.username || '');
+          }
+
+          // Check if user has a team
+          const teamResponse = await fetch('/api/team');
+          const teamData = await teamResponse.json();
+          setHasTeam(teamData.success && teamData.team !== null);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [session]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -146,7 +173,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     <div className="flex-1">
                       <div className="font-semibold text-slate-100">{session?.user?.name}</div>
                       <div className="text-sm text-slate-400">{session?.user?.email}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">@{session?.user?.email?.split('@')[0]}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">@{username}</div>
                     </div>
                   </div>
                 </div>
@@ -159,29 +186,39 @@ export default function Layout({ children }: { children: ReactNode }) {
                       My Teams
                     </div>
                     <div className="space-y-1 max-h-64 overflow-y-auto">
-                      {/* Placeholder teams - will be replaced with actual data */}
-                      <button
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left"
-                      >
-                        <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center flex-shrink-0">
-                          <img
-                            src="https://a.espncdn.com/redesign/assets/img/logos/espn-logo-white.svg"
-                            alt="ESPN"
-                            className="w-5 h-5"
-                          />
+                      {/* Only show team if user has one */}
+                      {hasTeam ? (
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            router.push('/myteam');
+                          }}
+                          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left"
+                        >
+                          <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center flex-shrink-0">
+                            <img
+                              src="https://a.espncdn.com/redesign/assets/img/logos/espn-logo-white.svg"
+                              alt="ESPN"
+                              className="w-5 h-5"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-slate-200 truncate">My Team</div>
+                            <div className="text-xs text-slate-400">ESPN</div>
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="px-2 py-4 text-center">
+                          <div className="text-slate-400 text-sm mb-2">No teams yet</div>
+                          <div className="text-xs text-slate-500">Add a team to get started</div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-slate-200 truncate">Current Team</div>
-                          <div className="text-xs text-slate-400">ESPN</div>
-                        </div>
-                      </button>
+                      )}
 
                       {/* Add New Team Button */}
                       <button
                         onClick={() => {
                           setIsDropdownOpen(false);
-                          router.push('/settings');
+                          router.push('/teams/new');
                         }}
                         className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left border border-dashed border-slate-600"
                       >

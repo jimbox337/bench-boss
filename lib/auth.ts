@@ -18,7 +18,8 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         username: { label: 'Username', type: 'text' },
         email: { label: 'Email', type: 'email' },
-        name: { label: 'Name', type: 'text' },
+        firstName: { label: 'First Name', type: 'text' },
+        lastName: { label: 'Last Name', type: 'text' },
         password: { label: 'Password', type: 'password' },
         isSignUp: { label: 'Sign Up', type: 'text' },
       },
@@ -31,8 +32,8 @@ export const authOptions: NextAuthOptions = {
 
         if (isSignUp) {
           // Sign up flow - create pending user
-          if (!credentials.email || !credentials.name) {
-            throw new Error('Please enter email and name');
+          if (!credentials.email || !credentials.firstName) {
+            throw new Error('Please enter email and first name');
           }
 
           if (credentials.password.length < 4) {
@@ -42,7 +43,8 @@ export const authOptions: NextAuthOptions = {
           const pendingUser = await createPendingUser(
             credentials.username,
             credentials.email,
-            credentials.name,
+            credentials.firstName,
+            credentials.lastName || null,
             credentials.password
           );
 
@@ -51,9 +53,13 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Return pending user info (won't actually log them in)
+          const displayName = pendingUser.lastName
+            ? `${pendingUser.firstName} ${pendingUser.lastName}`
+            : pendingUser.firstName;
+
           return {
             id: pendingUser.id,
-            name: pendingUser.name,
+            name: displayName,
             email: pendingUser.email,
             image: null,
           };
@@ -76,9 +82,13 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
           }
 
+          const displayName = user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.firstName;
+
           return {
             id: user.id,
-            name: user.name,
+            name: displayName,
             email: user.email,
             image: user.profilePicture,
           };
@@ -127,11 +137,17 @@ export const authOptions: NextAuthOptions = {
             // Create new user from Google account
             const username = profile.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
 
+            const fullName = profile.name || profile.email.split('@')[0];
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0];
+            const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : null;
+
             existingUser = await prisma.user.create({
               data: {
                 username: `${username}_${Date.now()}`, // Ensure unique username
                 email: profile.email.toLowerCase(),
-                name: profile.name || profile.email.split('@')[0],
+                firstName: firstName,
+                lastName: lastName,
                 password: '', // No password for OAuth users
                 profilePicture: (profile as any).picture || null,
                 emailVerified: new Date(), // Auto-verify Google emails

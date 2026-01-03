@@ -55,14 +55,11 @@ function LoginForm() {
     }
 
     try {
-      const fullName = lastName.trim()
-        ? `${firstName.trim()} ${lastName.trim()}`
-        : firstName.trim();
-
       const result = await signIn('credentials', {
         username,
         email: isSignUp ? email : undefined,
-        name: isSignUp ? fullName : undefined,
+        firstName: isSignUp ? firstName : undefined,
+        lastName: isSignUp ? lastName : undefined,
         password,
         isSignUp: isSignUp.toString(),
         redirect: false,
