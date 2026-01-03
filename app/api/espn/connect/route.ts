@@ -109,8 +109,8 @@ export async function POST(request: Request) {
       espnS2: espnS2 || null,
       swid: swid || null,
       seasonId: seasonId.toString(),
-      roster: selectedTeam.roster,
-      leagueSettings: leagueInfo.settings,
+      roster: selectedTeam.roster as any,
+      leagueSettings: leagueInfo.settings as any,
       lastSyncedAt: new Date(),
       isActive: true,
     };

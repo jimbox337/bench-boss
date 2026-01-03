@@ -51,7 +51,7 @@ model Team {
   espnTeamId      String?
   espnS2          String?  // ESPN private league cookie
   swid            String?  // ESPN private league cookie
-  seasonId        Int?     // ESPN season year
+  seasonId        String?  // ESPN season year
   isActive        Boolean  @default(true)
   roster          Json?    // Array of Player objects
   leagueSettings  Json?    // League scoring settings
