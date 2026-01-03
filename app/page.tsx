@@ -4,11 +4,31 @@ import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator'
 import { useData } from '@/lib/DataContext';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
   const { players, projections, isLoading, isLiveData, myTeam } = useData();
   const { data: session } = useSession();
   const router = useRouter();
+  const [hasTeam, setHasTeam] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkTeam = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch('/api/team');
+          const data = await response.json();
+          setHasTeam(data.success && data.team !== null);
+        } catch (error) {
+          setHasTeam(false);
+        }
+      } else {
+        setHasTeam(false);
+      }
+    };
+
+    checkTeam();
+  }, [session]);
 
   // Calculate total projected points for the week
   const totalPoints = myTeam.reduce((sum, player) => {
@@ -16,6 +36,200 @@ export default function Dashboard() {
     if (!proj) return sum;
     return sum + calculateFantasyPoints(proj, defaultLeagueSettings);
   }, 0);
+
+  // Show welcome page if no team is linked
+  if (hasTeam === false) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        {/* Hero Section */}
+        <div className="p-8 pt-12">
+          <div className="max-w-6xl mx-auto text-center mb-12">
+            <div className="text-6xl mb-4">🏒</div>
+            <h1 className="text-5xl font-bold text-slate-100 mb-4">Welcome to Bench Boss</h1>
+            <p className="text-xl text-slate-400 mb-8">
+              Your ultimate fantasy hockey companion. Get started by linking your team.
+            </p>
+            <button
+              onClick={() => router.push('/teams/new')}
+              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-xl transition-colors shadow-lg hover:shadow-xl"
+            >
+              Add Your Team
+            </button>
+          </div>
+
+          {/* Features Grid */}
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-blue-600 transition-colors">
+              <div className="text-4xl mb-3">⚡</div>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">Lineup Optimizer</h3>
+              <p className="text-slate-400 text-sm">
+                Maximize your weekly points with AI-powered lineup recommendations
+              </p>
+            </div>
+
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-purple-600 transition-colors">
+              <div className="text-4xl mb-3">🔄</div>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">Trade Analyzer</h3>
+              <p className="text-slate-400 text-sm">
+                Evaluate trade proposals with advanced analytics and projections
+              </p>
+            </div>
+
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-green-600 transition-colors">
+              <div className="text-4xl mb-3">🎯</div>
+              <h3 className="text-xl font-bold text-slate-100 mb-2">Waiver Targets</h3>
+              <p className="text-slate-400 text-sm">
+                Discover hidden gems and trending players on the waiver wire
+              </p>
+            </div>
+          </div>
+
+          {/* NHL News Section */}
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-slate-100">Latest NHL News</h2>
+              <a
+                href="https://www.nhl.com/news"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 text-sm"
+              >
+                View More →
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* News Card 1 */}
+              <a
+                href="https://www.nhl.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-blue-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-blue-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">🏆</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-blue-400 transition-colors">
+                    NHL Standings Update
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    Check out the latest standings and playoff race updates from around the league
+                  </p>
+                  <span className="text-xs text-slate-500">NHL.com</span>
+                </div>
+              </a>
+
+              {/* News Card 2 */}
+              <a
+                href="https://www.nhl.com/stats"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-purple-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-purple-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">📊</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-purple-400 transition-colors">
+                    Player Stats & Leaders
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    View the top scorers, goalies, and statistical leaders across the NHL
+                  </p>
+                  <span className="text-xs text-slate-500">NHL Stats</span>
+                </div>
+              </a>
+
+              {/* News Card 3 */}
+              <a
+                href="https://www.nhl.com/video"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-orange-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-orange-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">🎥</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-orange-400 transition-colors">
+                    Game Highlights
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    Watch the best goals, saves, and moments from recent NHL games
+                  </p>
+                  <span className="text-xs text-slate-500">NHL Video</span>
+                </div>
+              </a>
+
+              {/* News Card 4 */}
+              <a
+                href="https://www.nhl.com/news/injuries"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-red-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-red-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">🏥</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-red-400 transition-colors">
+                    Injury Reports
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    Stay updated on player injuries and their fantasy hockey impact
+                  </p>
+                  <span className="text-xs text-slate-500">NHL Injuries</span>
+                </div>
+              </a>
+
+              {/* News Card 5 */}
+              <a
+                href="https://www.nhl.com/news/trades"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-green-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-green-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">🔄</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-green-400 transition-colors">
+                    Trade Deadline News
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    Follow the latest trades, rumors, and roster moves around the NHL
+                  </p>
+                  <span className="text-xs text-slate-500">NHL Trades</span>
+                </div>
+              </a>
+
+              {/* News Card 6 */}
+              <a
+                href="https://www.nhl.com/stanley-cup-playoffs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-slate-800 border border-slate-700 rounded-xl overflow-hidden hover:border-yellow-600 transition-all"
+              >
+                <div className="aspect-video bg-gradient-to-br from-yellow-900/30 to-slate-700 flex items-center justify-center">
+                  <span className="text-6xl">🥇</span>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-100 mb-2 group-hover:text-yellow-400 transition-colors">
+                    Playoff Picture
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-3">
+                    Track the playoff race and postseason matchups as they develop
+                  </p>
+                  <span className="text-xs text-slate-500">NHL Playoffs</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
