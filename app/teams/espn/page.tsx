@@ -263,7 +263,7 @@ export default function ESPNSetup() {
                 placeholder="2025"
               />
               <p className="text-xs text-slate-400 mt-2">
-                Current season (2024-2025)
+                Current season (2025-2026)
               </p>
             </div>
 
