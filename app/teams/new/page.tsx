@@ -11,11 +11,9 @@ export default function NewTeam() {
     setSelectedPlatform(platform);
 
     if (platform === 'espn') {
-      // Redirect to settings page for ESPN connection
-      router.push('/settings');
+      router.push('/teams/espn');
     } else if (platform === 'custom') {
-      // Redirect to settings page for custom league setup
-      router.push('/settings');
+      router.push('/teams/custom');
     }
   };
 
