@@ -48,8 +48,8 @@ export async function POST(request: Request) {
       espnS2: null,
       swid: null,
       seasonId: '2025',
-      roster: null,
-      leagueSettings: null,
+      roster: null as any,
+      leagueSettings: null as any,
       lastSyncedAt: new Date(),
       isActive: true,
     };
