@@ -240,7 +240,7 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
 
       teams.push({
         id: team.id,
-        name: team.name || team.location + ' ' + team.nickname,
+        name: team.name || (team.location && team.nickname ? `${team.location} ${team.nickname}` : team.location || team.nickname || `Team ${team.id}`),
         abbrev: team.abbrev || '',
         logo: team.logo || undefined,
         roster,
