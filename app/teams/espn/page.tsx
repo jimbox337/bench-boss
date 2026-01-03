@@ -253,18 +253,17 @@ export default function ESPNSetup() {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Season Year *
+                Season Year
               </label>
               <input
                 type="text"
                 value={seasonId}
-                onChange={(e) => setSeasonId(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-red-500 focus:outline-none"
+                readOnly
+                className="w-full bg-slate-600 border border-slate-600 text-slate-300 rounded-lg px-4 py-3 cursor-not-allowed"
                 placeholder="2025"
-                required
               />
               <p className="text-xs text-slate-400 mt-2">
-                Current fantasy season year (usually {new Date().getFullYear()})
+                Current season (2024-2025)
               </p>
             </div>
 
