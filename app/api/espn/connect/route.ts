@@ -78,7 +78,10 @@ export async function POST(request: Request) {
           abbrev: t.abbrev,
           logo: t.logo,
         })),
-        espnConfig,
+        leagueId,
+        seasonId,
+        espnS2,
+        swid,
       });
     }
 
