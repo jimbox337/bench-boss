@@ -31,7 +31,7 @@ export default function ESPNSetup() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
   const handleOpenESPN = () => {
-    window.open('https://fantasy.espn.com/hockey/', '_blank');
+    window.open('https://www.espn.com/fantasy/hockey/', '_blank');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
