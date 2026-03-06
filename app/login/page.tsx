@@ -243,6 +243,23 @@ function LoginForm() {
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
           </div>
+
+          <div className="mt-4 text-center">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-gradient-to-br from-slate-50 to-gray-100 text-xs text-slate-400">or</span>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push('/')}
+              className="mt-4 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
+            >
+              Continue as Guest
+            </button>
+          </div>
         </div>
       </div>
 
