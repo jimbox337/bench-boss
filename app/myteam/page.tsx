@@ -68,10 +68,10 @@ export default function MyTeam() {
   );
 
   const groupedByPosition = {
-    C: myTeam.filter(p => p.positions.includes('C')),
-    LW: myTeam.filter(p => p.positions.includes('LW')),
-    RW: myTeam.filter(p => p.positions.includes('RW')),
-    D: myTeam.filter(p => p.positions.includes('D')),
+    C: myTeam.filter(p => p.positions?.includes('C')),
+    LW: myTeam.filter(p => p.positions?.includes('LW')),
+    RW: myTeam.filter(p => p.positions?.includes('RW')),
+    D: myTeam.filter(p => p.positions?.includes('D')),
     G: myTeam.filter(p => p.isGoalie),
   };
 
