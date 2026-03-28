@@ -9,10 +9,27 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function MyTeam() {
   const router = useRouter();
-  const { players, myTeam, addToMyTeam, removeFromMyTeam } = useData();
+  const { players, myTeam, addToMyTeam, removeFromMyTeam, setMyTeam, setESPNConfig } = useData();
   const [search, setSearch] = useState('');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteTeam = async () => {
+    setIsDeleting(true);
+    try {
+      await fetch('/api/team', { method: 'DELETE' });
+      setMyTeam([]);
+      setESPNConfig(null);
+      router.push('/');
+    } catch {
+      // silently fail
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   // Show empty state if no team
   if (myTeam.length === 0) {
@@ -83,13 +100,47 @@ export default function MyTeam() {
           <h2 className="text-3xl font-bold text-slate-100">My Team</h2>
           <p className="text-slate-400 mt-1">{myTeam.length} players on roster</p>
         </div>
-        <button
-          onClick={() => setShowAddPlayer(!showAddPlayer)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-        >
-          {showAddPlayer ? 'Close' : '+ Add Player'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAddPlayer(!showAddPlayer)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            {showAddPlayer ? 'Close' : '+ Add Player'}
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 bg-slate-700 text-red-400 rounded-lg font-medium hover:bg-red-900/30 hover:text-red-300 transition-colors border border-slate-600 hover:border-red-700"
+          >
+            Delete Team
+          </button>
+        </div>
       </div>
+
+      {/* Delete Confirm Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h3 className="text-xl font-bold text-slate-100 mb-2">Delete Team?</h3>
+            <p className="text-slate-400 text-sm mb-6">This will remove your team and all roster data. You can reconnect your league any time.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteTeam}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Player Section */}
       {showAddPlayer && (

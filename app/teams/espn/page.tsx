@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useData } from '@/lib/DataContext';
+import { mapESPNPlayersToNHL } from '@/lib/espnFantasyApi';
 
 interface ESPNTeam {
   id: number;
@@ -19,7 +20,7 @@ interface LeagueInfo {
 
 export default function ESPNSetup() {
   const router = useRouter();
-  const { syncESPNLeague, selectESPNTeam } = useData();
+  const { players, setMyTeam, setESPNConfig } = useData();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
   const [seasonId, setSeasonId] = useState('2025');
@@ -112,11 +113,33 @@ export default function ESPNSetup() {
         swid: swid || undefined,
       };
 
-      // Sync league into DataContext (populates espnTeams with full roster data)
-      await syncESPNLeague(config);
+      // Fetch full league data with rosters directly
+      const res = await fetch('/api/espn-league', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      const data = await res.json();
 
-      // Map ESPN players → NHL players and save to DB
-      await selectESPNTeam(selectedTeamId);
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch league data');
+      }
+
+      const selectedTeam = data.teams?.find((t: any) => t.id === selectedTeamId);
+      if (!selectedTeam) {
+        throw new Error('Selected team not found');
+      }
+
+      // Map ESPN roster entries to NHL Player objects using live player data
+      const mappedPlayers = mapESPNPlayersToNHL(selectedTeam.roster, players);
+
+      if (mappedPlayers.length === 0) {
+        throw new Error('No players could be matched. NHL player data may still be loading — try again in a moment.');
+      }
+
+      // Save to DataContext (this also persists to DB)
+      setESPNConfig(config);
+      setMyTeam(mappedPlayers);
 
       router.push('/myteam');
     } catch (err: any) {
