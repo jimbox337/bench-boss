@@ -20,7 +20,7 @@ export default function ESPNSetup() {
   const router = useRouter();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
-  const [seasonId, setSeasonId] = useState('2025');
+  const [seasonId, setSeasonId] = useState('2026');
   const [espnS2, setEspnS2] = useState('');
   const [swid, setSwid] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -285,7 +285,7 @@ export default function ESPNSetup() {
                 placeholder="2025"
               />
               <p className="text-xs text-slate-400 mt-2">
-                Current season (2025-2026)
+                Current season (2025-2026) — ESPN uses end year
               </p>
             </div>
 

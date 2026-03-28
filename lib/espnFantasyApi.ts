@@ -65,24 +65,38 @@ function buildLeagueUrl(config: ESPNLeagueConfig, view?: string): string {
 async function fetchESPN(url: string, config: ESPNLeagueConfig): Promise<any> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Fantasy-Source': 'kona',
+    'X-Fantasy-Platform': 'kona-PROD-c897b6aa89ea6e35c9d1e4f780a16fa28c44d62d',
   };
+
+  // Normalize SWID — ESPN requires curly braces
+  const rawSwid = config.swid?.trim() ?? '';
+  const swid = rawSwid && !rawSwid.startsWith('{') ? `{${rawSwid}}` : rawSwid;
 
   // Add cookies for private league access
   const cookies: string[] = [];
   if (config.espnS2) {
-    cookies.push(`espn_s2=${config.espnS2}`);
+    cookies.push(`espn_s2=${config.espnS2.trim()}`);
   }
-  if (config.swid) {
-    cookies.push(`SWID=${config.swid}`);
+  if (swid) {
+    cookies.push(`SWID=${swid}`);
   }
   if (cookies.length > 0) {
     headers['Cookie'] = cookies.join('; ');
   }
 
+  console.log(`ESPN fetch: ${url} | cookies: ${cookies.length > 0 ? 'yes' : 'none'}`);
+
   const response = await fetch(url, { headers });
 
   if (!response.ok) {
-    throw new Error(`ESPN API request failed: ${response.status} ${response.statusText}`);
+    const body = await response.text().catch(() => '');
+    console.error(`ESPN API error ${response.status}: ${body.slice(0, 200)}`);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(`Private league access denied (${response.status}). Check that your espn_s2 and SWID cookies are correct and not expired.`);
+    }
+    throw new Error(`ESPN API error ${response.status}: ${response.statusText}`);
   }
 
   return response.json();

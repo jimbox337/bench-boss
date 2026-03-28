@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       console.error('Error fetching ESPN league:', error);
       return NextResponse.json({
         success: false,
-        error: 'Failed to connect to ESPN league. Please check your League ID and try again. If your league is private, you may need to provide authentication cookies.',
+        error: error?.message || 'Failed to connect to ESPN league. Check your League ID and cookies.',
       }, { status: 400 });
     }
 
