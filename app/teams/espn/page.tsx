@@ -19,6 +19,7 @@ interface LeagueInfo {
 export default function ESPNSetup() {
   const router = useRouter();
   const [leagueId, setLeagueId] = useState('');
+  const [leagueIdInput, setLeagueIdInput] = useState('');
   const [seasonId, setSeasonId] = useState('2025');
   const [espnS2, setEspnS2] = useState('');
   const [swid, setSwid] = useState('');
@@ -32,6 +33,19 @@ export default function ESPNSetup() {
 
   const handleOpenESPN = () => {
     window.open('https://www.espn.com/fantasy/hockey/', '_blank');
+  };
+
+  const parseLeagueInput = (value: string) => {
+    setLeagueIdInput(value);
+    // Try to extract league ID from a pasted URL
+    const match = value.match(/leagueId=(\d+)/);
+    if (match) {
+      setLeagueId(match[1]);
+    } else if (/^\d+$/.test(value.trim())) {
+      setLeagueId(value.trim());
+    } else {
+      setLeagueId('');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -236,19 +250,27 @@ export default function ESPNSetup() {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                ESPN League ID *
+                ESPN League URL or ID *
               </label>
               <input
                 type="text"
-                value={leagueId}
-                onChange={(e) => setLeagueId(e.target.value)}
+                value={leagueIdInput}
+                onChange={(e) => parseLeagueInput(e.target.value)}
                 className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-red-500 focus:outline-none"
-                placeholder="12345678"
+                placeholder="Paste your league URL or just the ID"
                 required
               />
-              <p className="text-xs text-slate-400 mt-2">
-                Look at your ESPN league URL and find the number after "leagueId="
-              </p>
+              {leagueId && leagueIdInput !== leagueId && (
+                <p className="text-xs text-green-400 mt-2">League ID detected: <strong>{leagueId}</strong></p>
+              )}
+              {!leagueId && leagueIdInput && (
+                <p className="text-xs text-red-400 mt-2">Couldn't find a league ID — try pasting the full URL</p>
+              )}
+              {!leagueIdInput && (
+                <p className="text-xs text-slate-400 mt-2">
+                  Paste your ESPN league URL (e.g. <span className="text-slate-300">fantasy.espn.com/hockey/league?leagueId=12345678</span>) or just the numeric ID
+                </p>
+              )}
             </div>
 
             <div>
@@ -352,8 +374,8 @@ export default function ESPNSetup() {
             <ol className="text-xs text-slate-400 space-y-1 list-decimal list-inside">
               <li>Click "Open ESPN Fantasy Hockey" above</li>
               <li>Navigate to your league in the new tab</li>
-              <li>Copy the League ID from the URL (the number after "leagueId=")</li>
-              <li>Return here and paste it in the form</li>
+              <li>Copy the full URL from your browser's address bar</li>
+              <li>Paste the URL (or just the League ID) into the field below</li>
               <li>Click "Connect League" to sync your team</li>
             </ol>
           </div>
