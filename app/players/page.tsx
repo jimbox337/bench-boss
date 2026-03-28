@@ -193,7 +193,7 @@ export default function PlayerExplorer() {
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">{player.nhlTeam}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">{player.positions.join('/')}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">{player.positions?.join('/') ?? ''}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">{player.gamesPlayed || '-'}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-400">{player.seasonStats?.PTS || '-'}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">{player.seasonStats?.G || '-'}</td>

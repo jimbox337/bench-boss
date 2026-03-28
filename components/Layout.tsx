@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import BenchBossLogo from './BenchBossLogo';
+import { useData } from '@/lib/DataContext';
 
 const navItems = [
   { icon: '📊', name: 'Dashboard', path: '/' },
@@ -22,10 +23,29 @@ export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { espnConfig, syncESPNLeague } = useData();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [hasTeam, setHasTeam] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSync = async () => {
+    if (!espnConfig || isSyncing) return;
+    setIsSyncing(true);
+    setSyncStatus('idle');
+    try {
+      await syncESPNLeague(espnConfig);
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 2000);
+    } catch {
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 2000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
@@ -118,6 +138,34 @@ export default function Layout({ children }: { children: ReactNode }) {
               );
             })}
           </div>
+
+          {/* Sync Button - only show when ESPN is connected */}
+          {espnConfig && (
+            <button
+              onClick={handleSync}
+              disabled={isSyncing}
+              title="Sync ESPN roster"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all mr-2 ${
+                syncStatus === 'success'
+                  ? 'bg-green-600 text-white'
+                  : syncStatus === 'error'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              } disabled:opacity-50`}
+            >
+              <svg
+                className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span className="hidden sm:inline">
+                {isSyncing ? 'Syncing...' : syncStatus === 'success' ? 'Synced!' : syncStatus === 'error' ? 'Failed' : 'Sync'}
+              </span>
+            </button>
+          )}
 
           {/* User Profile Dropdown or Get Started Button */}
           <div className="relative" ref={dropdownRef}>

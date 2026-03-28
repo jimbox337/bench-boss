@@ -51,10 +51,10 @@ export async function analyzeLineup(
 ${leagueSettings.pointsPerStat ? `- Points per stat: ${JSON.stringify(leagueSettings.pointsPerStat)}` : ''}
 
 **Current Roster:**
-${roster.map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions.join('/')}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
+${roster.map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions?.join('/') ?? ''}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
 
 **Available Free Agents (Top 20):**
-${availablePlayers.slice(0, 20).map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions.join('/')}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
+${availablePlayers.slice(0, 20).map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions?.join('/') ?? ''}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
 
 Provide:
 1. Top 3 lineup optimization suggestions
@@ -122,10 +122,10 @@ export async function analyzeWaiverWire(
   const prompt = `You are a fantasy hockey expert. Analyze waiver wire opportunities.
 
 **My Team:**
-${myTeam.map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions.join('/')}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
+${myTeam.map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions?.join('/') ?? ''}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
 
 **Top Available Players:**
-${availablePlayers.slice(0, 30).map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions.join('/')}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
+${availablePlayers.slice(0, 30).map(p => `- ${p.name} (${p.nhlTeam}, ${p.positions?.join('/') ?? ''}) - ${p.seasonStats?.PTS || 0} PTS, ${p.seasonStats?.G || 0} G, ${p.seasonStats?.A || 0} A`).join('\n')}
 
 **League Scoring:** ${leagueSettings.scoringType}
 

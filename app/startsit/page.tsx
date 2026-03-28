@@ -75,7 +75,7 @@ export default function StartSit() {
                       setShowPlayer1Suggestions(false);
                     }}
                   >
-                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions.join('/')})</span>
+                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
                   </div>
                 ))}
               </div>
@@ -106,7 +106,7 @@ export default function StartSit() {
                       setShowPlayer2Suggestions(false);
                     }}
                   >
-                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions.join('/')})</span>
+                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
                   </div>
                 ))}
               </div>
@@ -151,7 +151,7 @@ export default function StartSit() {
               {player1?.name}
             </h4>
             <p className={`text-sm ${points1 > points2 ? 'text-green-200' : 'text-slate-400'}`}>
-              {player1?.nhlTeam} • {player1?.positions.join('/')} • {proj1?.gamesPlayed} games this week
+              {player1?.nhlTeam} • {player1?.positions?.join('/') ?? ''} • {proj1?.gamesPlayed} games this week
             </p>
           </div>
           <div className="p-6 space-y-3">
@@ -187,7 +187,7 @@ export default function StartSit() {
               {player2?.name}
             </h4>
             <p className={`text-sm ${points2 > points1 ? 'text-green-200' : 'text-slate-400'}`}>
-              {player2?.nhlTeam} • {player2?.positions.join('/')} • {proj2?.gamesPlayed} games this week
+              {player2?.nhlTeam} • {player2?.positions?.join('/') ?? ''} • {proj2?.gamesPlayed} games this week
             </p>
           </div>
           <div className="p-6 space-y-3">

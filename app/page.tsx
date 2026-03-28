@@ -306,7 +306,7 @@ export default function Dashboard() {
                       {player.nhlTeam}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
-                      {player.positions.join('/')}
+                      {player.positions?.join('/') ?? ''}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
                       {player.gamesPlayed || 0}

@@ -127,7 +127,7 @@ export default function MyTeam() {
                       {player.nhlTeam}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
-                      {player.positions.join('/')}
+                      {player.positions?.join('/') ?? ''}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-400">
                       {player.seasonStats?.PTS || 0}
@@ -196,7 +196,7 @@ export default function MyTeam() {
                       <tr key={player.id} className="hover:bg-slate-750 transition-colors cursor-pointer" onClick={() => setSelectedPlayer(player)}>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="font-medium text-slate-100 hover:text-blue-400 transition-colors">{player.name}</div>
-                          <div className="text-xs text-slate-400">{player.positions.join('/')}</div>
+                          <div className="text-xs text-slate-400">{player.positions?.join('/') ?? ''}</div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
                           {player.nhlTeam}

@@ -114,7 +114,7 @@ export default function WaiverWire() {
                         )}
                       </div>
                       <p className="text-sm text-slate-400">
-                        {target.player.nhlTeam} • {target.player.positions.join('/')} • {target.reasoning}
+                        {target.player.nhlTeam} • {target.player.positions?.join('/') ?? ''} • {target.reasoning}
                       </p>
                     </div>
                   </div>

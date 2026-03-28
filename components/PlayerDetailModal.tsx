@@ -139,7 +139,7 @@ export default function PlayerDetailModal({ player, isOpen, onClose }: PlayerDet
                     );
                   })()}
                   <div className="flex items-center gap-4 text-lg">
-                    <span className="text-slate-300 font-semibold">{player.positions.join('/')}</span>
+                    <span className="text-slate-300 font-semibold">{player.positions?.join('/') ?? ''}</span>
                     {player.nhlTeam !== 'UNK' && (
                       <>
                         <span className="text-slate-600">•</span>
