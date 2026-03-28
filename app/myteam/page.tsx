@@ -63,8 +63,8 @@ export default function MyTeam() {
   const availablePlayers = players.filter(p => !myTeam.some(tp => tp.id === p.id));
 
   const filteredAvailable = availablePlayers.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.nhlTeam.toLowerCase().includes(search.toLowerCase())
+    p.name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.nhlTeam?.toLowerCase().includes(search.toLowerCase())
   );
 
   const groupedByPosition = {

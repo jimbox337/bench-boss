@@ -17,14 +17,14 @@ export default function StartSit() {
   const player1Suggestions = useMemo(() => {
     if (!player1Name || player1Name.length < 2) return [];
     return players
-      .filter(p => p.name.toLowerCase().includes(player1Name.toLowerCase()))
+      .filter(p => p.name?.toLowerCase().includes(player1Name.toLowerCase()))
       .slice(0, 10);
   }, [player1Name, players]);
 
   const player2Suggestions = useMemo(() => {
     if (!player2Name || player2Name.length < 2) return [];
     return players
-      .filter(p => p.name.toLowerCase().includes(player2Name.toLowerCase()))
+      .filter(p => p.name?.toLowerCase().includes(player2Name.toLowerCase()))
       .slice(0, 10);
   }, [player2Name, players]);
 

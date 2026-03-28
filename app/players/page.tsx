@@ -25,7 +25,7 @@ export default function PlayerExplorer() {
 
   const filteredPlayers = players
     .filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ?? false;
       const matchesPosition = position === 'all' || (p.positions?.includes(position) ?? false);
       return matchesSearch && matchesPosition;
     })
