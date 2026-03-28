@@ -46,17 +46,11 @@ export interface ESPNRosterEntry {
 /**
  * Build the base URL for ESPN Fantasy API calls
  */
-function buildLeagueUrl(config: ESPNLeagueConfig, view?: string): string {
+function buildLeagueUrl(config: ESPNLeagueConfig, views: string | string[]): string {
   const { leagueId, seasonId } = config;
-
-  // For 2018 onwards
-  let url = `${ESPN_API_BASE}/${SPORT_CODE}/seasons/${seasonId}/segments/0/leagues/${leagueId}`;
-
-  if (view) {
-    url += `?view=${view}`;
-  }
-
-  return url;
+  const url = `${ESPN_API_BASE}/${SPORT_CODE}/seasons/${seasonId}/segments/0/leagues/${leagueId}`;
+  const viewList = Array.isArray(views) ? views : [views];
+  return url + '?' + viewList.map(v => `view=${v}`).join('&');
 }
 
 /**
@@ -106,7 +100,7 @@ async function fetchESPN(url: string, config: ESPNLeagueConfig): Promise<any> {
  * Fetch league information and settings from ESPN
  */
 export async function fetchESPNLeagueInfo(config: ESPNLeagueConfig): Promise<ESPNLeagueInfo> {
-  const url = buildLeagueUrl(config, 'mSettings');
+  const url = buildLeagueUrl(config, ['mSettings']);
   const data = await fetchESPN(url, config);
 
   // Parse league settings
@@ -227,7 +221,7 @@ function parseStatCategories(scoringItems: any, isGoalie: boolean): any[] {
  * Fetch all teams and rosters from ESPN league
  */
 export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam[]> {
-  const url = buildLeagueUrl(config, 'mRoster');
+  const url = buildLeagueUrl(config, ['mRoster', 'mTeam', 'mSettings']);
   const data = await fetchESPN(url, config);
 
   const teams: ESPNTeam[] = [];
@@ -252,20 +246,21 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
         }
       }
 
-      // ESPN team structure can have multiple name formats:
-      // - team.name (direct name)
-      // - team.location + team.nickname (separate fields)
-      // - team.teamLocation + team.teamNickname (alternate fields)
-      let teamName = team.name;
+      // ESPN team name — log raw fields to diagnose missing names
+      console.log(`ESPN team ${team.id} raw:`, JSON.stringify({
+        name: team.name, location: team.location, nickname: team.nickname,
+        teamLocation: team.teamLocation, teamNickname: team.teamNickname,
+        abbrev: team.abbrev,
+      }));
+
+      const location = (team.location || team.teamLocation || '').trim();
+      const nickname = (team.nickname || team.teamNickname || '').trim();
+      let teamName = (team.name || '').trim();
       if (!teamName) {
-        const location = team.location || team.teamLocation || '';
-        const nickname = team.nickname || team.teamNickname || '';
         if (location && nickname) {
           teamName = `${location} ${nickname}`;
-        } else if (location || nickname) {
-          teamName = location || nickname;
         } else {
-          teamName = `Team ${team.id}`;
+          teamName = location || nickname || team.abbrev || `Team ${team.id}`;
         }
       }
 

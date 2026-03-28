@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useData } from '@/lib/DataContext';
 
 interface ESPNTeam {
   id: number;
@@ -18,9 +19,10 @@ interface LeagueInfo {
 
 export default function ESPNSetup() {
   const router = useRouter();
+  const { syncESPNLeague, selectESPNTeam } = useData();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
-  const [seasonId, setSeasonId] = useState('2026');
+  const [seasonId, setSeasonId] = useState('2025');
   const [espnS2, setEspnS2] = useState('');
   const [swid, setSwid] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -103,27 +105,22 @@ export default function ESPNSetup() {
     setError('');
 
     try {
-      const response = await fetch('/api/espn/select-team', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          leagueId,
-          seasonId,
-          espnS2: espnS2 || undefined,
-          swid: swid || undefined,
-          teamId: selectedTeamId,
-        }),
-      });
+      const config = {
+        leagueId,
+        seasonId: parseInt(seasonId),
+        espnS2: espnS2 || undefined,
+        swid: swid || undefined,
+      };
 
-      const data = await response.json();
+      // Sync league into DataContext (populates espnTeams with full roster data)
+      await syncESPNLeague(config);
 
-      if (data.success) {
-        router.push('/myteam');
-      } else {
-        setError(data.error || 'Failed to select team');
-      }
-    } catch (err) {
-      setError('An error occurred while selecting your team');
+      // Map ESPN players → NHL players and save to DB
+      await selectESPNTeam(selectedTeamId);
+
+      router.push('/myteam');
+    } catch (err: any) {
+      setError(err?.message || 'An error occurred while selecting your team');
     } finally {
       setIsLoading(false);
     }
