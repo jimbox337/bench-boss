@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 import { useData } from '@/lib/DataContext';
 import { mapESPNPlayersToNHL } from '@/lib/espnFantasyApi';
 
@@ -18,12 +18,13 @@ interface LeagueInfo {
   seasonId: number;
 }
 
-export default function ESPNSetup() {
+function ESPNSetupInner() {
   const router = useRouter();
-  const { players, setMyTeam, setESPNConfig } = useData();
+  const searchParams = useSearchParams();
+  const { players, setMyTeam, setESPNConfig, setLeagueSettings } = useData();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
-  const [seasonId, setSeasonId] = useState('2025');
+  const [seasonId] = useState('2025');
   const [espnS2, setEspnS2] = useState('');
   const [swid, setSwid] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,13 +35,20 @@ export default function ESPNSetup() {
   const [leagueInfo, setLeagueInfo] = useState<LeagueInfo | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
 
+  // Auto-fill cookies from bookmarklet redirect params
+  useEffect(() => {
+    const s2 = searchParams.get('espn_s2');
+    const swidParam = searchParams.get('swid');
+    if (s2) { setEspnS2(s2); setShowAdvanced(true); }
+    if (swidParam) { setSwid(swidParam); setShowAdvanced(true); }
+  }, [searchParams]);
+
   const handleOpenESPN = () => {
     window.open('https://www.espn.com/fantasy/hockey/', '_blank');
   };
 
   const parseLeagueInput = (value: string) => {
     setLeagueIdInput(value);
-    // Try to extract league ID from a pasted URL
     const match = value.match(/leagueId=(\d+)/);
     if (match) {
       setLeagueId(match[1]);
@@ -78,18 +86,16 @@ export default function ESPNSetup() {
 
       if (data.success) {
         if (data.requiresTeamSelection) {
-          // Show team selection
           setLeagueInfo(data.league);
           setAvailableTeams(data.teams);
           setShowTeamSelection(true);
         } else {
-          // Team auto-selected, redirect to myteam
           router.push('/myteam');
         }
       } else {
         setError(data.error || 'Failed to connect ESPN league');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while connecting your league');
     } finally {
       setIsLoading(false);
@@ -113,7 +119,6 @@ export default function ESPNSetup() {
         swid: swid || undefined,
       };
 
-      // Fetch full league data with rosters directly
       const res = await fetch('/api/espn-league', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,15 +135,16 @@ export default function ESPNSetup() {
         throw new Error('Selected team not found');
       }
 
-      // Map ESPN roster entries to NHL Player objects using live player data
       const mappedPlayers = mapESPNPlayersToNHL(selectedTeam.roster, players);
 
       if (mappedPlayers.length === 0) {
         throw new Error('No players could be matched. NHL player data may still be loading — try again in a moment.');
       }
 
-      // Save to DataContext (this also persists to DB)
       setESPNConfig(config);
+      if (data.leagueInfo?.settings) {
+        setLeagueSettings(data.leagueInfo.settings);
+      }
       setMyTeam(mappedPlayers);
 
       router.push('/myteam');
@@ -149,17 +155,15 @@ export default function ESPNSetup() {
     }
   };
 
+  const bookmarkletCode = `javascript:(function(){var c=document.cookie,s2=c.match(/espn_s2=([^;]+)/),sw=c.match(/SWID=([^;]+)/);if(!s2||!sw){alert('Not found. Make sure you are logged in to ESPN.');return;}window.location='https://www.benchboss.pro/teams/espn?espn_s2='+encodeURIComponent(s2[1])+'&swid='+encodeURIComponent(sw[1]);})()`;
+
   if (showTeamSelection && leagueInfo) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">
         <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fontWeight="bold">
-                  ESPN
-                </text>
-              </svg>
+            <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-black text-xl">
+              ESPN
             </div>
             <h1 className="text-4xl font-bold text-slate-100 mb-3">Select Your Team</h1>
             <p className="text-slate-400 text-lg">{leagueInfo.name}</p>
@@ -185,11 +189,7 @@ export default function ESPNSetup() {
                 >
                   <div className="flex items-center gap-4">
                     {team.logo && (
-                      <img
-                        src={team.logo}
-                        alt={team.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
+                      <img src={team.logo} alt={team.name} className="w-12 h-12 rounded-lg object-cover" />
                     )}
                     <div>
                       <h3 className="text-lg font-bold text-slate-100">{team.name}</h3>
@@ -229,19 +229,15 @@ export default function ESPNSetup() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="10" fontWeight="bold">
-                ESPN
-              </text>
-            </svg>
+          <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-black text-xl">
+            ESPN
           </div>
           <h1 className="text-4xl font-bold text-slate-100 mb-3">Connect ESPN Fantasy</h1>
           <p className="text-slate-400 text-lg">Sync your ESPN league automatically</p>
         </div>
 
         <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-          {/* Quick Access Button */}
+          {/* Open ESPN */}
           <div className="mb-6 p-4 bg-gradient-to-r from-red-600 to-red-700 rounded-lg">
             <h3 className="text-white font-bold mb-2">Step 1: Open Your ESPN League</h3>
             <p className="text-red-100 text-sm mb-3">
@@ -257,6 +253,22 @@ export default function ESPNSetup() {
             </button>
           </div>
 
+          {/* Bookmarklet */}
+          <div className="mb-6 p-4 bg-slate-900/60 border border-slate-600 rounded-lg">
+            <h3 className="text-slate-200 font-semibold mb-1 text-sm">Private league? Auto-grab cookies</h3>
+            <p className="text-slate-400 text-xs mb-3">
+              Drag the button to your bookmarks bar. Then visit ESPN Fantasy, click it, and your cookies will be filled in automatically.
+            </p>
+            <div className="flex items-center gap-3">
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: `<a href="${bookmarkletCode}" draggable="true" style="display:inline-block;padding:8px 16px;background:#EAB308;color:#000;font-size:14px;font-weight:700;border-radius:8px;cursor:grab;text-decoration:none;user-select:none;">BenchBoss ESPN Auth</a>`
+                }}
+              />
+              <span className="text-slate-500 text-xs">← drag to bookmarks bar</span>
+            </div>
+          </div>
+
           {error && (
             <div className="mb-6 bg-red-900/30 border border-red-600 text-red-200 px-4 py-3 rounded-lg">
               {error}
@@ -265,7 +277,7 @@ export default function ESPNSetup() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-4 bg-blue-900/20 border border-blue-600 rounded-lg">
-              <h3 className="text-blue-400 font-bold mb-2">Step 2: Get Your League Information</h3>
+              <h3 className="text-blue-400 font-bold mb-0">Step 2: Enter Your League ID</h3>
             </div>
 
             <div>
@@ -294,22 +306,17 @@ export default function ESPNSetup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Season Year
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Season Year</label>
               <input
                 type="text"
                 value={seasonId}
                 readOnly
                 className="w-full bg-slate-600 border border-slate-600 text-slate-300 rounded-lg px-4 py-3 cursor-not-allowed"
-                placeholder="2025"
               />
-              <p className="text-xs text-slate-400 mt-2">
-                Current season (2025-2026) — ESPN uses end year
-              </p>
+              <p className="text-xs text-slate-400 mt-2">Current season (2024-2025) — ESPN uses end year</p>
             </div>
 
-            {/* Advanced Options for Private Leagues */}
+            {/* Private League Options */}
             <div className="border-t border-slate-700 pt-6">
               <button
                 type="button"
@@ -324,15 +331,18 @@ export default function ESPNSetup() {
 
               {showAdvanced && (
                 <div className="mt-4 space-y-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
+                  {espnS2 && swid && (
+                    <div className="flex items-center gap-2 text-green-400 text-xs bg-green-900/20 border border-green-700 rounded px-3 py-2">
+                      <span>✓</span>
+                      <span>Cookies loaded — ready to connect private league</span>
+                    </div>
+                  )}
                   <p className="text-xs text-slate-400">
-                    If your league is private, you'll need to provide authentication cookies from ESPN.
-                    These allow BenchBoss to access your private league data.
+                    Required for private leagues. Use the bookmarklet above to auto-fill these, or paste manually.
                   </p>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      espn_s2 Cookie
-                    </label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">espn_s2 Cookie</label>
                     <input
                       type="text"
                       value={espnS2}
@@ -343,9 +353,7 @@ export default function ESPNSetup() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      SWID Cookie
-                    </label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">SWID Cookie</label>
                     <input
                       type="text"
                       value={swid}
@@ -357,14 +365,13 @@ export default function ESPNSetup() {
 
                   <details className="text-xs text-slate-400">
                     <summary className="cursor-pointer hover:text-slate-300 font-medium mb-2">
-                      How to find these cookies
+                      How to find these manually
                     </summary>
                     <ol className="list-decimal list-inside space-y-1 ml-2 mt-2">
                       <li>Open ESPN Fantasy in your browser and log in</li>
                       <li>Press F12 to open Developer Tools</li>
-                      <li>Go to the "Application" or "Storage" tab</li>
-                      <li>Click "Cookies" → "https://fantasy.espn.com"</li>
-                      <li>Find and copy the values for "espn_s2" and "SWID"</li>
+                      <li>Go to the "Application" tab → Cookies → espn.com</li>
+                      <li>Copy the values for "espn_s2" and "SWID"</li>
                     </ol>
                   </details>
                 </div>
@@ -388,19 +395,16 @@ export default function ESPNSetup() {
               </button>
             </div>
           </form>
-
-          <div className="mt-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-300 mb-2">Quick Guide:</h3>
-            <ol className="text-xs text-slate-400 space-y-1 list-decimal list-inside">
-              <li>Click "Open ESPN Fantasy Hockey" above</li>
-              <li>Navigate to your league in the new tab</li>
-              <li>Copy the full URL from your browser's address bar</li>
-              <li>Paste the URL (or just the League ID) into the field below</li>
-              <li>Click "Connect League" to sync your team</li>
-            </ol>
-          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ESPNSetup() {
+  return (
+    <Suspense>
+      <ESPNSetupInner />
+    </Suspense>
   );
 }

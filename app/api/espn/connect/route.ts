@@ -61,10 +61,21 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // For now, let user select their team if there are multiple teams
-    // We'll store the league info and redirect to a team selection page
-    if (teams.length > 1) {
-      // Store ESPN config temporarily in session or return teams for selection
+    // Try to auto-detect user's team by matching SWID to primaryOwner
+    let selectedTeam = null;
+    if (swid) {
+      const normalizedSwid = swid.trim().replace(/^\{/, '').replace(/\}$/, '').toLowerCase();
+      selectedTeam = teams.find(t => {
+        const owner = (t.primaryOwner || '').replace(/^\{/, '').replace(/\}$/, '').toLowerCase();
+        return owner === normalizedSwid;
+      }) || null;
+      if (selectedTeam) {
+        console.log(`Auto-detected team via SWID: ${selectedTeam.name}`);
+      }
+    }
+
+    // If couldn't auto-detect and there are multiple teams, show team selection
+    if (!selectedTeam && teams.length > 1) {
       return NextResponse.json({
         success: true,
         requiresTeamSelection: true,
@@ -86,8 +97,8 @@ export async function POST(request: Request) {
       });
     }
 
-    // If only one team, auto-select it
-    const selectedTeam = teams[0];
+    // Use auto-detected team or the only team available
+    if (!selectedTeam) selectedTeam = teams[0];
 
     // Deactivate all other teams for this user
     await prisma.team.updateMany({

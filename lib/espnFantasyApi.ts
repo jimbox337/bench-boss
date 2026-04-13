@@ -31,6 +31,7 @@ export interface ESPNTeam {
   name: string;
   abbrev: string;
   logo?: string;
+  primaryOwner?: string; // SWID of team owner, used for auto-detection
   roster: ESPNRosterEntry[];
 }
 
@@ -237,8 +238,8 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
             roster.push({
               playerId: player.id,
               playerName: player.fullName,
-              position: getPositionName(entry.lineupSlotId),
-              defaultPosition: player.defaultPositionId ? getPositionName(player.defaultPositionId) : 'UNKNOWN',
+              position: getSlotName(entry.lineupSlotId),
+              defaultPosition: player.defaultPositionId ? getDefaultPositionName(player.defaultPositionId) : 'UNKNOWN',
               lineupSlotId: entry.lineupSlotId,
               acquisitionType: entry.acquisitionType || 'UNKNOWN',
             });
@@ -269,6 +270,7 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
         name: teamName,
         abbrev: team.abbrev || team.teamAbbrev || '',
         logo: team.logo || team.logoUrl || undefined,
+        primaryOwner: team.primaryOwner || undefined,
         roster,
       });
     }
@@ -278,20 +280,25 @@ export async function fetchESPNTeams(config: ESPNLeagueConfig): Promise<ESPNTeam
 }
 
 /**
- * Get position name from ESPN lineup slot ID
+ * ESPN lineup slot ID → position label (where on roster a player is placed)
  */
-function getPositionName(slotId: number): string {
+function getSlotName(slotId: number): string {
   const slotMap: { [key: number]: string } = {
-    0: 'C',
-    1: 'LW',
-    2: 'RW',
-    3: 'D',
-    4: 'G',
-    5: 'UTIL',
-    20: 'BN',
-    21: 'IR',
+    0: 'C', 1: 'LW', 2: 'RW', 3: 'F', 4: 'D', 5: 'G',
+    6: 'UTIL', 17: 'F', 20: 'BN', 21: 'IR',
   };
-  return slotMap[slotId] || 'UNKNOWN';
+  return slotMap[slotId] || 'BN';
+}
+
+/**
+ * ESPN defaultPositionId → actual player position
+ * This is separate from lineup slot IDs — the numbering is different.
+ */
+function getDefaultPositionName(posId: number): string {
+  const posMap: { [key: number]: string } = {
+    1: 'C', 2: 'LW', 3: 'RW', 4: 'D', 5: 'G',
+  };
+  return posMap[posId] || 'F';
 }
 
 /**
