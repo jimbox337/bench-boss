@@ -9,7 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function MyTeam() {
   const router = useRouter();
-  const { players, myTeam, addToMyTeam, removeFromMyTeam, setMyTeam, setESPNConfig } = useData();
+  const { players, myTeam, teamExists, addToMyTeam, removeFromMyTeam, setMyTeam, setESPNConfig } = useData();
   const [search, setSearch] = useState('');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -31,8 +31,8 @@ export default function MyTeam() {
     }
   };
 
-  // Show empty state if no team
-  if (myTeam.length === 0) {
+  // Show empty state if no team record exists
+  if (!teamExists) {
     return (
       <ProtectedRoute requiresTeam={true}>
       <div className="min-h-screen flex items-center justify-center p-8">

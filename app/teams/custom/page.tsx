@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useData } from '@/lib/DataContext';
 
 export default function CustomSetup() {
   const router = useRouter();
+  const { refreshTeam } = useData();
   const [teamName, setTeamName] = useState('');
   const [leagueName, setLeagueName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,7 @@ export default function CustomSetup() {
       const data = await response.json();
 
       if (data.success) {
+        await refreshTeam();
         router.push('/myteam');
       } else {
         setError(data.error || 'Failed to create custom league');

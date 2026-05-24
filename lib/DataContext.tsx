@@ -13,9 +13,11 @@ interface DataContextType {
   syncLiveData: () => Promise<void>;
   lastSyncTime: Date | null;
   myTeam: Player[];
+  teamExists: boolean;
   addToMyTeam: (player: Player) => void;
   removeFromMyTeam: (playerId: string) => void;
   setMyTeam: (players: Player[]) => void;
+  refreshTeam: () => Promise<void>;
   espnConfig: ESPNLeagueConfig | null;
   espnLeagueInfo: ESPNLeagueInfo | null;
   espnTeams: any[];
@@ -34,9 +36,11 @@ const DataContext = createContext<DataContextType>({
   syncLiveData: async () => {},
   lastSyncTime: null,
   myTeam: [],
+  teamExists: false,
   addToMyTeam: () => {},
   removeFromMyTeam: () => {},
   setMyTeam: () => {},
+  refreshTeam: async () => {},
   espnConfig: null,
   espnLeagueInfo: null,
   espnTeams: [],
@@ -55,6 +59,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLiveData, setIsLiveData] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [myTeam, setMyTeamState] = useState<Player[]>([]);
+  const [teamExists, setTeamExists] = useState(false);
   const [teamDataLoaded, setTeamDataLoaded] = useState(false);
 
   // ESPN integration state
@@ -85,6 +90,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             const team = data.team;
             console.log('✅ Team data loaded from database:', team.name);
 
+            setTeamExists(true);
+
             // Restore roster
             if (team.roster && Array.isArray(team.roster)) {
               setMyTeamState(team.roster as Player[]);
@@ -108,6 +115,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             setTeamDataLoaded(true);
           } else {
             console.log('📝 No team data found for user');
+            setTeamExists(false);
             setTeamDataLoaded(true);
           }
         } catch (error) {
@@ -117,6 +125,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       } else if (status === 'unauthenticated') {
         // Clear data when logged out
         setMyTeamState([]);
+        setTeamExists(false);
         setESPNConfigState(null);
         const { defaultLeagueSettings } = require('./calculator');
         setLeagueSettingsState(defaultLeagueSettings);
@@ -178,6 +187,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
       throw error;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const refreshTeam = async () => {
+    try {
+      const response = await fetch('/api/team');
+      const data = await response.json();
+      if (data.team) {
+        setTeamExists(true);
+        if (data.team.roster && Array.isArray(data.team.roster)) {
+          setMyTeamState(data.team.roster as Player[]);
+        }
+        if (data.team.leagueSettings) {
+          setLeagueSettingsState(data.team.leagueSettings as LeagueSettings);
+        }
+        if (data.team.espnLeagueId) {
+          setESPNConfigState({
+            leagueId: data.team.espnLeagueId,
+            seasonId: data.team.seasonId || new Date().getFullYear(),
+            espnS2: data.team.espnS2 || undefined,
+            swid: data.team.swid || undefined,
+          });
+        }
+      } else {
+        setTeamExists(false);
+      }
+    } catch (error) {
+      console.error('Failed to refresh team:', error);
     }
   };
 
@@ -314,6 +351,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             leagueSettings,
           }),
         });
+        setTeamExists(true);
         console.log('✅ Team saved to database');
       } catch (error) {
         console.error('Failed to save team to database:', error);
@@ -342,9 +380,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       syncLiveData,
       lastSyncTime,
       myTeam,
+      teamExists,
       addToMyTeam,
       removeFromMyTeam,
       setMyTeam,
+      refreshTeam,
       espnConfig,
       espnLeagueInfo,
       espnTeams,
