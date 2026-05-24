@@ -27,7 +27,7 @@ export default function CustomSetup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           platform: 'custom',
-          teamName,
+          name: teamName,
           leagueName,
         }),
       });
