@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CountUp, Reveal } from '@/components/ui/reveal';
+import NoTeamDashboard from '@/components/NoTeamDashboard';
 import {
   Activity,
   BarChart3,
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const { data: session } = useSession();
   const router = useRouter();
   const [hasTeam, setHasTeam] = useState<boolean | null>(null);
+  const useLegacyOnboarding = process.env.NEXT_PUBLIC_LEGACY_ONBOARDING === 'true';
 
   useEffect(() => {
     const checkTeam = async () => {
@@ -51,6 +53,10 @@ export default function Dashboard() {
   }, 0);
 
   // Show welcome page if no team is linked
+  if (hasTeam === false && !useLegacyOnboarding) {
+    return <NoTeamDashboard onAddTeam={() => router.push('/teams/new')} onBrowsePlayers={() => router.push('/players')} />;
+  }
+
   if (hasTeam === false) {
     return (
       <div className="min-h-screen">

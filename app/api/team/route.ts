@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+type SessionUserWithId = {
+  id: string;
+};
+
 // GET - Fetch user's active team
 export async function GET() {
   try {
@@ -12,7 +16,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as SessionUserWithId).id;
 
     // Find the user's active team
     const team = await prisma.team.findFirst({
@@ -45,8 +49,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
-    const body = await request.json();
+    const userId = (session.user as SessionUserWithId).id;
+    const body: unknown = await request.json();
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Invalid team payload' }, { status: 400 });
+    }
 
     const {
       name,
@@ -59,16 +67,39 @@ export async function POST(request: Request) {
       seasonId,
       roster,
       leagueSettings,
-    } = body;
+    } = body as Record<string, unknown>;
+
+    if (typeof name !== 'string' || !name.trim()) {
+      return NextResponse.json({ success: false, error: 'A team name is required' }, { status: 400 });
+    }
+
+    if (typeof platform !== 'string' || !platform.trim()) {
+      return NextResponse.json({ success: false, error: 'A team platform is required' }, { status: 400 });
+    }
+
+    const normalizedName = name.trim();
+    const normalizedPlatform = platform.trim();
+    const normalizedLeagueSettings =
+      leagueSettings && typeof leagueSettings === 'object' && !Array.isArray(leagueSettings)
+        ? leagueSettings
+        : undefined;
 
     // Check if user already has a team for this ESPN league/team combo
     let team;
-    if (espnLeagueId && espnTeamId) {
+    if (typeof espnLeagueId === 'string' && typeof espnTeamId === 'string') {
       team = await prisma.team.findFirst({
         where: {
           userId,
           espnLeagueId,
           espnTeamId,
+        },
+      });
+    } else if (normalizedPlatform.toLowerCase() === 'custom') {
+      team = await prisma.team.findFirst({
+        where: {
+          userId,
+          platform: 'Custom',
+          isActive: true,
         },
       });
     }
@@ -78,14 +109,14 @@ export async function POST(request: Request) {
       team = await prisma.team.update({
         where: { id: team.id },
         data: {
-          name,
-          platform,
-          logo,
-          espnS2,
-          swid,
-          seasonId,
-          roster,
-          leagueSettings,
+          name: normalizedName,
+          platform: normalizedPlatform,
+          logo: typeof logo === 'string' ? logo : undefined,
+          espnS2: typeof espnS2 === 'string' ? espnS2 : undefined,
+          swid: typeof swid === 'string' ? swid : undefined,
+          seasonId: typeof seasonId === 'string' ? seasonId : undefined,
+          roster: Array.isArray(roster) ? roster : undefined,
+          leagueSettings: normalizedLeagueSettings,
           lastSyncedAt: new Date(),
           isActive: true,
           updatedAt: new Date(),
@@ -102,16 +133,16 @@ export async function POST(request: Request) {
       team = await prisma.team.create({
         data: {
           userId,
-          name,
-          platform,
-          logo,
-          espnLeagueId,
-          espnTeamId,
-          espnS2,
-          swid,
-          seasonId,
-          roster,
-          leagueSettings,
+          name: normalizedName,
+          platform: normalizedPlatform,
+          logo: typeof logo === 'string' ? logo : undefined,
+          espnLeagueId: typeof espnLeagueId === 'string' ? espnLeagueId : undefined,
+          espnTeamId: typeof espnTeamId === 'string' ? espnTeamId : undefined,
+          espnS2: typeof espnS2 === 'string' ? espnS2 : undefined,
+          swid: typeof swid === 'string' ? swid : undefined,
+          seasonId: typeof seasonId === 'string' ? seasonId : undefined,
+          roster: Array.isArray(roster) ? roster : undefined,
+          leagueSettings: normalizedLeagueSettings,
           lastSyncedAt: new Date(),
           isActive: true,
         },
@@ -134,7 +165,7 @@ export async function DELETE() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as SessionUserWithId).id;
 
     // Delete all teams for this user
     await prisma.team.deleteMany({

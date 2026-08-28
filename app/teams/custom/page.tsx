@@ -3,8 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useData } from '@/lib/DataContext';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-export default function CustomSetup() {
+function CustomSetupInner() {
   const router = useRouter();
   const { refreshTeam } = useData();
   const [teamName, setTeamName] = useState('');
@@ -28,9 +29,11 @@ export default function CustomSetup() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          platform: 'custom',
-          name: teamName,
-          leagueName,
+          platform: 'Custom',
+          name: teamName.trim(),
+          leagueSettings: {
+            leagueName: leagueName.trim(),
+          },
         }),
       });
 
@@ -42,7 +45,7 @@ export default function CustomSetup() {
       } else {
         setError(data.error || 'Failed to create custom league');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while creating your league');
     } finally {
       setIsLoading(false);
@@ -83,7 +86,7 @@ export default function CustomSetup() {
                 required
               />
               <p className="text-xs text-slate-400 mt-2">
-                What's your fantasy team called?
+                What&apos;s your fantasy team called?
               </p>
             </div>
 
@@ -126,7 +129,7 @@ export default function CustomSetup() {
             <h3 className="text-sm font-semibold text-slate-300 mb-2">Next steps:</h3>
             <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
               <li>Add players to your roster manually</li>
-              <li>Configure your league's scoring settings</li>
+              <li>Configure your league&apos;s scoring settings</li>
               <li>Set up position requirements</li>
               <li>Start using Bench Boss tools for analysis</li>
             </ul>
@@ -134,5 +137,13 @@ export default function CustomSetup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomSetup() {
+  return (
+    <ProtectedRoute>
+      <CustomSetupInner />
+    </ProtectedRoute>
   );
 }
