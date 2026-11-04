@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, ShieldCheck, Users } from 'lucide-react';
+import { RefreshCw, Search, ShieldCheck, Users } from 'lucide-react';
 
 type ManagedUser = {
   id: string;
@@ -15,6 +15,7 @@ type ManagedUser = {
   createdAt: string;
   updatedAt: string;
   _count: { teams: number };
+  authLinked: boolean;
 };
 
 export default function AdminUsersPage() {
@@ -24,6 +25,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -64,6 +67,23 @@ export default function AdminUsersPage() {
     }
   };
 
+  const syncLegacyUsers = async () => {
+    setSyncing(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/admin/users', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || data.failed?.[0]?.error || 'Unable to sync users');
+      setNotice(`${data.created} legacy ${data.created === 1 ? 'account' : 'accounts'} added to Supabase Auth.`);
+      setUsers(current => current.map(user => ({ ...user, authLinked: true })));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to sync users');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   if (loading) return <div className="bb-page"><div className="bb-panel p-8 text-muted">Loading users…</div></div>;
 
   return (
@@ -77,6 +97,7 @@ export default function AdminUsersPage() {
       </header>
 
       {error && <div className="mb-5 border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">{error}</div>}
+      {notice && <div className="mb-5 border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">{notice}</div>}
 
       <section className="mb-5 grid gap-4 sm:grid-cols-3">
         <div className="bb-panel p-5"><p className="text-xs font-medium text-muted">Total users</p><p className="mt-2 text-3xl font-semibold text-ink">{users.length}</p></div>
@@ -87,10 +108,13 @@ export default function AdminUsersPage() {
       <section className="bb-panel overflow-hidden">
         <div className="flex flex-col gap-4 border-b border-rule p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2"><Users className="h-5 w-5 text-accent" /><h2 className="text-lg font-semibold">Accounts</h2></div>
-          <label className="relative block w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input value={query} onChange={event => setQuery(event.target.value)} className="bb-field w-full pl-9" placeholder="Search users" aria-label="Search users" />
-          </label>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {users.some(user => !user.authLinked) && <button type="button" onClick={() => void syncLegacyUsers()} disabled={syncing} className="fantasy-button inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />{syncing ? 'Syncing' : 'Sync legacy users'}</button>}
+            <label className="relative block w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <input value={query} onChange={event => setQuery(event.target.value)} className="bb-field w-full pl-9" placeholder="Search users" aria-label="Search users" />
+            </label>
+          </div>
         </div>
 
         <div className="divide-y divide-rule">
@@ -102,7 +126,7 @@ export default function AdminUsersPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-ink">{name}</h3>{isSelf && <span className="bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">You</span>}</div>
                   <p className="mt-1 truncate text-sm text-muted">{user.email} · @{user.username}</p>
-                  <p className="mt-1 text-xs text-muted">{user._count.teams} teams · Joined {new Date(user.createdAt).toLocaleDateString()} · {user.emailVerified ? 'Verified' : 'Unverified'}</p>
+                  <p className="mt-1 text-xs text-muted">{user._count.teams} teams · Joined {new Date(user.createdAt).toLocaleDateString()} · {user.emailVerified ? 'Verified' : 'Unverified'} · {user.authLinked ? 'Supabase linked' : 'Legacy login'}</p>
                 </div>
                 <span className={`w-fit px-2 py-1 text-xs font-medium ${user.status === 'active' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>{user.status}</span>
                 <label className="text-xs text-muted">Role<select className="bb-field mt-1 w-full" value={user.role} disabled={savingId === user.id || isSelf} onChange={event => void updateUser(user, { role: event.target.value as ManagedUser['role'], status: user.status })}><option value="user">User</option><option value="admin">Admin</option></select></label>
