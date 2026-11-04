@@ -23,6 +23,8 @@ export async function GET() {
         firstName: true,
         lastName: true,
         profilePicture: true,
+        role: true,
+        status: true,
       },
     });
 
@@ -42,6 +44,8 @@ export async function GET() {
         firstName: user.firstName,
         lastName: user.lastName,
         profilePicture: user.profilePicture,
+        role: user.role,
+        status: user.status,
       },
     });
   } catch (error) {

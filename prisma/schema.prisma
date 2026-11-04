@@ -31,6 +31,7 @@ model User {
   lastName                  String?
   password                  String    // bcrypt hashed
   role                      String    @default("user") // user or admin
+  status                    String    @default("active") // active or suspended
   profilePicture            String?   // URL to profile picture
   emailVerified             DateTime? // When email was verified
   emailVerificationToken    String?   @unique

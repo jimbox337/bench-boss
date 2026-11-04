@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Repeat2,
   Search,
+  ShieldCheck,
   Shirt,
   Swords,
   User,
@@ -32,6 +33,8 @@ const navItems = [
   { icon: Search, name: 'Players', path: '/players' },
 ];
 
+const adminNavItem = { icon: ShieldCheck, name: 'Admin', path: '/admin' };
+
 const publicRoutes = ['/login'];
 
 function getInitial(name?: string | null) {
@@ -44,6 +47,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const { espnConfig, syncESPNLeague } = useData();
   const [username, setUsername] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [hasTeam, setHasTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [teamPlatform, setTeamPlatform] = useState('');
@@ -81,17 +85,23 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!session?.user) return;
+      if (!session?.user) {
+        setIsAdmin(false);
+        return;
+      }
 
       try {
-        const response = await fetch('/api/user/profile');
+        const [response, teamResponse] = await Promise.all([
+          fetch('/api/user/profile'),
+          fetch('/api/team'),
+        ]);
         const data = await response.json();
 
         if (data.success) {
           setUsername(data.user.username || '');
+          setIsAdmin(data.user.role === 'admin');
         }
 
-        const teamResponse = await fetch('/api/team');
         const teamData = await teamResponse.json();
         const team = teamData.team;
 
@@ -125,6 +135,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const syncLabel =
     isSyncing ? 'Syncing' : syncStatus === 'success' ? 'Synced' : syncStatus === 'error' ? 'Failed' : 'Sync ESPN';
+  const visibleNavItems = isAdmin ? [...navItems, adminNavItem] : navItems;
 
   return (
     <div className="bb-shell h-screen fantasy-app-shell text-ink flex flex-col">
@@ -210,7 +221,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="bb-nav flex-1 space-y-1 overflow-y-auto">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
 
@@ -306,7 +317,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       <nav className="bb-mobile-nav fixed z-50 p-2 lg:hidden">
         <div ref={mobileNavRef} className="flex gap-1 overflow-x-auto">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.path;
 
