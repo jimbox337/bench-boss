@@ -1,3 +1,4 @@
+import { getCurrentNHLSeason } from './nhlSeason';
 import { Player, Projection, SkaterStats } from './calculator';
 
 const NHL_API_BASE = 'https://api-web.nhle.com/v1';
@@ -75,7 +76,7 @@ async function fetchTeamSchedule(teamAbbrev: string, retries = 3) {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       await delay(200); // 200ms delay
-      const season = '20242025';
+      const season = await getCurrentNHLSeason();
       const res = await fetch(`${NHL_API_BASE}/club-schedule-season/${teamAbbrev}/${season}`);
 
       if (res.status === 429) {

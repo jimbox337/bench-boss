@@ -1,176 +1,172 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { ArrowLeft, CheckCircle2, ChevronRight, Settings2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-export default function NewTeam() {
+const platformOptions = [
+  {
+    id: 'espn',
+    title: 'ESPN Fantasy',
+    label: 'Recommended',
+    description: 'Connect your ESPN Fantasy Hockey league and sync roster, league settings, and scoring rules.',
+    action: 'Connect ESPN',
+    path: '/teams/espn',
+    badgeClass: 'bg-paper-2 text-muted border-rule',
+    iconClass: 'bg-paper-3 text-ink',
+    features: ['Auto-sync roster and stats', 'Import scoring settings', 'Private league support'],
+    mark: 'ESPN',
+  },
+  {
+    id: 'yahoo',
+    title: 'Yahoo Fantasy',
+    label: 'League import',
+    description: 'Bring in your Yahoo Fantasy Hockey league once your Yahoo connection is ready.',
+    action: 'Connect Yahoo',
+    path: '/teams/yahoo',
+    badgeClass: 'bg-paper-2 text-accent border-rule',
+    iconClass: 'bg-paper-3 text-ink',
+    features: ['Roster setup flow', 'League settings support', 'Yahoo-ready structure'],
+    mark: 'Y!',
+  },
+];
+
+function NewTeamInner() {
   const router = useRouter();
-  const [selectedPlatform, setSelectedPlatform] = useState<'espn' | 'yahoo' | 'custom' | null>(null);
-
-  const handlePlatformSelect = (platform: 'espn' | 'yahoo' | 'custom') => {
-    setSelectedPlatform(platform);
-
-    if (platform === 'espn') {
-      router.push('/teams/espn');
-    } else if (platform === 'yahoo') {
-      router.push('/teams/yahoo');
-    } else if (platform === 'custom') {
-      router.push('/teams/custom');
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-100 mb-3">Add Your Fantasy Team</h1>
-          <p className="text-slate-400 text-lg">Choose how you want to set up your team</p>
-        </div>
+    <div className="bb-page">
+      <div className="mx-auto max-w-6xl">
+        <button
+          onClick={() => router.back()}
+          className="mb-6 inline-flex items-center gap-2 border border-rule bg-paper-2 px-4 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* ESPN Option */}
-          <button
-            onClick={() => handlePlatformSelect('espn')}
-            className="group bg-gradient-to-br from-red-900/30 to-slate-800 hover:from-red-900/50 hover:to-slate-700 border-2 border-red-700/50 hover:border-red-600 rounded-2xl p-8 transition-all duration-300 text-left"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-red-600 rounded-xl flex items-center justify-center">
-                <svg className="w-10 h-10" viewBox="0 0 200 200" fill="none">
-                  <rect width="200" height="200" fill="#D40000"/>
-                  <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="60" fontWeight="bold" fontFamily="Arial">
-                    ESPN
-                  </text>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-slate-100 group-hover:text-red-400 transition-colors">
-                  ESPN Fantasy
-                </h3>
-                <p className="text-slate-400 text-sm">Recommended</p>
-              </div>
+        <section className="bb-page-header mb-6">
+
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+            <div>
+              <h1 className="text-3xl font-semibold leading-tight text-ink">
+                Add your fantasy team.
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-base leading-6 text-ink-2">
+                Start with an import when your league platform is available, or build a custom roster manually.
+              </p>
             </div>
 
-            <p className="text-slate-300 mb-4">
-              Connect your ESPN Fantasy Hockey league to automatically sync your team, roster, and league settings.
-            </p>
-
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Auto-sync roster and stats
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Import league scoring settings
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Real-time updates
-              </li>
-            </ul>
-
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-red-400 font-semibold group-hover:text-red-300 transition-colors">
-                Connect ESPN →
-              </span>
-            </div>
-          </button>
-
-          {/* Yahoo Option */}
-          <button
-            onClick={() => handlePlatformSelect('yahoo')}
-            className="group bg-gradient-to-br from-purple-900/30 to-slate-800 hover:from-purple-900/50 hover:to-slate-700 border-2 border-purple-700/50 hover:border-purple-600 rounded-2xl p-8 transition-all duration-300 text-left"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center">
-                <svg className="w-10 h-10" viewBox="0 0 200 200" fill="none">
-                  <rect width="200" height="200" fill="#6001D2"/>
-                  <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="80" fontWeight="bold" fontFamily="Arial">
-                    Y!
-                  </text>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-slate-100 group-hover:text-purple-400 transition-colors">
-                  Yahoo Fantasy
-                </h3>
-                <p className="text-slate-400 text-sm">Popular choice</p>
-              </div>
-            </div>
-
-            <p className="text-slate-300 mb-4">
-              Connect your Yahoo Fantasy Hockey league to automatically sync your team and league settings.
-            </p>
-
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Auto-sync roster and stats
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Import league scoring settings
-              </li>
-              <li className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Real-time updates
-              </li>
-            </ul>
-
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-purple-400 font-semibold group-hover:text-purple-300 transition-colors">
-                Connect Yahoo →
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* Custom Option */}
-        <div className="mb-6">
-          <button
-            onClick={() => handlePlatformSelect('custom')}
-            className="group w-full bg-slate-800 hover:bg-slate-750 border-2 border-slate-700 hover:border-blue-600 rounded-2xl p-6 transition-all duration-300 text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
+            <div className="border-l border-rule pl-6 py-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center bg-paper-2 text-accent">
+                  <Sparkles className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-100 group-hover:text-blue-400 transition-colors">Custom League</h3>
-                  <p className="text-slate-400 text-sm">Manual setup - Build your own team</p>
+                  <p className="text-sm font-medium text-ink">Best first move</p>
+                  <p className="text-xs text-muted">Connect ESPN if you already play there.</p>
                 </div>
               </div>
-              <span className="text-blue-400 font-semibold group-hover:text-blue-300 transition-colors">
-                Setup Custom →
-              </span>
+              <div className="rink-divider my-5" />
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="py-2">
+                  <p className="text-2xl font-medium text-accent">3</p>
+                  <p className="text-xs font-medium text-muted">Setup paths</p>
+                </div>
+                <div className="py-2">
+                  <p className="text-2xl font-medium text-success">Live</p>
+                  <p className="text-xs font-medium text-muted">NHL data</p>
+                </div>
+              </div>
             </div>
-          </button>
+          </div>
+        </section>
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          {platformOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => router.push(option.path)}
+              className="bb-panel group flex flex-col gap-4 p-6 text-left hover:border-accent"
+            >
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-14 w-14 items-center justify-center  text-sm font-medium ${option.iconClass}`}>
+                    {option.mark}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-ink">{option.title}</h2>
+                    <span className={`mt-2 inline-flex  border px-3 py-1 text-xs font-medium ${option.badgeClass}`}>
+                      {option.label}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className="mt-2 h-5 w-5 text-muted transition-colors group-hover:text-accent" />
+              </div>
+
+              <p className="leading-7 text-muted">{option.description}</p>
+
+              <div className="space-y-3">
+                {option.features.map((feature) => (
+                  <div key={feature} className="flex items-center gap-2 text-sm font-medium text-muted">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    {feature}
+                  </div>
+                ))}
+              </div>
+
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-accent mt-auto pt-2">
+                {option.action}
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </button>
+          ))}
         </div>
 
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => router.back()}
-            className="text-slate-400 hover:text-slate-300 transition-colors"
-          >
-            ← Back
-          </button>
-        </div>
+        <button
+          onClick={() => router.push('/teams/custom')}
+          className="bb-panel group mt-5 w-full p-6 text-left hover:border-accent"
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center bg-paper-2 text-accent">
+                <Settings2 className="h-7 w-7" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-ink">Custom League</h2>
+                <p className="mt-1 text-sm text-muted">Manual roster setup for any league format.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 text-sm font-medium text-accent">
+              Build Manually
+              <ChevronRight className="h-4 w-4 transition-colors" />
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {[
+              [Zap, 'Pick players manually'],
+              [ShieldCheck, 'Control scoring assumptions'],
+              [Sparkles, 'Use every Bench Boss tool'],
+            ].map(([Icon, text]) => (
+              <div key={text as string} className="flex items-center gap-2 bg-paper-2 px-3 py-3 text-sm font-medium text-muted">
+                <Icon className="h-4 w-4 text-accent" />
+                {text as string}
+              </div>
+            ))}
+          </div>
+        </button>
       </div>
     </div>
+  );
+}
+
+export default function NewTeam() {
+  return (
+    <ProtectedRoute>
+      <NewTeamInner />
+    </ProtectedRoute>
   );
 }

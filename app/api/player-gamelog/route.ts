@@ -1,3 +1,4 @@
+import { getCurrentNHLSeason } from '@/lib/nhlSeason';
 import { NextResponse } from 'next/server';
 
 const NHL_WEB_API = 'https://api-web.nhle.com/v1';
@@ -11,8 +12,9 @@ export async function GET(request: Request) {
   }
 
   try {
+    const season = await getCurrentNHLSeason();
     const [gameLogRes, landingRes] = await Promise.all([
-      fetch(`${NHL_WEB_API}/player/${playerId}/game-log/20252026/2`),
+      fetch(`${NHL_WEB_API}/player/${playerId}/game-log/${season}/2`),
       fetch(`${NHL_WEB_API}/player/${playerId}/landing`),
     ]);
 

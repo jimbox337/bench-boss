@@ -1,3 +1,4 @@
+import { AI_MODEL } from './aiModel';
 import Groq from 'groq-sdk';
 import { Player, LeagueSettings } from './calculator';
 
@@ -70,7 +71,7 @@ Format as JSON:
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: AI_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -143,7 +144,7 @@ Format as JSON:
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: AI_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -210,7 +211,7 @@ Format as JSON array:
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: AI_MODEL,
       messages: [{
         role: 'user',
         content: prompt

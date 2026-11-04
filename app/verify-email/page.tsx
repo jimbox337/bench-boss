@@ -1,5 +1,7 @@
 'use client';
 
+import { CircleCheck, CircleX, LoaderCircle } from 'lucide-react';
+
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,16 +12,14 @@ export default function VerifyEmailPage() {
   const router = useRouter();
   const token = searchParams.get('token');
 
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
-  const [message, setMessage] = useState('');
+  const [verificationStatus, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const [verificationMessage, setMessage] = useState('');
   const [countdown, setCountdown] = useState(3);
+  const status = token ? verificationStatus : 'error';
+  const message = token ? verificationMessage : 'No verification token provided';
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error');
-      setMessage('No verification token provided');
-      return;
-    }
+    if (!token) return;
 
     // Verify the email
     const verifyEmail = async () => {
@@ -67,38 +67,38 @@ export default function VerifyEmailPage() {
   }, [status, router]);
 
   return (
-    <div className="min-h-screen flex">
+    <div className="bb-page grid min-h-full gap-8 py-10 lg:grid-cols-2">
       {/* Left Side - Verification Status (50%) */}
-      <div className="w-1/2 bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center p-12">
+      <div className="bb-panel flex items-start justify-center p-8">
         <div className="max-w-md w-full text-center">
           <div className="text-6xl mb-6">
-            {status === 'verifying' && '⏳'}
-            {status === 'success' && '✅'}
-            {status === 'error' && '❌'}
+            {status === 'verifying' && <LoaderCircle aria-hidden="true" className="h-8 w-8 text-muted" />}
+            {status === 'success' && <CircleCheck aria-hidden="true" className="h-8 w-8 text-muted" />}
+            {status === 'error' && <CircleX aria-hidden="true" className="h-8 w-8 text-muted" />}
           </div>
 
-          <h1 className="text-3xl font-bold text-slate-800 mb-4">
+          <h1 className="text-3xl font-semibold text-ink mb-4">
             {status === 'verifying' && 'Verifying Your Email'}
             {status === 'success' && 'Email Verified!'}
             {status === 'error' && 'Verification Failed'}
           </h1>
 
-          <p className="text-slate-700 mb-6 text-lg">
-            {status === 'verifying' && 'Please wait while we verify your email address...'}
+          <p className="text-ink mb-6 text-lg">
+            {status === 'verifying' && 'Please wait while we verify your email address…'}
             {status === 'success' && message}
             {status === 'error' && message}
           </p>
 
           {status === 'success' && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-300 rounded-lg p-4">
-                <p className="text-blue-800 font-semibold text-lg">
-                  Redirecting in {countdown}...
+              <div className="bg-paper-2 border border-rule p-4">
+                <p className="text-accent-2 font-medium text-lg">
+                  Redirecting in {countdown}…
                 </p>
               </div>
               <Link
                 href="/login"
-                className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
+                className="bb-button inline-block px-8 py-3 bg-accent text-accent-ink font-medium hover:bg-accent transition-colors"
               >
                 Go to Login Now
               </Link>
@@ -109,12 +109,12 @@ export default function VerifyEmailPage() {
             <div className="space-y-4">
               <Link
                 href="/login"
-                className="inline-block px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
+                className="bb-button inline-block px-8 py-3 bg-accent text-accent-ink font-medium hover:bg-accent transition-colors"
               >
                 Back to Login
               </Link>
-              <p className="text-sm text-slate-600 mt-4">
-                Need help? <Link href="/support" className="text-blue-600 hover:underline font-medium">Contact Support</Link>
+              <p className="text-sm text-muted mt-4">
+                Need help? <Link href="/support" className="text-accent-2 hover:underline font-medium">Contact Support</Link>
               </p>
             </div>
           )}
@@ -122,8 +122,8 @@ export default function VerifyEmailPage() {
       </div>
 
       {/* Right Side - Logo (50%) */}
-      <div className="w-1/2 bg-white flex flex-col items-center justify-center">
-        <BenchBossLogo size={500} />
+      <div className="flex items-center justify-center py-10">
+        <BenchBossLogo size={240} />
       </div>
     </div>
   );

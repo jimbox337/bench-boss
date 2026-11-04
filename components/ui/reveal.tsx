@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useSpring } from 'motion/react';
+import { useMotionValue, useMotionValueEvent, useReducedMotion, useSpring } from 'motion/react';
 import { useEffect, useState, type ReactNode } from 'react';
 
 type RevealProps = {
@@ -10,20 +10,8 @@ type RevealProps = {
 };
 
 /** A small, owned motion primitive for app content—not a decorative effect library. */
-export function Reveal({ children, className, delay = 0 }: RevealProps) {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.32, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
+export function Reveal({ children, className }: RevealProps) {
+  return <div className={className}>{children}</div>;
 }
 
 type CountUpProps = {

@@ -1,6 +1,8 @@
 'use client';
 
-import { BarChart3, Crosshair, Repeat2, Shirt } from 'lucide-react';
+import Link from 'next/link';
+import { BarChart3, CheckCircle2, Crosshair, Repeat2, ShieldCheck, Shirt, Swords, Zap } from 'lucide-react';
+import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
 
 type NoTeamDashboardProps = {
   onAddTeam: () => void;
@@ -9,63 +11,60 @@ type NoTeamDashboardProps = {
 
 export default function NoTeamDashboard({ onAddTeam, onBrowsePlayers }: NoTeamDashboardProps) {
   const tools = [
-    [BarChart3, 'Projections', 'Compare player output and schedule context without leaving the roster view.'],
-    [Crosshair, 'Waivers', 'Scan the player pool for players worth a closer look.'],
-    [Repeat2, 'Trades', 'Evaluate deals from the roster data you already use.'],
+    [Zap, 'Lineup optimizer', 'Review your best projected lineup.', '/lineup'],
+    [Swords, 'Start / sit', 'Compare two players before puck drop.', '/startsit'],
+    [Crosshair, 'Waiver targets', 'Find available players for your roster.', '/waivers'],
+    [Repeat2, 'Trade analyzer', 'Compare both sides of a proposed deal.', '/trades'],
+    [BarChart3, 'Player explorer', 'Research NHL season stats.', '/players'],
+    [Shirt, 'My team', 'Manage your roster by position.', '/myteam'],
   ] as const;
 
   return (
-    <div className="min-h-full px-5 py-8 md:p-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 border-b border-white/10 pb-6">
-          <p className="fantasy-kicker mb-3 text-xs font-black">Bench Boss / 2026 season</p>
-          <h1 className="max-w-3xl text-4xl font-black tracking-tight text-white md:text-6xl">
-            Start with the roster, then make the calls.
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 md:text-lg">
-            Connect a league or build one manually. Bench Boss keeps your roster, player pool, and lineup tools in the same place.
-          </p>
-        </header>
+    <div className="bb-page bb-dashboard">
+      <header className="bb-page-header">
+        <div><h1>My dashboard</h1><p>Your fantasy hockey team and player research, in one place.</p></div>
+      </header>
+      <div className="bb-dashboard-layout grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          <section className="bb-panel bb-dashboard-setup overflow-hidden" aria-labelledby="connect-team-title">
+            <div className="bb-dashboard-panel-heading flex items-center justify-between gap-3 border-b border-rule px-5 py-4"><h2 id="connect-team-title" className="text-lg">My fantasy team</h2><span className="text-xs text-muted">No team connected</span></div>
+            <div className="px-5 py-6 sm:px-6">
+              <h3 className="text-2xl leading-tight">Get your team in the game.</h3>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-muted">Browse players, compare trades, and build a guest roster—no account required. Sign in when you want to save a personal team.</p>
+              <div className="mt-5 flex flex-wrap items-center gap-3"><button onClick={onAddTeam} className="bb-button">Build a roster</button><button onClick={onBrowsePlayers} className="bb-button-secondary">Browse player pool</button></div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-rule bg-paper-3 px-5 py-3 text-xs text-muted">
+              <span className="font-medium text-ink-2">League setup</span><span>ESPN import</span><span>Custom roster</span><Link href="/teams/yahoo" className="text-accent hover:underline">Yahoo connection</Link>
+            </div>
+          </section>
 
-        <section className="grid border border-white/10 bg-[#171a22] lg:grid-cols-[1.25fr_0.75fr]">
-          <div className="p-6 md:p-8">
-            <div className="mb-12 flex h-11 w-11 items-center justify-center rounded-lg border border-violet-300/30 bg-violet-400/10 text-violet-200">
-              <Shirt className="h-5 w-5" />
+          <section className="bb-panel bb-dashboard-tools overflow-hidden" aria-labelledby="dashboard-tools-title">
+            <div className="bb-dashboard-panel-heading border-b border-rule px-5 py-4"><h2 id="dashboard-tools-title" className="text-lg">Fantasy hockey tools</h2></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2">
+              {tools.map(([Icon, title, copy, href]) => (
+                <Link key={title} href={href} className="flex min-w-0 items-start gap-3 border-b border-rule px-5 py-5 hover:bg-paper-3">
+                  <Icon size={22} className="mt-0.5 shrink-0 text-accent" strokeWidth={1.7} aria-hidden="true" />
+                  <div className="min-w-0"><h3 className="text-sm font-semibold text-accent">{title}</h3><p className="mt-1 text-xs leading-5 text-muted">{copy}</p></div>
+                </Link>
+              ))}
             </div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">No active team</p>
-            <h2 className="text-3xl font-black text-white">Create your workspace.</h2>
-            <p className="mt-3 max-w-xl leading-7 text-slate-400">Import an existing ESPN league or create a roster from the NHL player pool. Your team is private to your account and can be edited later.</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button onClick={onAddTeam} className="fantasy-button rounded-lg px-5 py-3 text-sm font-black text-white">Add your team</button>
-              <button onClick={onBrowsePlayers} className="rounded-lg border border-white/10 px-5 py-3 text-sm font-bold text-slate-200 transition-colors hover:bg-white/5">Browse player pool</button>
-            </div>
-          </div>
-          <div className="border-t border-white/10 bg-black/15 p-6 md:p-8 lg:border-l lg:border-t-0">
-            <p className="mb-6 text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Setup sequence</p>
-            <ol className="space-y-6">
+          </section>
+
+          <section className="bb-panel bb-dashboard-guide px-5 py-5" aria-labelledby="setup-guide-title">
+            <h2 id="setup-guide-title" className="text-lg">Set up once. Manage all season.</h2>
+            <ol className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
               {[
-                ['01', 'Choose a league source', 'Connect ESPN or start with a custom team.'],
-                ['02', 'Confirm your roster', 'Review the players Bench Boss should track.'],
-                ['03', 'Use the player tools', 'Compare projections, matchups, and availability.'],
+                ['1', 'Choose your league', 'Connect ESPN or start a custom team.'],
+                ['2', 'Confirm your roster', 'Review the players you want to track.'],
+                ['3', 'Make your next move', 'Compare projections and availability.'],
               ].map(([step, title, detail]) => (
-                <li key={step} className="flex gap-4">
-                  <span className="font-mono text-xs font-bold text-violet-300">{step}</span>
-                  <span><strong className="block text-sm text-slate-100">{title}</strong><span className="mt-1 block text-sm leading-6 text-slate-500">{detail}</span></span>
-                </li>
+                <li key={step} className="flex items-start gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-paper-3 text-xs font-semibold text-muted">{step}</span><div><h3 className="text-sm font-semibold">{title}</h3><p className="mt-1 text-xs leading-5 text-muted">{detail}</p></div></li>
               ))}
             </ol>
-          </div>
-        </section>
-
-        <section className="mt-10 grid gap-px border border-white/10 bg-white/10 md:grid-cols-3">
-          {tools.map(([Icon, title, copy]) => (
-            <div key={title} className="bg-[#13161d] p-6">
-              <Icon className="mb-8 h-5 w-5 text-violet-300" />
-              <h3 className="font-black text-white">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{copy}</p>
-            </div>
-          ))}
-        </section>
+            <div className="mt-5 flex items-center gap-2 border-t border-rule pt-4 text-xs text-muted"><ShieldCheck size={15} className="shrink-0" aria-hidden="true" /><span>Your team is private to your account. Edit your roster any time.</span><CheckCircle2 size={15} className="ml-auto shrink-0 text-success" aria-hidden="true" /></div>
+          </section>
+        </div>
+        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><LeagueResources /></aside>
       </div>
     </div>
   );

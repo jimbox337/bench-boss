@@ -2,350 +2,330 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useEffect, useState, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
+import {
+  BarChart3,
+  ChevronRight,
+  Crosshair,
+  LifeBuoy,
+  LogOut,
+  Plus,
+  RefreshCw,
+  Repeat2,
+  Search,
+  Shirt,
+  Swords,
+  User,
+  Zap,
+} from 'lucide-react';
 import BenchBossLogo from './BenchBossLogo';
 import { useData } from '@/lib/DataContext';
 
 const navItems = [
-  { icon: '📊', name: 'Dashboard', path: '/' },
-  { icon: '👕', name: 'My Team', path: '/myteam' },
-  { icon: '⚡', name: 'Lineup Optimizer', path: '/lineup' },
-  { icon: '🤔', name: 'Start / Sit', path: '/startsit' },
-  { icon: '🔄', name: 'Trade Analyzer', path: '/trades' },
-  { icon: '🎯', name: 'Waiver Targets', path: '/waivers' },
-  { icon: '👥', name: 'Player Explorer', path: '/players' },
+  { icon: BarChart3, name: 'Dashboard', path: '/' },
+  { icon: Shirt, name: 'My Team', path: '/myteam' },
+  { icon: Zap, name: 'Lineup', path: '/lineup' },
+  { icon: Swords, name: 'Start / Sit', path: '/startsit' },
+  { icon: Repeat2, name: 'Trades', path: '/trades' },
+  { icon: Crosshair, name: 'Waivers', path: '/waivers' },
+  { icon: Search, name: 'Players', path: '/players' },
 ];
 
 const publicRoutes = ['/login'];
+
+function getInitial(name?: string | null) {
+  return name?.trim().charAt(0).toUpperCase() || 'B';
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session, status } = useSession();
   const { espnConfig, syncESPNLeague } = useData();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [username, setUsername] = useState('');
   const [hasTeam, setHasTeam] = useState(false);
   const [teamName, setTeamName] = useState('');
   const [teamPlatform, setTeamPlatform] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const rail = mobileNavRef.current;
+    const active = rail?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (rail && active) rail.scrollLeft = active.offsetLeft - (rail.clientWidth - active.clientWidth) / 2;
+  }, [pathname, status]);
+
+  const isLoading = status === 'loading';
+  const isAuthenticated = !!session;
 
   const handleSync = async () => {
     if (!espnConfig || isSyncing) return;
+
     setIsSyncing(true);
     setSyncStatus('idle');
+
     try {
       await syncESPNLeague(espnConfig);
       setSyncStatus('success');
-      setTimeout(() => setSyncStatus('idle'), 2000);
+      setTimeout(() => setSyncStatus('idle'), 2200);
     } catch {
       setSyncStatus('error');
-      setTimeout(() => setSyncStatus('idle'), 2000);
+      setTimeout(() => setSyncStatus('idle'), 2200);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const isLoading = status === 'loading';
-  const isAuthenticated = !!session;
-
-  // Fetch user data and team info
   useEffect(() => {
     const fetchUserData = async () => {
-      if (session?.user) {
-        try {
-          const response = await fetch('/api/user/profile');
-          const data = await response.json();
+      if (!session?.user) return;
 
-          if (data.success) {
-            setUsername(data.user.username || '');
-          }
+      try {
+        const response = await fetch('/api/user/profile');
+        const data = await response.json();
 
-          // Check if user has a team
-          const teamResponse = await fetch('/api/team');
-          const teamData = await teamResponse.json();
-          const team = teamData.team;
-          setHasTeam(teamData.success && team !== null);
-          if (team) {
-            setTeamName(team.name || 'My Team');
-            setTeamPlatform(team.platform || '');
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
+        if (data.success) {
+          setUsername(data.user.username || '');
         }
+
+        const teamResponse = await fetch('/api/team');
+        const teamData = await teamResponse.json();
+        const team = teamData.team;
+
+        setHasTeam(teamData.success && team !== null);
+        if (team) {
+          setTeamName(team.name || 'My Team');
+          setTeamPlatform(team.platform || 'Custom');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
       }
     };
 
     fetchUserData();
   }, [session]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // If on public routes, show without sidebar
   if (publicRoutes.includes(pathname)) {
     return <>{children}</>;
   }
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-slate-900 items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🏒</div>
-          <div className="text-slate-300">Loading...</div>
+      <div className="flex h-screen fantasy-app-shell items-center justify-center">
+        <div className="fantasy-card rounded-pill px-8 py-7 text-center">
+          <BenchBossLogo size={54} />
+          <p className="mt-4 text-sm font-medium text-accent">Loading Bench Boss</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col h-screen bg-slate-900">
-      {/* Top Navbar */}
-      <nav className="bg-slate-800 border-b border-slate-700 py-2 z-50">
-        <div className="flex items-center justify-between h-full px-4">
-          {/* Logo */}
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-          >
-            <BenchBossLogo size={32} />
-            <span className="text-lg font-bold text-slate-100 hidden lg:inline">Bench Boss</span>
-          </button>
+  const syncLabel =
+    isSyncing ? 'Syncing' : syncStatus === 'success' ? 'Synced' : syncStatus === 'error' ? 'Failed' : 'Sync ESPN';
 
-          {/* Navigation Icons */}
-          <div className="flex items-center space-x-1 flex-1 justify-center">
+  return (
+    <div className="bb-shell h-screen fantasy-app-shell text-ink flex flex-col">
+          <header className="bb-topbar flex shrink-0 items-center justify-between">
+            <button
+              onClick={() => router.push('/')}
+              className="bb-masthead-brand flex items-center gap-3"
+            >
+              <span className="bb-logo-plate"><BenchBossLogo size={48} /></span>
+              <span className="text-xl font-semibold text-on-brand">Bench Boss</span>
+            </button>
+
+            <nav className="bb-masthead-links hidden md:flex" aria-label="Site navigation">
+              <Link href="/">Fantasy hockey</Link>
+              <Link href="/players">Player research</Link>
+              <Link href="/support">Help center</Link>
+            </nav>
+
+            <div className="flex items-center gap-2">
+              {espnConfig && (
+                <button
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 rounded-pill border border-rule bg-paper-2 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-paper-2 disabled:opacity-60 lg:hidden"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                  Sync
+                </button>
+              )}
+
+              {isAuthenticated ? (
+                <Link
+                  href="/profile"
+                  className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-pill bg-paper-2 text-sm font-medium text-ink"
+                  aria-label="Profile"
+                >
+                  {session?.user?.image ? (
+                    <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    getInitial(session?.user?.name)
+                  )}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => router.push('/login')}
+                  className="rounded-pill px-4 py-2 fantasy-button text-sm font-medium transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
+            </div>
+          </header>
+      <div className="bb-shell-grid grid flex-1 min-h-0 w-full">
+        <aside className="bb-sidebar hidden lg:flex min-h-0 flex-col border-r">
+          <div className="bb-sidebar-brand">
+            <button
+              onClick={() => router.push('/')}
+              className="flex w-full items-center gap-3 rounded-pill px-2 py-2 text-left transition-colors hover:bg-paper-2"
+            >
+              <Shirt className="h-5 w-5 text-accent" aria-hidden="true" />
+              <span className="leading-tight">
+                <span className="bb-wordmark block text-ink">My workspace</span>
+                <span className="fantasy-kicker block text-xs font-medium">Fantasy hockey tools</span>
+              </span>
+            </button>
+          </div>
+
+          <div className="bb-team-switch">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-muted">Active Team</p>
+                <p className="mt-1 truncate text-sm font-medium text-ink">{hasTeam ? teamName : 'No team linked'}</p>
+                <p className="mt-0.5 text-xs text-accent">{hasTeam ? teamPlatform : 'Connect a league'}</p>
+              </div>
+              <button
+                onClick={() => router.push(hasTeam ? '/myteam' : '/teams/new')}
+                className="rounded-pill border border-rule bg-paper-2 p-2 text-accent transition-colors hover:bg-paper-2"
+                aria-label={hasTeam ? 'Open team' : 'Add team'}
+              >
+                {hasTeam ? <ChevronRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <nav className="bb-nav flex-1 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
+              const Icon = item.icon;
               const isActive = pathname === item.path;
+
               return (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex flex-col items-center px-3 py-1 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700'
-                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                  className="bb-nav-link group flex items-center gap-3 transition-colors"
                 >
-                  <span className="text-2xl mb-0.5">{item.icon}</span>
-                  <span className="text-[10px] font-medium whitespace-nowrap">{item.name}</span>
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-accent' : 'text-muted group-hover:text-accent'}`} />
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
-          </div>
+          </nav>
 
-          {/* Sync Button - only show when ESPN is connected */}
-          {espnConfig && (
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              title="Sync ESPN roster"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all mr-2 ${
-                syncStatus === 'success'
-                  ? 'bg-green-600 text-white'
-                  : syncStatus === 'error'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
-              } disabled:opacity-50`}
-            >
-              <svg
-                className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span className="hidden sm:inline">
-                {isSyncing ? 'Syncing...' : syncStatus === 'success' ? 'Synced!' : syncStatus === 'error' ? 'Failed' : 'Sync'}
-              </span>
-            </button>
-          )}
-
-          {/* User Profile Dropdown or Get Started Button */}
-          <div className="relative" ref={dropdownRef}>
-            {isAuthenticated ? (
+          <div className="bb-sidebar-footer space-y-3 border-t">
+            {espnConfig && (
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 hover:bg-slate-700 rounded-lg p-1 transition-colors"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className={`flex w-full items-center justify-center gap-2 rounded-pill border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
+                  syncStatus === 'success'
+                    ? 'border-rule bg-success/10 text-success'
+                    : syncStatus === 'error'
+                    ? 'border-rule bg-error/10 text-error'
+                    : 'border-rule bg-paper-2 text-accent hover:bg-paper-2'
+                }`}
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-bold border-2 border-transparent hover:border-blue-400 transition-all">
-                  {session?.user?.image ? (
-                    <img
-                      src={session.user.image}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  ) : null}
-                  <div className={`text-lg ${session?.user?.image ? 'hidden' : ''}`}>
-                    {session?.user?.name?.charAt(0).toUpperCase()}
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                {syncLabel}
+              </button>
+            )}
+
+            {isAuthenticated ? (
+              <div className="rounded-pill border border-rule bg-paper-2 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-pill bg-paper-2 text-base font-medium text-ink">
+                    {session?.user?.image ? (
+                      <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      getInitial(session?.user?.name)
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">{session?.user?.name || 'Manager'}</p>
+                    <p className="truncate text-xs text-muted">{username ? `@${username}` : session?.user?.email}</p>
                   </div>
                 </div>
-                <svg
-                  className="w-4 h-4 text-slate-400 hidden md:block"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <Link
+                    href="/profile"
+                    className="flex items-center justify-center rounded-pill bg-paper-2 py-2 text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
+                    aria-label="Profile"
+                  >
+                    <User className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/support"
+                    className="flex items-center justify-center rounded-pill bg-paper-2 py-2 text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
+                    aria-label="Support"
+                  >
+                    <LifeBuoy className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="flex items-center justify-center rounded-pill bg-error/10 py-2 text-error transition-colors hover:bg-error/10"
+                    aria-label="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             ) : (
               <button
                 onClick={() => router.push('/login')}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+                className="w-full rounded-pill px-4 py-3 fantasy-button text-sm font-medium transition-colors"
               >
                 Get Started
               </button>
             )}
-
-            {/* Dropdown Menu - Two Column Layout */}
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-[600px] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl z-50">
-                {/* User Info Header */}
-                <div className="p-4 border-b border-slate-700 bg-slate-750">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-blue-600 flex items-center justify-center text-white font-bold">
-                      {session?.user?.image ? (
-                        <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl">{session?.user?.name?.charAt(0).toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-slate-100">{session?.user?.name}</div>
-                      <div className="text-sm text-slate-400">{session?.user?.email}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">@{username}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Two Column Content */}
-                <div className="grid grid-cols-2 divide-x divide-slate-700">
-                  {/* Left Column - My Teams */}
-                  <div className="p-3">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 px-2">
-                      My Teams
-                    </div>
-                    <div className="space-y-1 max-h-64 overflow-y-auto">
-                      {/* Only show team if user has one */}
-                      {hasTeam ? (
-                        <button
-                          onClick={() => {
-                            setIsDropdownOpen(false);
-                            router.push('/myteam');
-                          }}
-                          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left"
-                        >
-                          <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 text-xs font-bold text-white ${
-                            teamPlatform?.toLowerCase() === 'espn' ? 'bg-red-600' :
-                            teamPlatform?.toLowerCase() === 'yahoo' ? 'bg-purple-600' :
-                            'bg-blue-600'
-                          }`}>
-                            {teamPlatform?.toLowerCase() === 'espn' ? 'ESPN' :
-                             teamPlatform?.toLowerCase() === 'yahoo' ? 'Y!' :
-                             '🏒'}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-slate-200 truncate">{teamName || 'My Team'}</div>
-                            <div className="text-xs text-slate-400 capitalize">{teamPlatform || 'Custom'}</div>
-                          </div>
-                        </button>
-                      ) : (
-                        <div className="px-2 py-4 text-center">
-                          <div className="text-slate-400 text-sm mb-2">No teams yet</div>
-                          <div className="text-xs text-slate-500">Add a team to get started</div>
-                        </div>
-                      )}
-
-                      {/* Add New Team Button */}
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          router.push('/teams/new');
-                        }}
-                        className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-slate-700 transition-colors text-left border border-dashed border-slate-600"
-                      >
-                        <div className="w-8 h-8 bg-slate-700 rounded flex items-center justify-center flex-shrink-0">
-                          <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-slate-300">Add New Team</div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Right Column - Settings & Actions */}
-                  <div className="p-3">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 px-2">
-                      Account
-                    </div>
-                    <div className="space-y-1">
-                      <Link
-                        href="/profile"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-2 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Profile
-                      </Link>
-
-                      <Link
-                        href="/support"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-2 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        Support
-                      </Link>
-
-                      <div className="border-t border-slate-700 my-2"></div>
-
-                      <button
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        className="w-full flex items-center gap-3 px-2 py-2 text-sm text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
+        </aside>
+
+        <div className="flex min-h-0 flex-col">
+
+
+          <main className="bb-main min-h-0 flex-1 overflow-y-auto fantasy-main pb-24 lg:pb-0">{children}</main>
+        </div>
+      </div>
+
+      <nav className="bb-mobile-nav fixed z-50 p-2 lg:hidden">
+        <div ref={mobileNavRef} className="flex gap-1 overflow-x-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.path;
+
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex min-h-14 min-w-[64px] flex-col items-center justify-center rounded-pill text-[11px] font-medium transition-colors ${
+                  isActive ? 'bg-paper-2 text-accent' : 'text-muted hover:bg-paper-2 hover:text-ink'
+                }`}
+              >
+                <Icon className={`mb-1 h-5 w-5 ${isActive ? 'text-accent' : ''}`} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-slate-900">
-        {children}
-      </main>
     </div>
   );
 }

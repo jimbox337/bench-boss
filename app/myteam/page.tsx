@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { TriangleAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useData } from '@/lib/DataContext';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
 import { Player } from '@/lib/calculator';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function MyTeam() {
   const router = useRouter();
-  const { players, myTeam, teamExists, addToMyTeam, removeFromMyTeam, setMyTeam, setESPNConfig } = useData();
+  const { status } = useSession();
+  const { players, myTeam, addToMyTeam, removeFromMyTeam, setMyTeam, refreshTeam, setESPNConfig } = useData();
   const [search, setSearch] = useState('');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -19,8 +21,12 @@ export default function MyTeam() {
   const handleDeleteTeam = async () => {
     setIsDeleting(true);
     try {
-      await fetch('/api/team', { method: 'DELETE' });
-      setMyTeam([]);
+      if (status === 'authenticated') {
+        const response = await fetch('/api/team', { method: 'DELETE' });
+        if (!response.ok) throw new Error('Unable to delete team');
+      }
+      if (status === 'authenticated') await refreshTeam();
+      else setMyTeam([]);
       setESPNConfig(null);
       router.push('/');
     } catch {
@@ -30,52 +36,6 @@ export default function MyTeam() {
       setShowDeleteConfirm(false);
     }
   };
-
-  // Show empty state if no team record exists
-  if (!teamExists) {
-    return (
-      <ProtectedRoute requiresTeam={true}>
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full text-center">
-          <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-12">
-            {/* Icon */}
-            <div className="w-24 h-24 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-slate-100 mb-3">
-              No Team Yet
-            </h2>
-
-            {/* Description */}
-            <p className="text-slate-400 mb-8 text-lg">
-              Get started by adding your fantasy hockey team. Connect your ESPN league or build a custom team.
-            </p>
-
-            {/* Action Button */}
-            <button
-              onClick={() => router.push('/teams/new')}
-              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-lg inline-flex items-center gap-2"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Your First Team
-            </button>
-
-            {/* Help Text */}
-            <p className="text-slate-500 mt-6 text-sm">
-              You can always add more teams later from the settings page
-            </p>
-          </div>
-        </div>
-      </div>
-      </ProtectedRoute>
-    );
-  }
 
   const availablePlayers = players.filter(p => !myTeam.some(tp => tp.id === p.id));
 
@@ -93,47 +53,48 @@ export default function MyTeam() {
   };
 
   return (
-    <ProtectedRoute requiresTeam={true}>
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <>
+    <div className="bb-page">
+      <div className="bb-page-header">
         <div>
-          <h2 className="text-3xl font-bold text-slate-100">My Team</h2>
-          <p className="text-slate-400 mt-1">{myTeam.length} players on roster</p>
+          <h1>{status === 'unauthenticated' ? 'Guest Roster' : 'My Team'}</h1>
+          {status === 'unauthenticated' && <p className="text-muted mt-1">Build a roster to use every tool. Kept in this browser tab; sign in to save a personal team.</p>}
+          <p className="text-muted mt-1">{myTeam.length} players on roster</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setShowAddPlayer(!showAddPlayer)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="bb-button"
           >
             {showAddPlayer ? 'Close' : '+ Add Player'}
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 bg-slate-700 text-red-400 rounded-lg font-medium hover:bg-red-900/30 hover:text-red-300 transition-colors border border-slate-600 hover:border-red-700"
+            className="px-4 py-2 bg-paper-3 text-error font-medium hover:bg-error/10 hover:text-error transition-colors border border-rule hover:border-error"
           >
-            Delete Team
+            {status === 'unauthenticated' ? 'Clear Roster' : 'Delete Team'}
           </button>
         </div>
       </div>
 
       {/* Delete Confirm Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-slate-800 rounded-xl border border-slate-700 p-8 max-w-sm w-full text-center shadow-2xl">
-            <div className="text-4xl mb-4">⚠️</div>
-            <h3 className="text-xl font-bold text-slate-100 mb-2">Delete Team?</h3>
-            <p className="text-slate-400 text-sm mb-6">This will remove your team and all roster data. You can reconnect your league any time.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-paper/85 p-4">
+          <div className="bb-panel p-8 max-w-sm w-full text-center">
+            <TriangleAlert className="mx-auto mb-4 h-8 w-8 text-error" aria-hidden="true" />
+            <h3 className="text-xl font-medium text-ink mb-2">Delete Team?</h3>
+            <p className="text-muted text-sm mb-6">This will remove your team and all roster data. You can reconnect your league any time.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-paper-3 text-ink-2 hover:bg-paper-3 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteTeam}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-error/10 text-error hover:bg-error/10 transition-colors disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
@@ -144,49 +105,49 @@ export default function MyTeam() {
 
       {/* Add Player Section */}
       {showAddPlayer && (
-        <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-6">
-          <h3 className="text-xl font-bold mb-4">Add Player to Roster</h3>
+        <div className="bb-panel p-6 mb-6">
+          <h3 className="text-xl font-medium mb-4">Add Player to Roster</h3>
 
           <input
             type="text"
             placeholder="Search players..."
-            className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 mb-4 focus:border-blue-500 focus:outline-none"
+            aria-label="Search players" className="bb-field w-full mb-4"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <div className="max-h-96 overflow-y-auto">
-            <table className="w-full">
-              <thead className="bg-slate-750 border-b border-slate-700 sticky top-0">
+          <div className="max-h-96 overflow-auto">
+            <table className="bb-table w-full">
+              <thead className="bg-paper-3 border-b border-rule sticky top-0">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase">Player</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase">Team</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase">Pos</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">PTS</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">G</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">A</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">Action</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Player</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Team</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Pos</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">PTS</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">G</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">A</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-ink-2">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-rule">
                 {filteredAvailable.slice(0, 50).map((player) => (
-                  <tr key={player.id} className="hover:bg-slate-750 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">
+                  <tr key={player.id} className="hover:bg-paper-3 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-ink">
                       {player.name}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">
                       {player.nhlTeam}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">
                       {player.positions?.join('/') ?? ''}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-blue-400">
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-accent-2">
                       {player.seasonStats?.PTS || 0}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                       {player.seasonStats?.G || 0}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                       {player.seasonStats?.A || 0}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-center">
@@ -195,7 +156,7 @@ export default function MyTeam() {
                           addToMyTeam(player);
                           setSearch('');
                         }}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                        className="bb-button-secondary text-sm"
                       >
                         Add
                       </button>
@@ -211,69 +172,70 @@ export default function MyTeam() {
       {/* Roster by Position */}
       <div className="grid grid-cols-1 gap-6">
         {Object.entries(groupedByPosition).map(([position, posPlayers]) => (
-          <div key={position} className="bg-slate-800 rounded-xl shadow-lg border border-slate-700">
-            <div className="p-4 border-b border-slate-700">
-              <h3 className="text-lg font-bold text-slate-100">
+          <div key={position} className="bb-panel">
+            <div className="p-4 border-b border-rule">
+              <h3 className="text-lg font-medium text-ink">
                 {position === 'G' ? 'Goalies' :
                  position === 'D' ? 'Defensemen' :
                  position === 'C' ? 'Centers' :
                  position === 'LW' ? 'Left Wings' : 'Right Wings'}
-                <span className="text-sm text-slate-400 ml-2">({posPlayers.length})</span>
+                <span className="text-sm text-muted ml-2">({posPlayers.length})</span>
               </h3>
             </div>
 
             {posPlayers.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
+              <div className="p-8 text-center text-muted">
                 No {position} players on roster
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-750">
+            <p className="mb-3 text-xs text-muted md:hidden">Swipe across the table for all stats.</p>
+                <table className="bb-table w-full">
+                  <thead className="bg-paper-3">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase">Player</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-300 uppercase">Team</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">GP</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">PTS</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">G</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">A</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">PPP</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-300 uppercase">SOG</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-slate-300 uppercase">Action</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Player</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Team</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">GP</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">PTS</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">G</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">A</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">PPP</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-ink-2">SOG</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-ink-2">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700">
+                  <tbody className="divide-y divide-rule">
                     {posPlayers.map((player) => (
-                      <tr key={player.id} className="hover:bg-slate-750 transition-colors cursor-pointer" onClick={() => setSelectedPlayer(player)}>
+                      <tr key={player.id} tabIndex={0} aria-label={`View ${player.name}`} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelectedPlayer(player); } }} className="hover:bg-paper-3 transition-colors cursor-pointer" onClick={() => setSelectedPlayer(player)}>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="font-medium text-slate-100 hover:text-blue-400 transition-colors">{player.name}</div>
-                          <div className="text-xs text-slate-400">{player.positions?.join('/') ?? ''}</div>
+                          <div className="font-medium text-ink hover:text-accent-2 transition-colors">{player.name}</div>
+                          <div className="text-xs text-muted">{player.positions?.join('/') ?? ''}</div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">
                           {player.nhlTeam}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                           {player.gamesPlayed || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-400">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-accent-2">
                           {player.seasonStats?.PTS || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                           {player.seasonStats?.G || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                           {player.seasonStats?.A || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                           {player.seasonStats?.PPP || 0}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">
                           {player.seasonStats?.SOG || 0}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-center">
                           <button
-                            onClick={() => removeFromMyTeam(player.id)}
-                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); removeFromMyTeam(player.id); }}
+                            className="bb-button-secondary text-error text-sm"
                           >
                             Remove
                           </button>
@@ -297,6 +259,6 @@ export default function MyTeam() {
         />
       )}
     </div>
-    </ProtectedRoute>
+    </>
   );
 }

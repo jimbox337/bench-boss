@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
-import { Player, Projection, LeagueSettings } from './calculator';
+import { Player, Projection, LeagueSettings, defaultLeagueSettings } from './calculator';
 import { ESPNLeagueConfig, ESPNLeagueInfo } from './espnFantasyApi';
 
 interface DataContextType {
@@ -60,7 +60,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [myTeam, setMyTeamState] = useState<Player[]>([]);
   const [teamExists, setTeamExists] = useState(false);
-  const [teamDataLoaded, setTeamDataLoaded] = useState(false);
+
 
   // ESPN integration state
   const [espnConfig, setESPNConfigState] = useState<ESPNLeagueConfig | null>(null);
@@ -75,66 +75,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return defaultLeagueSettings;
   });
 
-  // Load team data from database when user logs in
+  // Keep guest rosters separate from account data, including across sign-in changes.
   useEffect(() => {
-    async function loadTeamFromDatabase() {
-      if (status === 'loading' || teamDataLoaded) return;
-
-      if (status === 'authenticated' && session?.user) {
-        try {
-          console.log('📦 Loading team data from database...');
-          const response = await fetch('/api/team');
-          const data = await response.json();
-
-          if (data.team) {
-            const team = data.team;
-            console.log('✅ Team data loaded from database:', team.name);
-
-            setTeamExists(true);
-
-            // Restore roster
-            if (team.roster && Array.isArray(team.roster)) {
-              setMyTeamState(team.roster as Player[]);
-            }
-
-            // Restore league settings
-            if (team.leagueSettings) {
-              setLeagueSettingsState(team.leagueSettings as LeagueSettings);
-            }
-
-            // Restore ESPN config
-            if (team.espnLeagueId) {
-              setESPNConfigState({
-                leagueId: team.espnLeagueId,
-                seasonId: team.seasonId || new Date().getFullYear(),
-                espnS2: team.espnS2 || undefined,
-                swid: team.swid || undefined,
-              });
-            }
-
-            setTeamDataLoaded(true);
-          } else {
-            console.log('📝 No team data found for user');
-            setTeamExists(false);
-            setTeamDataLoaded(true);
-          }
-        } catch (error) {
-          console.error('❌ Error loading team from database:', error);
-          setTeamDataLoaded(true);
-        }
-      } else if (status === 'unauthenticated') {
-        // Clear data when logged out
-        setMyTeamState([]);
-        setTeamExists(false);
-        setESPNConfigState(null);
-        const { defaultLeagueSettings } = require('./calculator');
-        setLeagueSettingsState(defaultLeagueSettings);
-        setTeamDataLoaded(false);
-      }
+    if (status === 'loading') return;
+    let cancelled = false;
+    setMyTeamState([]);
+    setTeamExists(false);
+    setESPNConfigState(null);
+    setESPNLeagueInfo(null);
+    setESPNTeams([]);
+    setLeagueSettingsState(defaultLeagueSettings);
+    if (status === 'unauthenticated') {
+      try {
+        const roster = JSON.parse(sessionStorage.getItem('benchBossGuestRoster') || '[]');
+        if (Array.isArray(roster)) setMyTeamState(roster.filter(p => p && typeof p.id === 'string' && typeof p.name === 'string'));
+      } catch { /* Storage may be unavailable or contain an expired roster. */ }
+    } else {
+      fetch('/api/team').then(response => response.json()).then(data => {
+        if (cancelled || !data.team) return;
+        const team = data.team;
+        setTeamExists(true);
+        setMyTeamState(Array.isArray(team.roster) ? team.roster : []);
+        if (team.leagueSettings) setLeagueSettingsState(team.leagueSettings);
+        if (team.espnLeagueId) setESPNConfigState({
+          leagueId: team.espnLeagueId,
+          seasonId: team.seasonId || new Date().getFullYear(),
+          espnS2: team.espnS2 || undefined,
+          swid: team.swid || undefined,
+        });
+      }).catch(error => console.error('Failed to load team:', error));
     }
-
-    loadTeamFromDatabase();
-  }, [status, session, teamDataLoaded]);
+    return () => { cancelled = true; };
+  }, [status, session?.user?.email]);
 
   useEffect(() => {
     // Auto-load real NHL data using fast API
@@ -211,6 +183,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           });
         }
       } else {
+        setMyTeamState([]);
         setTeamExists(false);
       }
     } catch (error) {
@@ -219,6 +192,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const saveTeamToDatabase = async (roster: Player[]) => {
+    if (status === 'unauthenticated') {
+      try { sessionStorage.setItem('benchBossGuestRoster', JSON.stringify(roster)); } catch { /* In-memory use remains available. */ }
+      return;
+    }
     if (status !== 'authenticated') return;
 
     try {
@@ -243,6 +220,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const addToMyTeam = (player: Player) => {
+    if (myTeam.some(existing => existing.id === player.id)) return;
     const newTeam = [...myTeam, player];
     setMyTeamState(newTeam);
     saveTeamToDatabase(newTeam);

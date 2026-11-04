@@ -1,5 +1,7 @@
 'use client';
 
+import { CircleCheck, LockKeyhole } from 'lucide-react';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,22 +41,22 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-8 max-w-md w-full">
+    <div className="bb-page flex min-h-full items-start justify-center py-12">
+      <div className="bb-panel p-6 sm:p-8 max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🔐</div>
-          <h1 className="text-3xl font-bold text-slate-100 mb-2">Forgot Password</h1>
-          <p className="text-slate-400">
-            Enter your email address and we'll send you a link to reset your password.
+          <LockKeyhole aria-hidden="true" className="mb-6 h-8 w-8 text-muted" />
+          <h1 className="text-3xl font-semibold text-ink mb-2">Forgot Password</h1>
+          <p className="text-muted">
+            Enter your email address and we’ll send you a link to reset your password.
           </p>
         </div>
 
         {success ? (
-          <div className="bg-green-900/30 border border-green-600 text-green-200 rounded-lg p-4 mb-6">
+          <div className="bg-success/10 border border-success/30 text-success p-4 mb-6">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
+              <CircleCheck aria-hidden="true" className="h-5 w-5 shrink-0" />
               <div>
-                <p className="font-semibold mb-1">Check your email</p>
+                <p className="font-medium mb-1">Check your email</p>
                 <p className="text-sm">{message}</p>
               </div>
             </div>
@@ -62,20 +64,20 @@ export default function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {message && (
-              <div className="bg-red-900/30 border border-red-600 text-red-200 rounded-lg p-3 text-sm">
+              <div className="bg-error/10 border border-error/30 text-error p-3 text-sm">
                 {message}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-ink-2 mb-2">
                 Email Address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none"
+                className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-3 focus:border-rule focus:outline-none"
                 placeholder="you@example.com"
                 required
               />
@@ -84,7 +86,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bb-button w-full bg-accent text-accent-ink py-3 font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Sending...' : 'Send Reset Link'}
             </button>
@@ -94,19 +96,19 @@ export default function ForgotPasswordPage() {
         <div className="mt-6 text-center">
           <Link
             href="/login"
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+            className="text-accent-2 hover:text-accent-2 text-sm font-medium"
           >
-            ← Back to Login
+            Back to Login
           </Link>
         </div>
 
         {success && (
           <div className="mt-6 text-center">
-            <p className="text-xs text-slate-400">
-              Didn't receive the email? Check your spam folder or{' '}
+            <p className="text-xs text-muted">
+              Didn’t receive the email? Check your spam folder or{' '}
               <button
                 onClick={() => setSuccess(false)}
-                className="text-blue-400 hover:underline"
+                className="text-accent-2 hover:underline"
               >
                 try again
               </button>

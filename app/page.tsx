@@ -5,7 +5,7 @@ import { useData } from '@/lib/DataContext';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { CountUp, Reveal } from '@/components/ui/reveal';
+import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
 import NoTeamDashboard from '@/components/NoTeamDashboard';
 import {
   Activity,
@@ -54,7 +54,7 @@ export default function Dashboard() {
 
   // Show welcome page if no team is linked
   if (hasTeam === false && !useLegacyOnboarding) {
-    return <NoTeamDashboard onAddTeam={() => router.push('/teams/new')} onBrowsePlayers={() => router.push('/players')} />;
+    return <NoTeamDashboard onAddTeam={() => router.push('/myteam')} onBrowsePlayers={() => router.push('/players')} />;
   }
 
   if (hasTeam === false) {
@@ -62,47 +62,46 @@ export default function Dashboard() {
       <div className="min-h-screen">
         {/* Hero Section */}
         <div className="px-5 py-8 md:p-10">
-          <div className="max-w-6xl mx-auto mb-10 fantasy-card rounded-3xl p-7 md:p-10 overflow-hidden relative">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-yellow-300 to-emerald-400" />
+          <div className="max-w-6xl mx-auto mb-10 fantasy-card rounded-none p-7 md:p-10 overflow-hidden relative">
+
             <div className="grid lg:grid-cols-[1.12fr_0.88fr] gap-8 items-center">
               <div>
-                <p className="fantasy-kicker text-xs font-black mb-3">Draft Night Starts Here</p>
-                <h1 className="text-4xl md:text-6xl font-black text-white mb-4 leading-tight">
+                <h1 className="text-4xl md:text-6xl font-medium text-ink mb-4 leading-tight">
                   Build a fantasy hockey war room.
                 </h1>
-                <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl">
+                <p className="text-lg md:text-xl text-ink-2 mb-8 max-w-2xl">
                   Link your team, scout player value, and make start/sit decisions from a command center built for fantasy hockey managers.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => router.push('/teams/new')}
-                    className="px-8 py-4 fantasy-button text-white text-lg font-black rounded-xl transition-all"
+                    className="px-8 py-4 fantasy-button text-lg font-medium rounded-none transition-colors"
                   >
                     Add Your Team
                   </button>
                   <button
                     onClick={() => router.push('/players')}
-                    className="px-8 py-4 bg-white/5 hover:bg-white/10 text-cyan-100 text-lg font-bold rounded-xl border border-white/10 transition-all"
+                    className="px-8 py-4 bg-paper-2 hover:bg-paper-2 text-ink text-lg font-medium rounded-none border border-rule transition-colors"
                   >
                     Scout Players
                   </button>
                 </div>
               </div>
 
-              <div className="relative min-h-72 rounded-2xl border border-cyan-200/20 bg-slate-950/50 p-5 overflow-hidden">
-                <div className="absolute inset-4 rounded-[50%] border border-cyan-200/15" />
-                <div className="absolute left-1/2 top-0 h-full w-px bg-red-400/35" />
-                <div className="absolute inset-x-8 top-1/2 h-px bg-cyan-200/25" />
+              <div className="relative min-h-72 rounded-none border border-rule bg-paper-2 p-5 overflow-hidden">
+                <div className="absolute inset-4 rounded-[50%] border border-rule" />
+                <div className="absolute left-1/2 top-0 h-full w-px bg-error/10" />
+                <div className="absolute inset-x-8 top-1/2 h-px bg-paper-2" />
                 <div className="relative grid grid-cols-2 gap-4 h-full">
                   {[
-                    ['Roster Score', '92', 'text-cyan-300'],
-                    ['Waiver Edge', '+18%', 'text-emerald-300'],
-                    ['Trade Heat', 'A-', 'text-yellow-300'],
-                    ['Injury Risk', 'Low', 'text-sky-300'],
+                    ['Example roster score', '92', 'text-ink'],
+                    ['Example waiver edge', '+18%', 'text-success'],
+                    ['Example trade rating', 'A-', 'text-ink'],
+                    ['Example injury risk', 'Low', 'text-accent-2'],
                   ].map(([label, value, color]) => (
-                    <div key={label} className="rounded-2xl bg-black/30 border border-white/10 p-4 flex flex-col justify-between min-h-28">
-                      <span className="text-xs text-slate-400 uppercase font-bold">{label}</span>
-                      <span className={`text-3xl font-black ${color}`}>{value}</span>
+                    <div key={label} className="rounded-none bg-paper-3 border border-rule p-4 flex flex-col justify-between min-h-28">
+                      <span className="text-xs text-muted font-medium">{label}</span>
+                      <span className={`text-3xl font-medium ${color}`}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -111,38 +110,37 @@ export default function Dashboard() {
           </div>
 
           <div className="max-w-6xl mx-auto text-center mb-10">
-            <p className="fantasy-kicker text-xs font-black mb-3">Manager Toolkit</p>
-            <h2 className="text-3xl md:text-4xl font-black text-white">Every decision gets a second opinion.</h2>
+            <h2 className="text-3xl md:text-4xl font-medium text-ink">Every decision gets a second opinion.</h2>
           </div>
 
           {/* Features Grid */}
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="fantasy-card fantasy-card-hover rounded-2xl p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-200">
+            <div className="fantasy-card fantasy-card-hover rounded-none p-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-paper-2 text-ink">
                 <Bolt className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-black text-white mb-2">Lineup Optimizer</h3>
-              <p className="text-slate-400 text-sm">
+              <h3 className="text-xl font-medium text-ink mb-2">Lineup Optimizer</h3>
+              <p className="text-muted text-sm">
                 Maximize your weekly points with AI-powered lineup recommendations
               </p>
             </div>
 
-            <div className="fantasy-card fantasy-card-hover rounded-2xl p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-200">
+            <div className="fantasy-card fantasy-card-hover rounded-none p-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-success/10 text-success">
                 <Repeat2 className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-black text-white mb-2">Trade Analyzer</h3>
-              <p className="text-slate-400 text-sm">
+              <h3 className="text-xl font-medium text-ink mb-2">Trade Analyzer</h3>
+              <p className="text-muted text-sm">
                 Evaluate trade proposals with advanced analytics and projections
               </p>
             </div>
 
-            <div className="fantasy-card fantasy-card-hover rounded-2xl p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-200">
+            <div className="fantasy-card fantasy-card-hover rounded-none p-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-paper-2 text-ink">
                 <Crosshair className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-black text-white mb-2">Waiver Targets</h3>
-              <p className="text-slate-400 text-sm">
+              <h3 className="text-xl font-medium text-ink mb-2">Waiver Targets</h3>
+              <p className="text-muted text-sm">
                 Discover hidden gems and trending players on the waiver wire
               </p>
             </div>
@@ -151,14 +149,14 @@ export default function Dashboard() {
           {/* NHL News Section */}
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-black text-white">League Intel</h2>
+              <h2 className="text-2xl font-medium text-ink">League Intel</h2>
               <a
                 href="https://www.nhl.com/news"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-cyan-300 hover:text-yellow-200 text-sm font-bold"
+                className="text-ink hover:text-ink text-sm font-medium"
               >
-                View More →
+                View More
               </a>
             </div>
 
@@ -168,19 +166,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-cyan-500/20 to-slate-950 flex items-center justify-center">
-                  <Trophy className="h-14 w-14 text-cyan-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <Trophy className="h-14 w-14 text-ink" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-ink transition-colors">
                     NHL Standings Update
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     Check out the latest standings and playoff race updates from around the league
                   </p>
-                  <span className="text-xs text-slate-500">NHL.com</span>
+                  <span className="text-xs text-muted">NHL.com</span>
                 </div>
               </a>
 
@@ -189,19 +187,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com/stats"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-violet-500/20 to-slate-950 flex items-center justify-center">
-                  <BarChart3 className="h-14 w-14 text-violet-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <BarChart3 className="h-14 w-14 text-accent" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-violet-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-ink transition-colors">
                     Player Stats & Leaders
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     View the top scorers, goalies, and statistical leaders across the NHL
                   </p>
-                  <span className="text-xs text-slate-500">NHL Stats</span>
+                  <span className="text-xs text-muted">NHL Stats</span>
                 </div>
               </a>
 
@@ -210,19 +208,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com/video"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-orange-500/20 to-slate-950 flex items-center justify-center">
-                  <Clapperboard className="h-14 w-14 text-orange-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <Clapperboard className="h-14 w-14 text-accent" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-orange-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-ink transition-colors">
                     Game Highlights
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     Watch the best goals, saves, and moments from recent NHL games
                   </p>
-                  <span className="text-xs text-slate-500">NHL Video</span>
+                  <span className="text-xs text-muted">NHL Video</span>
                 </div>
               </a>
 
@@ -231,19 +229,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com/news/injuries"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-red-500/20 to-slate-950 flex items-center justify-center">
-                  <HeartPulse className="h-14 w-14 text-red-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <HeartPulse className="h-14 w-14 text-error" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-red-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-error transition-colors">
                     Injury Reports
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     Stay updated on player injuries and their fantasy hockey impact
                   </p>
-                  <span className="text-xs text-slate-500">NHL Injuries</span>
+                  <span className="text-xs text-muted">NHL Injuries</span>
                 </div>
               </a>
 
@@ -252,19 +250,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com/news/trades"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-emerald-500/20 to-slate-950 flex items-center justify-center">
-                  <Repeat2 className="h-14 w-14 text-emerald-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <Repeat2 className="h-14 w-14 text-success" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-emerald-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-success transition-colors">
                     Trade Deadline News
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     Follow the latest trades, rumors, and roster moves around the NHL
                   </p>
-                  <span className="text-xs text-slate-500">NHL Trades</span>
+                  <span className="text-xs text-muted">NHL Trades</span>
                 </div>
               </a>
 
@@ -273,19 +271,19 @@ export default function Dashboard() {
                 href="https://www.nhl.com/stanley-cup-playoffs"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group fantasy-card fantasy-card-hover rounded-2xl overflow-hidden"
+                className="group fantasy-card fantasy-card-hover rounded-none overflow-hidden"
               >
-                <div className="aspect-video bg-gradient-to-br from-yellow-500/20 to-slate-950 flex items-center justify-center">
-                  <Medal className="h-14 w-14 text-yellow-200" />
+                <div className="aspect-video bg-paper-3  flex items-center justify-center">
+                  <Medal className="h-14 w-14 text-ink" />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-black text-white mb-2 group-hover:text-yellow-300 transition-colors">
+                  <h3 className="text-lg font-medium text-ink mb-2 group-hover:text-ink transition-colors">
                     Playoff Picture
                   </h3>
-                  <p className="text-sm text-slate-400 mb-3">
+                  <p className="text-sm text-muted mb-3">
                     Track the playoff race and postseason matchups as they develop
                   </p>
-                  <span className="text-xs text-slate-500">NHL Playoffs</span>
+                  <span className="text-xs text-muted">NHL Playoffs</span>
                 </div>
               </a>
             </div>
@@ -296,172 +294,114 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="px-5 py-6 md:p-8">
-      <Reveal className="mb-7" delay={0.02}>
-        <div className="fantasy-card fantasy-card-command rounded-3xl p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-yellow-300 to-emerald-400" />
-        <p className="fantasy-kicker text-xs font-black mb-2">Live Bench Command</p>
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <h2 className="text-4xl md:text-5xl font-black text-white">Dashboard</h2>
-            <p className="text-slate-300 mt-2">Track matchup leverage, roster volume, and player form from one fantasy war room.</p>
-          </div>
-          <button
-            onClick={() => router.push('/lineup')}
-            className="w-fit px-5 py-3 fantasy-button-gold rounded-xl font-black transition-all"
-          >
-            Optimize Lineup
-          </button>
-        </div>
-        </div>
-      </Reveal>
+    <div className="bb-page bb-dashboard">
+      <header className="bb-page-header">
+        <div><h1>My dashboard</h1><p>Your roster, weekly projections, and player research.</p></div>
+        <button onClick={() => router.push('/lineup')} className="bb-button">Optimize Lineup</button>
+      </header>
 
-      {/* Loading Banner */}
       {isLoading && (
-        <div className="fantasy-card border-cyan-300/30 rounded-2xl p-4 mb-6">
-          <p className="text-sm text-cyan-100">
-            <strong>⏳ Loading Live NHL Data...</strong> Fetching current season stats and projections.
-          </p>
+        <div className="mb-5 flex items-center gap-2 text-sm text-muted" role="status">
+          <Activity className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Loading NHL stats and projections…
         </div>
       )}
-
-      {/* Success Banner */}
       {!isLoading && isLiveData && (
-        <div className="bg-emerald-500/10 border border-emerald-300/30 rounded-2xl p-4 mb-6 shadow-[0_0_24px_rgba(16,185,129,0.12)]">
-          <p className="flex items-start gap-2 text-sm text-emerald-100">
-            <Activity className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              <strong>Live NHL Data Active!</strong> Using real player stats from the current season.
-            Projections are based on per-game averages and upcoming schedules.
-            </span>
-          </p>
+        <div className="mb-5 flex items-start gap-2 text-xs text-muted">
+          <Activity className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+          <p>NHL stats connected. Projections use per-game averages and upcoming schedules.</p>
         </div>
       )}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Reveal delay={0.06}>
-          <div className="fantasy-card fantasy-card-hover fantasy-stat-card p-6 rounded-2xl">
-          <p className="text-sm text-slate-400 mb-1 font-bold uppercase">Projected Points</p>
-            <CountUp value={totalPoints} decimals={1} className="text-4xl font-black tabular-nums text-cyan-300" />
-          <p className="text-xs text-emerald-300 mt-2 font-bold">↑ 12% vs league avg</p>
-          </div>
-        </Reveal>
-        <Reveal delay={0.1}>
-          <div className="fantasy-card fantasy-card-hover fantasy-stat-card p-6 rounded-2xl">
-          <p className="text-sm text-slate-400 mb-1 font-bold uppercase">Category Edge</p>
-          <p className="text-4xl font-black text-yellow-300">6-3</p>
-          <p className="text-xs text-slate-400 mt-2">Favored in 6 of 9 cats</p>
-          </div>
-        </Reveal>
-        <Reveal delay={0.14}>
-          <div className="fantasy-card fantasy-card-hover fantasy-stat-card p-6 rounded-2xl">
-          <p className="text-sm text-slate-400 mb-1 font-bold uppercase">Games This Week</p>
-            <CountUp
-              value={myTeam.reduce((sum, p) => {
-              const proj = projections.find(pr => pr.playerId === p.id);
-              return sum + (proj?.gamesPlayed || 0);
-              }, 0)}
-              className="text-4xl font-black tabular-nums text-emerald-300"
-            />
-          <p className="text-xs text-slate-400 mt-2">{myTeam.length} active roster spots</p>
-          </div>
-        </Reveal>
-      </div>
-
-      {/* My Team Roster */}
-      {myTeam.length > 0 && (
-        <Reveal className="mb-8" delay={0.08}>
-          <div className="fantasy-card rounded-3xl p-5 md:p-6">
-          <div className="flex items-center justify-between gap-4 mb-5">
-            <div>
-              <p className="fantasy-kicker text-xs font-black mb-1">Roster Board</p>
-              <h3 className="text-2xl font-black text-white">My Roster</h3>
+      <div className="bb-dashboard-layout grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          <section className="bb-panel bb-dashboard-summary overflow-hidden" aria-label="Roster summary">
+            <div className="grid grid-cols-1 divide-y divide-rule sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <div className="px-5 py-5">
+                <p className="text-xs font-medium text-muted">Projected points</p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{isLoading ? '—' : totalPoints.toFixed(1)}</p>
+                <p className="mt-1 text-xs text-muted">Weekly roster projection</p>
+              </div>
+              <div className="px-5 py-5">
+                <p className="text-xs font-medium text-muted">Players on roster</p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{myTeam.length}</p>
+                <p className="mt-1 text-xs text-muted">{myTeam.filter((player) => player.isGoalie).length} goalies / {myTeam.filter((player) => !player.isGoalie).length} skaters</p>
+              </div>
+              <div className="px-5 py-5">
+                <p className="text-xs font-medium text-muted">Games this week</p>
+                <p className="mt-2 text-3xl font-semibold tabular-nums text-ink">{isLoading ? '—' : myTeam.reduce((sum, player) => sum + (projections.find((projection) => projection.playerId === player.id)?.gamesPlayed || 0), 0)}</p>
+                <p className="mt-1 text-xs text-muted">Across your roster</p>
+              </div>
             </div>
-            <button
-              onClick={() => router.push('/myteam')}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 text-sm font-bold text-cyan-100 transition-all"
-            >
-              Full Roster
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full ice-table">
-              <thead className="border-b border-white/10">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Player</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Team</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase">Pos</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">GP</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">G</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">A</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">PTS</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-400 uppercase">SOG</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10">
-                {myTeam.slice(0, 10).map((player) => (
-                  <tr key={player.id} className="transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-100">
-                      {player.name}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
-                      {player.nhlTeam}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-300">
-                      {player.positions?.join('/') ?? ''}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
-                      {player.gamesPlayed || 0}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
-                      {player.seasonStats?.G || 0}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
-                      {player.seasonStats?.A || 0}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-bold text-blue-400">
-                      {player.seasonStats?.PTS || 0}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-300">
-                      {player.seasonStats?.SOG || 0}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {myTeam.length > 10 && (
-            <p className="text-sm text-slate-400 mt-4 text-center">
-              Showing 10 of {myTeam.length} players. <a href="/myteam" className="text-cyan-300 hover:text-yellow-200 font-bold">View all</a>
-            </p>
-          )}
-          </div>
-        </Reveal>
-      )}
+          </section>
 
-      {/* Empty State */}
-      {myTeam.length === 0 && !isLoading && (
-        <div className="fantasy-card rounded-3xl p-12 text-center">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-400/10 text-cyan-200">
-            <Shirt className="h-8 w-8" />
-          </div>
-          <h3 className="text-2xl font-black text-white mb-2">No Team Yet</h3>
-          <p className="text-slate-400 mb-6">Add players to your roster to get started</p>
-          <button
-            onClick={() => {
-              if (!session) {
-                router.push('/login');
-              } else {
-                router.push('/myteam');
-              }
-            }}
-            className="inline-block px-6 py-3 fantasy-button text-white rounded-xl font-black transition-all"
-          >
-            Build My Team
-          </button>
+          {myTeam.length > 0 && (
+            <section className="bb-panel bb-dashboard-roster overflow-hidden" aria-labelledby="my-roster-title">
+              <div className="bb-dashboard-panel-heading flex flex-wrap items-center justify-between gap-3 border-b border-rule px-5 py-3">
+                <h2 id="my-roster-title" className="text-lg">My roster</h2>
+                <button onClick={() => router.push('/myteam')} className="bb-button-secondary text-sm">Full Roster</button>
+              </div>
+              <p className="px-5 pt-3 text-xs text-muted md:hidden">Swipe across the table for all stats.</p>
+              <div className="overflow-x-auto">
+                <table className="bb-table w-full">
+                  <thead><tr>
+                    <th className="px-4 py-3 text-left">Player</th>
+                    <th className="px-4 py-3 text-right">PTS</th>
+                    <th className="px-4 py-3 text-left">Team</th>
+                    <th className="px-4 py-3 text-left">Pos</th>
+                    <th className="px-4 py-3 text-right">GP</th>
+                    <th className="px-4 py-3 text-right">G</th>
+                    <th className="px-4 py-3 text-right">A</th>
+                    <th className="px-4 py-3 text-right">SOG</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-rule">
+                    {myTeam.slice(0, 10).map((player) => (
+                      <tr key={player.id}>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-ink">{player.name}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold tabular-nums text-accent">{player.seasonStats?.PTS || 0}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.nhlTeam}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.positions?.join('/') ?? ''}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm tabular-nums text-ink-2">{player.gamesPlayed || 0}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm tabular-nums text-ink-2">{player.seasonStats?.G || 0}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm tabular-nums text-ink-2">{player.seasonStats?.A || 0}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm tabular-nums text-ink-2">{player.seasonStats?.SOG || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {myTeam.length > 10 && (
+                <p className="border-t border-rule px-5 py-4 text-xs text-muted">Showing 10 of {myTeam.length} players. <a href="/myteam" className="font-semibold text-accent hover:underline">View all</a></p>
+              )}
+            </section>
+          )}
+
+          {myTeam.length === 0 && !isLoading && (
+            <section className="bb-panel px-6 py-8">
+              <Shirt className="mb-4 h-7 w-7 text-accent" aria-hidden="true" />
+              <h2 className="text-xl">No players on your roster</h2>
+              <p className="mt-2 text-sm text-muted">Add players to your roster to get started.</p>
+              <button
+                onClick={() => {
+                  if (!session) { router.push('/login'); }
+                  else { router.push('/myteam'); }
+                }}
+                className="bb-button mt-5"
+              >Build My Team</button>
+            </section>
+          )}
+
+          <section className="bb-panel overflow-hidden" aria-labelledby="next-move-title">
+            <div className="bb-dashboard-panel-heading border-b border-rule px-5 py-4"><h2 id="next-move-title" className="text-lg">Plan your next move</h2></div>
+            <div className="grid grid-cols-1 divide-y divide-rule sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <a href="/startsit" className="px-5 py-5 hover:bg-paper-3"><h3 className="text-sm text-accent">Start / sit</h3><p className="mt-2 text-xs leading-5 text-muted">Compare two players before setting your lineup.</p></a>
+              <a href="/waivers" className="px-5 py-5 hover:bg-paper-3"><h3 className="text-sm text-accent">Waiver targets</h3><p className="mt-2 text-xs leading-5 text-muted">Review the available player pool.</p></a>
+              <a href="/trades" className="px-5 py-5 hover:bg-paper-3"><h3 className="text-sm text-accent">Trade analyzer</h3><p className="mt-2 text-xs leading-5 text-muted">Compare both sides of a roster move.</p></a>
+            </div>
+          </section>
         </div>
-      )}
+        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><LeagueResources /></aside>
+      </div>
     </div>
   );
 }

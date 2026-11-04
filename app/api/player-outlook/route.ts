@@ -1,3 +1,4 @@
+import { AI_MODEL } from '@/lib/aiModel';
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { Player, PlayerOutlook } from '@/lib/calculator';
@@ -56,7 +57,7 @@ Consider:
 - Ice time and power play usage (infer from PPP)`;
 
     const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile', // FREE Groq model (updated)
+      model: AI_MODEL,
       messages: [{
         role: 'user',
         content: prompt

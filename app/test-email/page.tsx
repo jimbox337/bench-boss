@@ -40,8 +40,8 @@ export default function TestEmailPage() {
   // Redirect if not logged in
   if (status === 'loading' || isCheckingAdmin) {
     return (
-      <div className="p-8 max-w-2xl mx-auto">
-        <div className="text-slate-400">Loading...</div>
+      <div className="bb-page max-w-4xl">
+        <div className="text-muted">Loading...</div>
       </div>
     );
   }
@@ -53,7 +53,7 @@ export default function TestEmailPage() {
 
   const handleTestVerification = async () => {
     if (!to) {
-      setResult('❌ Please enter an email address');
+      setResult('Error: Please enter an email address');
       return;
     }
 
@@ -71,13 +71,13 @@ export default function TestEmailPage() {
       const data = await response.json();
 
       if (data.success) {
-        setResult(`✅ Verification email sent successfully to ${to}! Check your inbox.`);
+        setResult(`Success: Verification email sent successfully to ${to}! Check your inbox.`);
       } else {
-        setResult(`❌ Error: ${data.error}`);
+        setResult(`Error: ${data.error}`);
       }
     } catch (error) {
       console.error('Error sending verification email:', error);
-      setResult(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +147,7 @@ export default function TestEmailPage() {
                 color: #ffffff;
                 font-size: 28px;
                 font-weight: 800;
-                text-transform: uppercase;
+                text-transform: ;
                 letter-spacing: 2px;
                 position: relative;
                 z-index: 1;
@@ -193,7 +193,7 @@ export default function TestEmailPage() {
           <body>
             <div class="email-wrapper">
               <div class="header">
-                <div class="logo">🏒</div>
+                <div class="logo">BB</div>
                 <div class="header-title">Bench Boss</div>
               </div>
 
@@ -203,7 +203,7 @@ export default function TestEmailPage() {
               </div>
 
               <div class="footer">
-                <div class="footer-brand">🏒 BENCH BOSS</div>
+                <div class="footer-brand">BENCH BOSS</div>
                 <p class="footer-text" style="font-size: 12px; margin-top: 10px;">
                   © 2026 Bench Boss. All rights reserved.
                 </p>
@@ -226,37 +226,37 @@ export default function TestEmailPage() {
       const data = await response.json();
 
       if (data.success) {
-        setResult('✅ Email sent successfully!');
+        setResult('Success: Email sent successfully!');
         setTo('');
         setSubject('');
         setMessage('');
       } else {
-        setResult(`❌ Error: ${data.error}`);
+        setResult(`Error: ${data.error}`);
       }
     } catch (error) {
-      setResult('❌ Failed to send email');
+      setResult('Error: Failed to send email');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-slate-100 mb-2">Test Email Sender</h1>
-      <p className="text-slate-400 mb-6 text-sm">Admin only - Logged in as {session?.user?.name}</p>
+    <div className="bb-page max-w-4xl">
+      <h1 className="text-3xl font-semibold text-ink mb-2">Test Email Sender</h1>
+      <p className="text-muted mb-6 text-sm">Admin only - Logged in as {session?.user?.name}</p>
 
-      <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 p-6">
+      <div className="bb-panel p-6">
         <form onSubmit={handleSend} className="space-y-4">
           {/* To */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-ink-2 mb-2">
               To Email Address
             </label>
             <input
               type="email"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+              className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-2 focus:border-rule focus:outline-none"
               placeholder="recipient@example.com"
               required
             />
@@ -264,14 +264,14 @@ export default function TestEmailPage() {
 
           {/* Subject */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-ink-2 mb-2">
               Subject
             </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+              className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-2 focus:border-rule focus:outline-none"
               placeholder="Test Email"
               required
             />
@@ -279,13 +279,13 @@ export default function TestEmailPage() {
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-ink-2 mb-2">
               Message
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none h-32"
+              className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-2 focus:border-rule focus:outline-none h-32"
               placeholder="Your message here..."
               required
             />
@@ -293,10 +293,10 @@ export default function TestEmailPage() {
 
           {/* Result Message */}
           {result && (
-            <div className={`p-4 rounded-lg ${
-              result.includes('✅')
-                ? 'bg-green-900/30 border border-green-600 text-green-200'
-                : 'bg-red-900/30 border border-red-600 text-red-200'
+            <div className={`p-4  ${
+              result.includes('Success:')
+                ? 'bg-success/10 border border-success/30 text-success'
+                : 'bg-error/10 border border-error/30 text-error'
             }`}>
               {result}
             </div>
@@ -306,34 +306,34 @@ export default function TestEmailPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bb-button w-full bg-accent text-accent-ink py-3 font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Sending...' : 'Send Custom Email'}
           </button>
 
           {/* Test Verification Email Button */}
-          <div className="mt-4 pt-4 border-t border-slate-600">
-            <p className="text-sm text-slate-400 mb-3">
+          <div className="mt-4 pt-4 border-t border-rule">
+            <p className="text-sm text-muted mb-3">
               Or test the actual verification email template:
             </p>
             <button
               type="button"
               onClick={handleTestVerification}
               disabled={isLoading || !to}
-              className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white py-3 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full hover:bg-paper-3 text-ink py-3 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Sending...' : '🏒 Send Verification Email'}
+              {isLoading ? 'Sending...' : 'Send Verification Email'}
             </button>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-muted mt-2">
               This will send the real verification email template to the email address above
             </p>
           </div>
         </form>
 
-        <div className="mt-6 p-4 bg-slate-750 rounded-lg border border-slate-600">
-          <p className="text-xs text-slate-400">
+        <div className="mt-6 p-4 bg-paper-3 border border-rule">
+          <p className="text-xs text-muted">
             <strong>Note:</strong> This uses your Resend API key to send emails.
-            The email will be sent from: <code className="text-blue-400">{process.env.NEXT_PUBLIC_EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>'}</code>
+            The email will be sent from: <code className="text-accent-2">{process.env.NEXT_PUBLIC_EMAIL_FROM || 'Bench Boss <noreply@benchboss.pro>'}</code>
           </p>
         </div>
       </div>

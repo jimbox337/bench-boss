@@ -1,3 +1,4 @@
+import { getCurrentNHLSeason } from './nhlSeason';
 import { Player, Projection, SkaterStats } from './calculator';
 
 // NHL Stats API - Much faster bulk endpoints
@@ -27,10 +28,11 @@ interface NHLStatsPlayer {
  */
 export async function fetchAllPlayersWithStats(): Promise<Player[]> {
   try {
-    console.log('Fetching all NHL skater stats...');
+    const season = await getCurrentNHLSeason();
+    console.log(`Fetching NHL stats for season ${season}...`);
 
     // Get all skaters with stats - single API call!
-    const skatersUrl = `${NHL_STATS_API}/skater/summary?cayenneExp=seasonId=20252026 and gameTypeId=2&limit=-1`;
+    const skatersUrl = `${NHL_STATS_API}/skater/summary?cayenneExp=seasonId=${season} and gameTypeId=2&limit=-1`;
     const skatersRes = await fetch(skatersUrl);
 
     if (!skatersRes.ok) {
@@ -44,7 +46,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
 
     // Fetch realtime stats for hits and blocks
     console.log('Fetching realtime stats for hits and blocks...');
-    const realtimeUrl = `${NHL_STATS_API}/skater/realtime?cayenneExp=seasonId=20252026 and gameTypeId=2&limit=-1`;
+    const realtimeUrl = `${NHL_STATS_API}/skater/realtime?cayenneExp=seasonId=${season} and gameTypeId=2&limit=-1`;
     const realtimeRes = await fetch(realtimeUrl);
 
     const realtimeMap = new Map<number, { hits: number; blockedShots: number }>();
@@ -77,7 +79,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
         positions: [s.positionCode],
         isGoalie: false,
         gamesPlayed: s.gamesPlayed,
-        headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${teamAbbrev}/${s.playerId}.png`,
+        headshotUrl: `https://assets.nhle.com/mugs/nhl/${season}/${teamAbbrev}/${s.playerId}.png`,
         seasonStats: {
           G: s.goals,
           A: s.assists,
@@ -94,7 +96,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
 
     // Also fetch goalies
     console.log('Fetching all NHL goalie stats...');
-    const goaliesUrl = `${NHL_STATS_API}/goalie/summary?cayenneExp=seasonId=20252026 and gameTypeId=2&limit=-1`;
+    const goaliesUrl = `${NHL_STATS_API}/goalie/summary?cayenneExp=seasonId=${season} and gameTypeId=2&limit=-1`;
     const goaliesRes = await fetch(goaliesUrl);
 
     if (goaliesRes.ok) {
@@ -112,7 +114,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
           positions: ['G'],
           isGoalie: true,
           gamesPlayed: g.gamesPlayed,
-          headshotUrl: `https://assets.nhle.com/mugs/nhl/20252026/${teamAbbrev}/${g.playerId}.png`,
+          headshotUrl: `https://assets.nhle.com/mugs/nhl/${season}/${teamAbbrev}/${g.playerId}.png`,
         });
       });
     }

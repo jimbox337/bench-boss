@@ -1,5 +1,7 @@
 'use client';
 
+import { CircleCheck, CircleX, KeyRound } from 'lucide-react';
+
 import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -67,16 +69,16 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-8 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-slate-100 mb-4">Invalid Reset Link</h1>
-          <p className="text-slate-400 mb-6">
+      <div className="bb-page flex min-h-full items-start justify-center py-12">
+        <div className="bb-panel p-6 sm:p-8 max-w-md w-full text-center">
+          <CircleX aria-hidden="true" className="mb-6 h-8 w-8 text-muted" />
+          <h1 className="text-2xl font-semibold text-ink mb-4">Invalid Reset Link</h1>
+          <p className="text-muted mb-6">
             This password reset link is invalid or has expired.
           </p>
           <Link
             href="/forgot-password"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            className="bb-button inline-block px-6 py-2 bg-accent text-accent-ink font-medium hover:bg-accent transition-colors"
           >
             Request New Link
           </Link>
@@ -86,22 +88,22 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 p-8 max-w-md w-full">
+    <div className="bb-page flex min-h-full items-start justify-center py-12">
+      <div className="bb-panel p-6 sm:p-8 max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🔑</div>
-          <h1 className="text-3xl font-bold text-slate-100 mb-2">Reset Password</h1>
-          <p className="text-slate-400">
+          <KeyRound aria-hidden="true" className="mb-6 h-8 w-8 text-muted" />
+          <h1 className="text-3xl font-semibold text-ink mb-2">Reset Password</h1>
+          <p className="text-muted">
             Enter your new password below.
           </p>
         </div>
 
         {success ? (
-          <div className="bg-green-900/30 border border-green-600 text-green-200 rounded-lg p-4 mb-6">
+          <div className="bg-success/10 border border-success/30 text-success p-4 mb-6">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">✅</span>
+              <CircleCheck aria-hidden="true" className="h-5 w-5 shrink-0" />
               <div>
-                <p className="font-semibold mb-1">Password Reset Successful</p>
+                <p className="font-medium mb-1">Password Reset Successful</p>
                 <p className="text-sm">Redirecting to login...</p>
               </div>
             </div>
@@ -109,38 +111,38 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {message && (
-              <div className="bg-red-900/30 border border-red-600 text-red-200 rounded-lg p-3 text-sm">
+              <div className="bg-error/10 border border-error/30 text-error p-3 text-sm">
                 {message}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-ink-2 mb-2">
                 New Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none"
+                className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-3 focus:border-rule focus:outline-none"
                 placeholder="Enter new password"
                 required
                 minLength={6}
               />
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Must be at least 6 characters
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-ink-2 mb-2">
                 Confirm Password
               </label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none"
+                className="bb-field w-full bg-paper-3 border border-rule text-ink px-4 py-3 focus:border-rule focus:outline-none"
                 placeholder="Confirm new password"
                 required
                 minLength={6}
@@ -150,7 +152,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bb-button w-full bg-accent text-accent-ink py-3 font-medium hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Resetting...' : 'Reset Password'}
             </button>
@@ -160,9 +162,9 @@ function ResetPasswordForm() {
         <div className="mt-6 text-center">
           <Link
             href="/login"
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+            className="text-accent-2 hover:text-accent-2 text-sm font-medium"
           >
-            ← Back to Login
+            Back to Login
           </Link>
         </div>
       </div>
@@ -173,8 +175,8 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-100">Loading...</div>
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <div className="text-ink">Loading...</div>
       </div>
     }>
       <ResetPasswordForm />

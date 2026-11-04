@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function StartSit() {
   const { players, projections } = useData();
@@ -34,7 +34,7 @@ export default function StartSit() {
 
   const proj1 = player1 ? projections.find(p => p.playerId === player1.id) : undefined;
   const proj2 = player2 ? projections.find(p => p.playerId === player2.id) : undefined;
-  
+
   const points1 = proj1 ? calculateFantasyPoints(proj1, defaultLeagueSettings) : 0;
   const points2 = proj2 ? calculateFantasyPoints(proj2, defaultLeagueSettings) : 0;
 
@@ -42,19 +42,19 @@ export default function StartSit() {
   const winnerProj = points1 > points2 ? proj1 : proj2;
 
   return (
-    <ProtectedRoute requiresTeam={true}>
-    <div className="p-8">
-      <h2 className="text-3xl font-bold text-slate-100 mb-6">Start / Sit Tool</h2>
+    <>
+    <div className="bb-page">
+      <header className="bb-page-header"><div><h1>Start / Sit Tool</h1><p>Put two players side by side before making the call.</p></div></header>
 
       {/* Controls */}
-      <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-6">
-        <h3 className="text-lg font-bold text-slate-100 mb-4">Compare Players</h3>
+      <div className="bb-toolbar mb-6">
+        <h3 className="text-lg font-medium text-ink mb-4">Compare Players</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Player 1</label>
-            <input
+            <label className="block text-sm font-medium text-ink-2 mb-2">Player 1</label>
+            <input aria-label="Player 1"
               type="text"
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+              className="bb-field w-full"
               placeholder="Enter player name..."
               value={player1Name}
               onChange={(e) => {
@@ -65,27 +65,27 @@ export default function StartSit() {
               onBlur={() => setTimeout(() => setShowPlayer1Suggestions(false), 200)}
             />
             {showPlayer1Suggestions && player1Suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-paper-3 border border-rule max-h-60 overflow-y-auto">
                 {player1Suggestions.map(p => (
-                  <div
+                  <button type="button"
                     key={p.id}
-                    className="px-4 py-2 hover:bg-slate-600 cursor-pointer text-slate-100"
+                    className="block w-full px-4 py-3 text-left hover:bg-paper-2 text-ink"
                     onClick={() => {
                       setPlayer1Name(p.name);
                       setShowPlayer1Suggestions(false);
                     }}
                   >
-                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
-                  </div>
+                    {p.name} <span className="text-muted text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
+                  </button>
                 ))}
               </div>
             )}
           </div>
           <div className="relative">
-            <label className="block text-sm font-medium text-slate-300 mb-2">Player 2</label>
-            <input
+            <label className="block text-sm font-medium text-ink-2 mb-2">Player 2</label>
+            <input aria-label="Player 2"
               type="text"
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+              className="bb-field w-full"
               placeholder="Enter player name..."
               value={player2Name}
               onChange={(e) => {
@@ -96,26 +96,26 @@ export default function StartSit() {
               onBlur={() => setTimeout(() => setShowPlayer2Suggestions(false), 200)}
             />
             {showPlayer2Suggestions && player2Suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-paper-3 border border-rule max-h-60 overflow-y-auto">
                 {player2Suggestions.map(p => (
-                  <div
+                  <button type="button"
                     key={p.id}
-                    className="px-4 py-2 hover:bg-slate-600 cursor-pointer text-slate-100"
+                    className="block w-full px-4 py-3 text-left hover:bg-paper-2 text-ink"
                     onClick={() => {
                       setPlayer2Name(p.name);
                       setShowPlayer2Suggestions(false);
                     }}
                   >
-                    {p.name} <span className="text-slate-400 text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
-                  </div>
+                    {p.name} <span className="text-muted text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
+                  </button>
                 ))}
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Timeframe</label>
-            <select
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+            <label className="block text-sm font-medium text-ink-2 mb-2">Timeframe</label>
+            <select aria-label="Timeframe"
+              className="bb-field w-full"
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
             >
@@ -128,14 +128,15 @@ export default function StartSit() {
         </div>
       </div>
 
+      {player1 && player2 ? <>
       {/* Recommendation */}
-      <div className="bg-green-900/30 border-2 border-green-600 rounded-xl p-6 mb-6">
+      <div className="border-l-2 border-success bg-paper-2 p-6 mb-6">
         <div className="flex items-start">
-          <div className="text-3xl mr-4">✅</div>
+          <CheckCircle2 className="mr-4 h-6 w-6 shrink-0 text-success" aria-hidden="true" />
           <div>
-            <h3 className="text-lg font-bold text-green-300">Start {winner?.name}</h3>
-            <p className="text-sm text-green-200 mt-1">
-              {winner?.name} has {winnerProj?.gamesPlayed} games vs {points1 > points2 ? player2?.name : player1?.name}'s {points1 > points2 ? proj2?.gamesPlayed : proj1?.gamesPlayed},
+            <h3 className="text-lg font-medium text-success">Start {winner?.name}</h3>
+            <p className="text-sm text-success mt-1">
+              {winner?.name} has {winnerProj?.gamesPlayed} games vs {points1 > points2 ? player2?.name : player1?.name}’s {points1 > points2 ? proj2?.gamesPlayed : proj1?.gamesPlayed},
               and projects {Math.abs(points1 - points2).toFixed(1)} more fantasy points this week.
             </p>
           </div>
@@ -143,80 +144,81 @@ export default function StartSit() {
       </div>
 
       {/* Comparison Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-px border border-rule bg-rule">
         {/* Player 1 Card */}
-        <div className={`bg-slate-800 rounded-xl shadow-lg overflow-hidden ${points1 > points2 ? 'border-2 border-green-500' : 'border border-slate-700 opacity-75'}`}>
-          <div className={`p-4 border-b ${points1 > points2 ? 'bg-green-900/30 border-green-700' : 'bg-slate-750 border-slate-700'}`}>
-            <h4 className={`font-bold ${points1 > points2 ? 'text-green-300' : 'text-slate-200'}`}>
+        <div className={`bg-paper-2   overflow-hidden ${points1 > points2 ? 'border-t-2 border-success' : 'border-t-2 border-rule'}`}>
+          <div className={`p-4 border-b ${points1 > points2 ? 'bg-success/10 border-success' : 'bg-paper-3 border-rule'}`}>
+            <h4 className={`font-medium ${points1 > points2 ? 'text-success' : 'text-ink'}`}>
               {player1?.name}
             </h4>
-            <p className={`text-sm ${points1 > points2 ? 'text-green-200' : 'text-slate-400'}`}>
-              {player1?.nhlTeam} • {player1?.positions?.join('/') ?? ''} • {proj1?.gamesPlayed} games this week
+            <p className={`text-sm ${points1 > points2 ? 'text-success' : 'text-muted'}`}>
+              {player1?.nhlTeam} / {player1?.positions?.join('/') ?? ''} / {proj1?.gamesPlayed} games this week
             </p>
           </div>
           <div className="p-6 space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-400">Projected Points</span>
-              <span className={`font-bold ${points1 > points2 ? 'text-green-400' : 'text-slate-200'}`}>
+              <span className="text-muted">Projected Points</span>
+              <span className={`font-medium ${points1 > points2 ? 'text-success' : 'text-ink'}`}>
                 {points1.toFixed(1)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Goals</span>
-              <span className="font-bold text-slate-200">{proj1?.skaterStats?.G.toFixed(1) || '-'}</span>
+              <span className="text-muted">Goals</span>
+              <span className="font-medium text-ink">{proj1?.skaterStats?.G.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Assists</span>
-              <span className="font-bold text-slate-200">{proj1?.skaterStats?.A.toFixed(1) || '-'}</span>
+              <span className="text-muted">Assists</span>
+              <span className="font-medium text-ink">{proj1?.skaterStats?.A.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Shots on Goal</span>
-              <span className="font-bold text-slate-200">{proj1?.skaterStats?.SOG.toFixed(1) || '-'}</span>
+              <span className="text-muted">Shots on Goal</span>
+              <span className="font-medium text-ink">{proj1?.skaterStats?.SOG.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">PPP</span>
-              <span className="font-bold text-slate-200">{proj1?.skaterStats?.PPP.toFixed(1) || '-'}</span>
+              <span className="text-muted">PPP</span>
+              <span className="font-medium text-ink">{proj1?.skaterStats?.PPP.toFixed(1) || '-'}</span>
             </div>
           </div>
         </div>
 
         {/* Player 2 Card */}
-        <div className={`bg-slate-800 rounded-xl shadow-lg overflow-hidden ${points2 > points1 ? 'border-2 border-green-500' : 'border border-slate-700 opacity-75'}`}>
-          <div className={`p-4 border-b ${points2 > points1 ? 'bg-green-900/30 border-green-700' : 'bg-slate-750 border-slate-700'}`}>
-            <h4 className={`font-bold ${points2 > points1 ? 'text-green-300' : 'text-slate-200'}`}>
+        <div className={`bg-paper-2   overflow-hidden ${points2 > points1 ? 'border-t-2 border-success' : 'border-t-2 border-rule'}`}>
+          <div className={`p-4 border-b ${points2 > points1 ? 'bg-success/10 border-success' : 'bg-paper-3 border-rule'}`}>
+            <h4 className={`font-medium ${points2 > points1 ? 'text-success' : 'text-ink'}`}>
               {player2?.name}
             </h4>
-            <p className={`text-sm ${points2 > points1 ? 'text-green-200' : 'text-slate-400'}`}>
-              {player2?.nhlTeam} • {player2?.positions?.join('/') ?? ''} • {proj2?.gamesPlayed} games this week
+            <p className={`text-sm ${points2 > points1 ? 'text-success' : 'text-muted'}`}>
+              {player2?.nhlTeam} / {player2?.positions?.join('/') ?? ''} / {proj2?.gamesPlayed} games this week
             </p>
           </div>
           <div className="p-6 space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-400">Projected Points</span>
-              <span className={`font-bold ${points2 > points1 ? 'text-green-400' : 'text-slate-200'}`}>
+              <span className="text-muted">Projected Points</span>
+              <span className={`font-medium ${points2 > points1 ? 'text-success' : 'text-ink'}`}>
                 {points2.toFixed(1)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Goals</span>
-              <span className="font-bold text-slate-200">{proj2?.skaterStats?.G.toFixed(1) || '-'}</span>
+              <span className="text-muted">Goals</span>
+              <span className="font-medium text-ink">{proj2?.skaterStats?.G.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Assists</span>
-              <span className="font-bold text-slate-200">{proj2?.skaterStats?.A.toFixed(1) || '-'}</span>
+              <span className="text-muted">Assists</span>
+              <span className="font-medium text-ink">{proj2?.skaterStats?.A.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Shots on Goal</span>
-              <span className="font-bold text-slate-200">{proj2?.skaterStats?.SOG.toFixed(1) || '-'}</span>
+              <span className="text-muted">Shots on Goal</span>
+              <span className="font-medium text-ink">{proj2?.skaterStats?.SOG.toFixed(1) || '-'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">PPP</span>
-              <span className="font-bold text-slate-200">{proj2?.skaterStats?.PPP.toFixed(1) || '-'}</span>
+              <span className="text-muted">PPP</span>
+              <span className="font-medium text-ink">{proj2?.skaterStats?.PPP.toFixed(1) || '-'}</span>
             </div>
           </div>
         </div>
       </div>
+      </> : <div className="bb-empty"><h2>Select two players</h2><p>Search for a player in each field to compare their projections.</p></div>}
     </div>
-    </ProtectedRoute>
+    </>
   );
 }

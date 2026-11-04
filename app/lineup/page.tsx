@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { calculateFantasyPoints, defaultLeagueSettings, optimizeLineup } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function LineupOptimizer() {
   const { projections, myTeam } = useData();
@@ -17,17 +16,18 @@ export default function LineupOptimizer() {
   const lineup = optimizeLineup(myTeam, projections, defaultLeagueSettings);
 
   return (
-    <ProtectedRoute requiresTeam={true}>
-    <div className="p-8">
-      <h2 className="text-3xl font-bold text-slate-100 mb-6">Lineup Optimizer</h2>
+    <>
+    <div className="bb-page">
+      {!myTeam.length && <div className="bb-panel p-5 mb-5">Add players to your <a className="text-accent underline" href="/myteam">guest or personal roster</a> to optimize your lineup. No account needed.</div>}
+      <header className="bb-page-header"><div><h1>Lineup Optimizer</h1><p>Review projected points and choose your active roster.</p></div></header>
 
       {/* Controls */}
-      <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 p-6 mb-6">
+      <div className="bb-toolbar mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Date Range</label>
-            <select
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none"
+            <label className="block text-sm font-medium text-ink-2 mb-2">Date Range</label>
+            <select aria-label="Date Range"
+              className="bb-field w-full"
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
             >
@@ -38,15 +38,16 @@ export default function LineupOptimizer() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Team</label>
-            <select className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none">
+            <label className="block text-sm font-medium text-ink-2 mb-2">Team</label>
+            <select aria-label="Team" className="bb-field w-full">
               <option>My Team</option>
             </select>
           </div>
           <div className="flex items-end">
-            <button 
+            <button
+              disabled={!myTeam.length}
               onClick={handleOptimize}
-              className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="w-full bb-button"
             >
               Optimize Lineup
             </button>
@@ -56,44 +57,45 @@ export default function LineupOptimizer() {
 
       {/* Results */}
       {optimized && (
-        <div className="bg-slate-800 rounded-xl shadow-sm border border-slate-700 overflow-hidden">
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-xl font-bold text-slate-100">Recommended Lineup</h3>
-            <p className="text-sm text-slate-400 mt-1">
-              Projected: <strong className="text-blue-400">{lineup.totalProjectedPoints?.toFixed(1)} pts</strong> this week
+        <div className="bb-panel overflow-hidden">
+          <div className="p-6 border-b border-rule">
+            <h3 className="text-xl font-medium text-ink">Recommended Lineup</h3>
+            <p className="text-sm text-muted mt-1">
+              Projected: <strong className="text-accent-2">{lineup.totalProjectedPoints?.toFixed(1)} pts</strong> this week
             </p>
           </div>
 
           {/* Active Roster */}
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-700 border-b border-slate-700">
+            <p className="mb-3 text-xs text-muted md:hidden">Swipe across the table for all stats.</p>
+            <table className="bb-table w-full">
+              <thead className="bg-paper-3 border-b border-rule">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Slot</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Player</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Team</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Games</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Proj. Pts</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">G</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">A</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">SOG</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">Slot</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">Player</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">Team</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">Games</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">Proj. Pts</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">G</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">A</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted">SOG</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-rule">
                 {lineup.activeRoster.map((slot, idx) => {
                   const proj = slot.projection;
                   const points = proj ? calculateFantasyPoints(proj, defaultLeagueSettings) : 0;
-                  
+
                   return (
-                    <tr key={idx} className="hover:bg-slate-700">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-100">{slot.slotType}</td>
-                      <td className="px-6 py-4 text-sm text-slate-100">{slot.player?.name}</td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{slot.player?.nhlTeam}</td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{proj?.gamesPlayed || 0}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-blue-400">{points.toFixed(1)}</td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.G.toFixed(1) || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.A.toFixed(1) || '-'}</td>
-                      <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.SOG.toFixed(1) || '-'}</td>
+                    <tr key={idx} className="hover:bg-paper-3">
+                      <td className="px-6 py-4 text-sm font-medium text-ink">{slot.slotType}</td>
+                      <td className="px-6 py-4 text-sm text-ink">{slot.player?.name}</td>
+                      <td className="px-6 py-4 text-sm text-muted">{slot.player?.nhlTeam}</td>
+                      <td className="px-6 py-4 text-sm text-muted">{proj?.gamesPlayed || 0}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-accent-2">{points.toFixed(1)}</td>
+                      <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.G.toFixed(1) || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.A.toFixed(1) || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.SOG.toFixed(1) || '-'}</td>
                     </tr>
                   );
                 })}
@@ -101,25 +103,25 @@ export default function LineupOptimizer() {
                 {/* Bench Section */}
                 {lineup.bench.length > 0 && (
                   <>
-                    <tr className="bg-slate-700 border-t-2 border-slate-600">
-                      <td colSpan={8} className="px-6 py-2 text-xs font-bold text-slate-400 uppercase">
+                    <tr className="bg-paper-3 border-t-2 border-rule">
+                      <td colSpan={8} className="px-6 py-2 text-xs font-medium text-muted">
                         Bench
                       </td>
                     </tr>
                     {lineup.bench.map((slot, idx) => {
                       const proj = slot.projection;
                       const points = proj ? calculateFantasyPoints(proj, defaultLeagueSettings) : 0;
-                      
+
                       return (
-                        <tr key={`bench-${idx}`} className="bg-slate-700 opacity-75">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-400">BN</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{slot.player?.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{slot.player?.nhlTeam}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{proj?.gamesPlayed || 0}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{points.toFixed(1)}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.G.toFixed(1) || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.A.toFixed(1) || '-'}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">{proj?.skaterStats?.SOG.toFixed(1) || '-'}</td>
+                        <tr key={`bench-${idx}`} className="bg-paper-3 opacity-75">
+                          <td className="px-6 py-4 text-sm font-medium text-muted">BN</td>
+                          <td className="px-6 py-4 text-sm text-muted">{slot.player?.name}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{slot.player?.nhlTeam}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{proj?.gamesPlayed || 0}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{points.toFixed(1)}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.G.toFixed(1) || '-'}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.A.toFixed(1) || '-'}</td>
+                          <td className="px-6 py-4 text-sm text-muted">{proj?.skaterStats?.SOG.toFixed(1) || '-'}</td>
                         </tr>
                       );
                     })}
@@ -132,11 +134,11 @@ export default function LineupOptimizer() {
       )}
 
       {!optimized && (
-        <div className="bg-slate-800 rounded-xl p-12 text-center border border-slate-700">
-          <p className="text-slate-400 text-lg">Click "Optimize Lineup" to see your best roster</p>
+        <div className="bg-paper-2 p-12 text-center border border-rule">
+          <p className="text-muted text-lg">Select “Optimize Lineup” to see your best roster</p>
         </div>
       )}
     </div>
-    </ProtectedRoute>
+    </>
   );
 }
