@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchESPNLeagueInfo, fetchESPNTeams, ESPNLeagueConfig } from '@/lib/espnFantasyApi';
+import { getServerSession } from '@/lib/supabase/auth';
+import { prisma } from '@/lib/prisma';
+import { decryptCredential, encryptCredential, isEncryptedCredential } from '@/lib/espnCredentials';
 
 /**
  * API route to fetch ESPN Fantasy League information
@@ -7,14 +10,40 @@ import { fetchESPNLeagueInfo, fetchESPNTeams, ESPNLeagueConfig } from '@/lib/esp
  */
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession();
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { leagueId, seasonId, espnS2, swid, action } = body;
+    const { leagueId, seasonId, action } = body;
+    let { espnS2, swid } = body;
 
     if (!leagueId || !seasonId) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields: leagueId and seasonId' },
         { status: 400 }
       );
+    }
+
+    if (!espnS2 || !swid) {
+      const storedTeam = await prisma.team.findFirst({
+        where: { userId: session.user.id, espnLeagueId: String(leagueId) },
+        orderBy: { updatedAt: 'desc' },
+      });
+      if (storedTeam) {
+        espnS2 ||= decryptCredential(storedTeam.espnS2);
+        swid ||= decryptCredential(storedTeam.swid);
+        if ((storedTeam.espnS2 && !isEncryptedCredential(storedTeam.espnS2)) || (storedTeam.swid && !isEncryptedCredential(storedTeam.swid))) {
+          await prisma.team.update({
+            where: { id: storedTeam.id },
+            data: {
+              espnS2: encryptCredential(storedTeam.espnS2),
+              swid: encryptCredential(storedTeam.swid),
+            },
+          });
+        }
+      }
     }
 
     const config: ESPNLeagueConfig = {

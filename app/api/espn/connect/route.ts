@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/supabase/auth';
 import { prisma } from '@/lib/prisma';
 import { fetchESPNLeagueInfo, fetchESPNTeams, ESPNLeagueConfig } from '@/lib/espnFantasyApi';
+import { encryptCredential, withoutESPNCredentials } from '@/lib/espnCredentials';
 
 export async function POST(request: Request) {
   try {
@@ -120,8 +121,8 @@ export async function POST(request: Request) {
       logo: selectedTeam.logo || null,
       espnLeagueId: leagueId.toString(),
       espnTeamId: selectedTeam.id.toString(),
-      espnS2: espnS2 || null,
-      swid: swid || null,
+      espnS2: encryptCredential(espnS2),
+      swid: encryptCredential(swid),
       seasonId: seasonId.toString(),
       roster: selectedTeam.roster as any,
       leagueSettings: leagueInfo.settings as any,
@@ -147,7 +148,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      team,
+      team: withoutESPNCredentials(team),
     });
   } catch (error) {
     console.error('Error connecting ESPN league:', error);

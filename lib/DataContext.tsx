@@ -100,8 +100,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (team.espnLeagueId) setESPNConfigState({
           leagueId: team.espnLeagueId,
           seasonId: team.seasonId || new Date().getFullYear(),
-          espnS2: team.espnS2 || undefined,
-          swid: team.swid || undefined,
         });
       }).catch(error => console.error('Failed to load team:', error));
     }
@@ -178,8 +176,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setESPNConfigState({
             leagueId: data.team.espnLeagueId,
             seasonId: data.team.seasonId || new Date().getFullYear(),
-            espnS2: data.team.espnS2 || undefined,
-            swid: data.team.swid || undefined,
           });
         }
       } else {

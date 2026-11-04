@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Suspense, useEffect, useState } from 'react';
 import {
   AlertCircle,
@@ -13,8 +14,6 @@ import {
   KeyRound,
   Lock,
   Puzzle,
-  RefreshCw,
-  ShieldCheck,
   Wifi,
 } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -40,7 +39,6 @@ interface ESPNLeagueTeam {
 
 function ESPNSetupInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { players, setMyTeam, setESPNConfig, setLeagueSettings } = useData();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
@@ -59,21 +57,6 @@ function ESPNSetupInner() {
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [sessionDetected, setSessionDetected] = useState(false);
-
-  useEffect(() => {
-    const s2 = searchParams.get('espn_s2');
-    const swidParam = searchParams.get('swid');
-
-    if (s2) {
-      setEspnS2(s2);
-      setShowAdvanced(true);
-    }
-
-    if (swidParam) {
-      setSwid(swidParam);
-      setShowAdvanced(true);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const handleReady = () => setExtensionInstalled(true);
@@ -217,7 +200,7 @@ function ESPNSetupInner() {
     }
   };
 
-  const bookmarkletCode = `javascript:(function(){var c=document.cookie,s2=c.match(/espn_s2=([^;]+)/),sw=c.match(/SWID=([^;]+)/);if(!s2||!sw){alert('Not found. Make sure you are logged in to ESPN.');return;}window.location='https://www.benchboss.pro/teams/espn?espn_s2='+encodeURIComponent(s2[1])+'&swid='+encodeURIComponent(sw[1]);})()`;
+  const bookmarkletCode = `javascript:(function(){var c=document.cookie,s2=c.match(/espn_s2=([^;]+)/),sw=c.match(/SWID=([^;]+)/);if(!s2||!sw){alert('Not found. Make sure you are logged in to ESPN.');return;}var p=btoa(unescape(encodeURIComponent(JSON.stringify({espnS2:s2[1],swid:sw[1]})))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');window.location='https://www.benchboss.pro/teams/espn#espn='+p;})()`;
 
   if (showTeamSelection && leagueInfo) {
     return (
@@ -310,10 +293,11 @@ function ESPNSetupInner() {
 
         <section className="bb-page-header mb-6">
 
-          <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
-            <div>
-              <div className="mb-4 inline-flex border border-error/30 bg-error/10 px-3 py-1 text-xs font-medium text-error">
-                ESPN Fantasy
+          <div className="w-full">
+            <div className="max-w-3xl">
+              <div className="mb-5 inline-flex items-center gap-3 border border-error/30 bg-white px-4 py-2">
+                <Image src="/espn-logo.svg" alt="ESPN" width={118} height={30} priority className="h-6 w-auto" />
+                <span className="border-l border-rule pl-3 text-xs font-medium text-error">Fantasy Hockey</span>
               </div>
               <h1 className="text-3xl font-semibold leading-tight text-ink">
                 Connect your ESPN team.
@@ -321,29 +305,6 @@ function ESPNSetupInner() {
               <p className="mt-3 max-w-2xl text-base leading-6 text-ink-2">
                 Import your league, choose your roster, and save it to your Bench Boss account.
               </p>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center bg-paper-3 text-sm font-medium text-ink">
-                  ESPN
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-ink">Login required</p>
-                  <p className="text-xs text-muted">Teams are saved to your account.</p>
-                </div>
-              </div>
-              <div className="rink-divider my-5" />
-              <div className="space-y-3 text-sm font-medium text-muted">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-success" />
-                  Private leagues supported
-                </div>
-                <div className="flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4 text-accent" />
-                  Roster sync after import
-                </div>
-              </div>
             </div>
           </div>
         </section>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/supabase/auth';
 import { prisma } from '@/lib/prisma';
+import { encryptCredential, withoutESPNCredentials } from '@/lib/espnCredentials';
 
 type SessionUserWithId = {
   id: string;
@@ -32,7 +33,7 @@ export async function GET() {
       return NextResponse.json({ success: true, team: null });
     }
 
-    return NextResponse.json({ success: true, team });
+    return NextResponse.json({ success: true, team: withoutESPNCredentials(team) });
   } catch (error) {
     console.error('Error fetching team:', error);
     return NextResponse.json({ error: 'Failed to fetch team' }, { status: 500 });
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
           name: normalizedName,
           platform: normalizedPlatform,
           logo: typeof logo === 'string' ? logo : undefined,
-          espnS2: typeof espnS2 === 'string' ? espnS2 : undefined,
-          swid: typeof swid === 'string' ? swid : undefined,
+          espnS2: typeof espnS2 === 'string' ? encryptCredential(espnS2) : undefined,
+          swid: typeof swid === 'string' ? encryptCredential(swid) : undefined,
           seasonId: typeof seasonId === 'string' ? seasonId : undefined,
           roster: Array.isArray(roster) ? roster : undefined,
           leagueSettings: normalizedLeagueSettings,
@@ -137,8 +138,8 @@ export async function POST(request: Request) {
           logo: typeof logo === 'string' ? logo : undefined,
           espnLeagueId: typeof espnLeagueId === 'string' ? espnLeagueId : undefined,
           espnTeamId: typeof espnTeamId === 'string' ? espnTeamId : undefined,
-          espnS2: typeof espnS2 === 'string' ? espnS2 : undefined,
-          swid: typeof swid === 'string' ? swid : undefined,
+          espnS2: typeof espnS2 === 'string' ? encryptCredential(espnS2) : undefined,
+          swid: typeof swid === 'string' ? encryptCredential(swid) : undefined,
           seasonId: typeof seasonId === 'string' ? seasonId : undefined,
           roster: Array.isArray(roster) ? roster : undefined,
           leagueSettings: normalizedLeagueSettings,
@@ -148,7 +149,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, team });
+    return NextResponse.json({ success: true, team: withoutESPNCredentials(team) });
   } catch (error) {
     console.error('Error saving team:', error);
     return NextResponse.json({ success: false, error: 'Failed to save team' }, { status: 500 });

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bench Boss ESPN Sync",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Securely connect your logged-in ESPN Fantasy Hockey leagues to Bench Boss.",
   "permissions": ["cookies", "storage", "tabs"],
   "host_permissions": [
