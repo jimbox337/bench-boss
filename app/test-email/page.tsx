@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function TestEmailPage() {

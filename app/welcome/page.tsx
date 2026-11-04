@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/AuthContext';
 import { useData } from '@/lib/DataContext';
 import { CheckCircle2, Plus, UserRound } from 'lucide-react';
 

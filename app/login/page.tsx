@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { createClient } from '@/lib/supabase/client';
 import { AlertCircle, CheckCircle2, Mail, ShieldCheck, Zap } from 'lucide-react';
 import BenchBossLogo from '@/components/BenchBossLogo';
 
@@ -25,7 +25,7 @@ function LoginForm() {
     setIsLoading(true);
 
     if (!username.trim()) {
-      setError('Please enter a username');
+      setError(isSignUp ? 'Please enter a username' : 'Please enter your email');
       setIsLoading(false);
       return;
     }
@@ -43,38 +43,47 @@ function LoginForm() {
       }
     }
 
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters');
+    if (!isSignUp && !username.includes('@')) {
+      setError('Please enter your email address');
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       setIsLoading(false);
       return;
     }
 
     try {
-      const result = await signIn('credentials', {
-        username,
-        email: isSignUp ? email : undefined,
-        firstName: isSignUp ? firstName : undefined,
-        lastName: isSignUp ? lastName : undefined,
-        password,
-        isSignUp: isSignUp.toString(),
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError(result.error);
-        setIsLoading(false);
-      } else if (result?.ok) {
-        if (isSignUp) {
-          // Show verification message for new signups
-          setShowVerificationMessage(true);
-          setIsLoading(false);
-        } else {
-          // Redirect to dashboard for login
+      const supabase = createClient();
+      if (isSignUp) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: { username: username.trim(), first_name: firstName.trim(), last_name: lastName.trim(), full_name: [firstName, lastName].filter(Boolean).join(' ') },
+          },
+        });
+        if (signUpError) throw signUpError;
+        if (data.session) {
           router.push('/');
+          router.refresh();
+        } else {
+          setShowVerificationMessage(true);
         }
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: username.trim().toLowerCase(),
+          password,
+        });
+        if (signInError) throw signInError;
+        router.push('/');
+        router.refresh();
       }
-    } catch {
-      setError('An unexpected error occurred');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to sign in');
       setIsLoading(false);
     }
   };
@@ -184,7 +193,7 @@ function LoginForm() {
             <>
               <button
                 type="button"
-                onClick={() => signIn('google', { callbackUrl: '/' })}
+                onClick={() => createClient().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })}
                 className="w-full bg-paper-2 hover:bg-paper-3 text-ink font-medium py-3 transition-colors flex items-center justify-center gap-3 border border-rule"
               >
                 <svg aria-hidden="true" className="w-5 h-5" viewBox="0 0 24 24">
@@ -260,7 +269,7 @@ function LoginForm() {
 
             <div>
               <label htmlFor="login-username" className="block text-sm font-medium text-ink-2 mb-2">
-                Username
+                {isSignUp ? 'Username' : 'Email'}
               </label>
               <input
                 type="text"
@@ -268,7 +277,7 @@ function LoginForm() {
                 onChange={(e) => setUsername(e.target.value)}
                 className="bb-field w-full border border-rule bg-paper px-4 py-3 text-ink outline-none transition-colors placeholder:text-muted focus:border-rule"
                 id="login-username"
-                    placeholder="Enter your username"
+                    placeholder={isSignUp ? 'Enter your username' : 'Enter your email'}
               />
             </div>
 

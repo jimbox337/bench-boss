@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, ReactNode } from 'react';
 import { AlertTriangle, Lock, LoaderCircle } from 'lucide-react';

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getServerSession } from '@/lib/supabase/auth';
 import { sendVerificationEmail, generateToken } from '@/lib/email';
 import { isAdmin } from '@/lib/admin';
 import { getUserById } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
 
     if (!session?.user) {
       return NextResponse.json(

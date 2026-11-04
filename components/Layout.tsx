@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut, useSession } from '@/lib/AuthContext';
 import {
   BarChart3,
   ChevronRight,

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/AuthContext';
 import { Player, Projection, LeagueSettings, defaultLeagueSettings } from './calculator';
 import { ESPNLeagueConfig, ESPNLeagueInfo } from './espnFantasyApi';
 

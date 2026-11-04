@@ -2,7 +2,7 @@
 
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
