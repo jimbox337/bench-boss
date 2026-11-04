@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { signOut, useSession } from '@/lib/AuthContext';
 import {
   BarChart3,
+  CalendarDays,
   ChevronRight,
   Crosshair,
   LifeBuoy,
@@ -25,6 +26,7 @@ import { useData } from '@/lib/DataContext';
 
 const navItems = [
   { icon: BarChart3, name: 'Dashboard', path: '/' },
+  { icon: CalendarDays, name: 'Games', path: '/games' },
   { icon: Shirt, name: 'My Team', path: '/myteam' },
   { icon: Zap, name: 'Lineup', path: '/lineup' },
   { icon: Swords, name: 'Start / Sit', path: '/startsit' },

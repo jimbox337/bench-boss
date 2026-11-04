@@ -7,6 +7,32 @@ const client = new Groq({
   apiKey: process.env.GROQ_API_KEY || '',
 });
 
+async function getVerifiedPlayerContext(player: Player) {
+  const [gameLogResult, scheduleResult] = await Promise.allSettled([
+    fetch(`https://api-web.nhle.com/v1/player/${player.id}/game-log/now`, { next: { revalidate: 900 } }).then(response => response.ok ? response.json() : null),
+    fetch(`https://api-web.nhle.com/v1/club-schedule/${player.nhlTeam}/week/now`, { next: { revalidate: 900 } }).then(response => response.ok ? response.json() : null),
+  ]);
+  const gameLog = gameLogResult.status === 'fulfilled' ? gameLogResult.value?.gameLog || [] : [];
+  const schedule = scheduleResult.status === 'fulfilled' ? scheduleResult.value?.games || [] : [];
+  const recent = gameLog.slice(0, 10).map((game: any) => ({
+    date: game.gameDate,
+    opponent: game.opponentAbbrev,
+    goals: game.goals || 0,
+    assists: game.assists || 0,
+    points: game.points ?? ((game.goals || 0) + (game.assists || 0)),
+    shots: game.shots || 0,
+    powerPlayPoints: game.powerPlayPoints || 0,
+    toi: game.toi || null,
+  }));
+  const now = Date.now();
+  const upcoming = schedule.filter((game: any) => new Date(`${game.gameDate}T23:59:59Z`).getTime() >= now).slice(0, 7).map((game: any) => ({
+    date: game.gameDate,
+    opponent: game.homeTeam?.abbrev === player.nhlTeam ? game.awayTeam?.abbrev : game.homeTeam?.abbrev,
+    venue: game.homeTeam?.abbrev === player.nhlTeam ? 'home' : 'away',
+  }));
+  return { source: 'NHL API', fetchedAt: new Date().toISOString(), recent, upcoming };
+}
+
 export async function POST(request: Request) {
   try {
     const { player }: { player: Player } = await request.json();
@@ -20,7 +46,8 @@ export async function POST(request: Request) {
 
     console.log(`Generating AI outlook for ${player.name}...`);
 
-    const prompt = `You are an expert fantasy hockey analyst. Analyze this player and provide a detailed outlook.
+    const verifiedContext = await getVerifiedPlayerContext(player);
+    const prompt = `You are an expert fantasy hockey analyst. Analyze this player using only the verified data supplied below. Do not invent injuries, linemates, deployment, news, or role changes. Clearly say when a fact is unavailable.
 
 **Player:** ${player.name}
 **Team:** ${player.nhlTeam}
@@ -37,6 +64,9 @@ export async function POST(request: Request) {
 - Blocks: ${player.seasonStats?.BLK || 0}
 - +/-: ${player.seasonStats?.plusMinus || 0}
 
+**Verified live context (${verifiedContext.source}, fetched ${verifiedContext.fetchedAt}):**
+${JSON.stringify({ recentGames: verifiedContext.recent, upcomingGames: verifiedContext.upcoming }, null, 2)}
+
 Provide a comprehensive fantasy hockey outlook in JSON format:
 
 {
@@ -52,9 +82,12 @@ Provide a comprehensive fantasy hockey outlook in JSON format:
 Consider:
 - Per-game averages vs total stats
 - Category contributions (multi-cat players are valuable)
-- Recent performance trends
-- Team context and linemates
-- Ice time and power play usage (infer from PPP)`;
+- Recent performance trends from the supplied game log
+- Exact team and upcoming opponents from the supplied schedule
+- Ice time and power-play production only when present in the supplied data
+- Schedule volume and home/away context
+
+Never claim that you searched the web. The NHL API context above is the authoritative live source for this response.`;
 
     const completion = await client.chat.completions.create({
       model: AI_MODEL,
@@ -62,7 +95,7 @@ Consider:
         role: 'user',
         content: prompt
       }],
-      temperature: 0.7,
+      temperature: 0.25,
       max_tokens: 1500,
     });
 

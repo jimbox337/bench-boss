@@ -1,5 +1,6 @@
 import { getCurrentNHLSeason } from './nhlSeason';
 import { Player, Projection, SkaterStats } from './calculator';
+import { generateScheduleAwareProjections } from './projectionEngine';
 
 // NHL Stats API - Much faster bulk endpoints
 const NHL_STATS_API = 'https://api.nhle.com/stats/rest/en';
@@ -70,7 +71,8 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
     // Convert to our Player format
     const players: Player[] = skaters.map(s => {
       const realtimeStats = realtimeMap.get(s.playerId) || { hits: 0, blockedShots: 0 };
-      const teamAbbrev = s.teamAbbrevs.split(',')[0] || 'UNK';
+      // NHL returns a comma-separated history after a trade; the last entry is current.
+      const teamAbbrev = s.teamAbbrevs.split(',').at(-1) || 'UNK';
 
       return {
         id: s.playerId.toString(),
@@ -106,7 +108,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
       console.log(`✅ Fetched ${goalies.length} goalies`);
 
       goalies.forEach((g: any) => {
-        const teamAbbrev = g.teamAbbrevs.split(',')[0] || 'UNK';
+        const teamAbbrev = g.teamAbbrevs.split(',').at(-1) || 'UNK';
         players.push({
           id: g.playerId.toString(),
           name: g.goalieFullName,
@@ -173,7 +175,7 @@ export async function generateSimpleProjections(players: Player[]): Promise<Proj
  */
 export async function loadFastNHLData() {
   const players = await fetchAllPlayersWithStats();
-  const projections = await generateSimpleProjections(players);
+  const projections = await generateScheduleAwareProjections(players);
 
   return { players, projections };
 }

@@ -53,6 +53,17 @@ export interface Projection {
   skaterStats?: SkaterStats;
   goalieStats?: GoalieStats;
   gamesPlayed: number;
+  confidence?: number;
+  modelVersion?: string;
+  context?: {
+    opponents: string[];
+    homeGames: number;
+    awayGames: number;
+    backToBacks: number;
+    seasonWeight: number;
+    recentWeight: number;
+    notes: string[];
+  };
 }
 
 export interface LeagueSettings {
