@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Activity, CalendarDays, Clock3, RefreshCw, TrendingUp } from 'lucide-react';
 import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
+import type { GameStarters, TeamStarter } from '@/lib/goalieStarters';
 
 type NHLTeam = { abbrev: string; score?: number; logo?: string; commonName?: { default?: string }; placeName?: { default?: string } };
 type NHLGame = { id: number; gameDate: string; startTimeUTC: string; gameState: string; periodDescriptor?: { number?: number; periodType?: string }; clock?: { timeRemaining?: string; inIntermission?: boolean }; homeTeam: NHLTeam; awayTeam: NHLTeam };
@@ -16,11 +17,21 @@ function gameStatus(game: NHLGame) {
   return new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
+function StarterLine({ starter }: { starter?: TeamStarter }) {
+  if (!starter) return <p className="pl-11 text-xs text-muted">Goalie: loading…</p>;
+  if (starter.status === 'unknown') return <p className="pl-11 text-xs text-muted">Goalie: not confirmed</p>;
+  if (starter.status === 'confirmed') {
+    return <p className="pl-11 text-xs"><span className="text-muted">G </span><span className="font-medium">{starter.name}</span> <span className="font-semibold text-success" title={starter.source}>✓ Confirmed</span></p>;
+  }
+  return <p className="pl-11 text-xs text-muted" title={starter.source}>G {starter.name} · <span className="italic">likely, not confirmed</span> ({starter.starts} of last {starter.ofGames} starts)</p>;
+}
+
 export default function GamesPage() {
   const { players, projections, myTeam, leagueSettings } = useData();
   const [games, setGames] = useState<NHLGame[]>([]);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [starters, setStarters] = useState<Map<number, GameStarters>>(new Map());
 
   const loadGames = async () => {
     const response = await fetch('/api/games');
@@ -28,6 +39,19 @@ export default function GamesPage() {
     if (data.success) { setGames(data.games); setUpdatedAt(new Date(data.updatedAt)); }
     setLoading(false);
   };
+
+  useEffect(() => {
+    let active = true;
+    const loadStarters = () => fetch('/api/goalie-starters')
+      .then(response => response.json())
+      .then(data => {
+        if (active && data.success) setStarters(new Map((data.starters as GameStarters[]).map(row => [row.gameId, row])));
+      })
+      .catch(() => { /* Keep the last known goalie information. */ });
+    void loadStarters();
+    const timer = window.setInterval(() => void loadStarters(), 120_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, []);
 
   useEffect(() => {
     void loadGames();
@@ -67,7 +91,7 @@ export default function GamesPage() {
         {loading ? <p className="p-8 text-sm text-muted">Loading the live NHL slate…</p> : games.length === 0 ? <p className="p-8 text-sm text-muted">No NHL games today.</p> : <div className="grid gap-px bg-rule md:grid-cols-2 xl:grid-cols-3">{games.map(game => (
           <article key={game.id} className="bg-paper p-5">
             <div className="mb-4 flex items-center justify-between text-xs"><span className={['LIVE', 'CRIT'].includes(game.gameState) ? 'font-semibold text-success' : 'text-muted'}>{gameStatus(game)}</span><span className="text-muted">{game.gameState}</span></div>
-            {[game.awayTeam, game.homeTeam].map(team => <div key={team.abbrev} className="flex items-center gap-3 py-2"><img src={team.logo} alt="" className="h-8 w-8 object-contain" /><span className="flex-1 font-medium">{teamName(team)}</span><span className="text-xl font-semibold tabular-nums">{team.score ?? '—'}</span></div>)}
+            {([['away', game.awayTeam], ['home', game.homeTeam]] as const).map(([side, team]) => <div key={team.abbrev} className="py-2"><div className="flex items-center gap-3"><img src={team.logo} alt="" className="h-8 w-8 object-contain" /><span className="flex-1 font-medium">{teamName(team)}</span><span className="text-xl font-semibold tabular-nums">{team.score ?? '—'}</span></div><StarterLine starter={starters.get(game.id)?.[side].starter} /></div>)}
           </article>
         ))}</div>}
       </section>
@@ -81,7 +105,7 @@ export default function GamesPage() {
         ))}</div>
       </section>
 
-      <p className="flex items-center gap-2 text-xs text-muted"><Clock3 className="h-4 w-4" /> Live scores refresh every 30 seconds. Projections refresh with NHL statistics and schedule data.</p>
+      <p className="flex items-center gap-2 text-xs text-muted"><Clock3 className="h-4 w-4" /> Live scores refresh every 30 seconds. Goalies are marked confirmed only when the NHL posts the official game lineup; otherwise the likely starter comes from recent starts.</p>
     </div>
   );
 }
