@@ -26,6 +26,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState('');
   const [syncing, setSyncing] = useState(false);
+  const [securingESPN, setSecuringESPN] = useState(false);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -84,6 +85,24 @@ export default function AdminUsersPage() {
     }
   };
 
+  const secureESPNCredentials = async () => {
+    setSecuringESPN(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await fetch('/api/admin/espn-credentials', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Unable to secure ESPN credentials');
+      setNotice(data.secured
+        ? `${data.secured} legacy ESPN ${data.secured === 1 ? 'connection' : 'connections'} encrypted.`
+        : 'All ESPN connections are already encrypted.');
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to secure ESPN credentials');
+    } finally {
+      setSecuringESPN(false);
+    }
+  };
+
   if (loading) return <div className="bb-page"><div className="bb-panel p-8 text-muted">Loading users…</div></div>;
 
   return (
@@ -109,6 +128,7 @@ export default function AdminUsersPage() {
         <div className="flex flex-col gap-4 border-b border-rule p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2"><Users className="h-5 w-5 text-accent" /><h2 className="text-lg font-semibold">Accounts</h2></div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button type="button" onClick={() => void secureESPNCredentials()} disabled={securingESPN} className="fantasy-button inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-60"><ShieldCheck className="h-4 w-4" />{securingESPN ? 'Securing' : 'Secure ESPN data'}</button>
             {users.some(user => !user.authLinked) && <button type="button" onClick={() => void syncLegacyUsers()} disabled={syncing} className="fantasy-button inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />{syncing ? 'Syncing' : 'Sync legacy users'}</button>}
             <label className="relative block w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
