@@ -1,0 +1,2885 @@
+{
+  "modelVersion": "bench-boss-lgbm-20261104",
+  "pipelineVersion": "2026.11.0",
+  "featureSchemaVersion": 1,
+  "trainedAt": "2026-11-04T23:45:49.417162+00:00",
+  "dataThrough": "2026-11-03",
+  "split": {
+    "train": [
+      "20222023",
+      "20232024"
+    ],
+    "validation": "20242025",
+    "test": "20252026",
+    "live": "20262027"
+  },
+  "source": "NHL public stats REST API (api.nhle.com/stats/rest)",
+  "sourceUpdatedAt": "2026-11-04T23:39:56.650507+00:00",
+  "skater": {
+    "targets": {
+      "goals": {
+        "selected": "residual",
+        "dispersion": 0.3840320352328223,
+        "validationWeeklyRmse": {
+          "direct": 0.6885280324795796,
+          "residual": 0.6774231775913802,
+          "baseline": 0.6779341677916907
+        },
+        "trees": {
+          "direct": 111,
+          "residual": 150
+        },
+        "topFeatures": [
+          "team_gf_l10",
+          "team_gf_pg",
+          "opp_sa_pg",
+          "opp_ga_pg",
+          "std_gp",
+          "l5_toi",
+          "l10_ppToi",
+          "home"
+        ],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 0.2561582907577736,
+              "rmse": 0.40714646138119864,
+              "poissonDeviance": 0.5756094200597339,
+              "spearman": 0.2587843100824449,
+              "bias": -0.012273235583999117,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 0.2551375262228632,
+              "rmse": 0.41891261529153234,
+              "poissonDeviance": 0.7125383873469859,
+              "spearman": 0.2071086645203665,
+              "bias": -0.010368462723775911,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 0.26150736975397704,
+              "rmse": 0.42151000386579435,
+              "poissonDeviance": 1.1129839380137831,
+              "spearman": 0.20586880920289138,
+              "bias": 0.0012981199579728236,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.2623911424893321,
+              "rmse": 0.42000607137964835,
+              "poissonDeviance": 1.1045131403207502,
+              "spearman": 0.21094095142448624,
+              "bias": 0.0021855943968232066,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 0.6885280324795796,
+              "residual": 0.6774231775913802,
+              "productionBaseline": 0.6779341677916907
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.30537302599537525,
+                "baselineMae": 0.31221668222397714,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 0.1254640792446524,
+                "baselineMae": 0.12905412781556633,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 0.33540163881053164,
+                "baselineMae": 0.3440583846063266,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 0.25807110622568924,
+              "rmse": 0.4147524992116009,
+              "poissonDeviance": 0.5876732718086829,
+              "spearman": 0.2566476627032149,
+              "bias": -0.018090039784805112,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 0.25844675418899254,
+              "rmse": 0.42687668811540697,
+              "poissonDeviance": 0.7335501803383859,
+              "spearman": 0.19986059012284152,
+              "bias": -0.015715227795842626,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 0.26650753540713734,
+              "rmse": 0.42877672806869854,
+              "poissonDeviance": 1.1483520575829869,
+              "spearman": 0.20003036536475044,
+              "bias": -0.00018820011407385116,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.26618579327566544,
+              "rmse": 0.4267796163720127,
+              "poissonDeviance": 1.1385471089359993,
+              "spearman": 0.2069066947699469,
+              "bias": -0.0007732047094630422,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 0.7090673283701728,
+              "residual": 0.6993536526025558,
+              "productionBaseline": 0.6970254442885505
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.3039888127045699,
+                "baselineMae": 0.31341099193094507,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.13195230445652675,
+                "baselineMae": 0.13741779821260727,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 0.3403485353826171,
+                "baselineMae": 0.3496736760253572,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 0.2691390858016145,
+              "rmse": 0.4243670291603852,
+              "poissonDeviance": 0.5996688520653518,
+              "spearman": 0.2497698414170239,
+              "bias": -0.011288712893028756,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 0.27099328577989973,
+              "rmse": 0.4656692049571035,
+              "poissonDeviance": 1.0345964244639667,
+              "spearman": 0.14062307613160085,
+              "bias": -0.008641012288120897,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 0.274608789088279,
+              "rmse": 0.46750050074146515,
+              "poissonDeviance": 2.3703833644629264,
+              "spearman": 0.14584140188075137,
+              "bias": -0.0015112042151491686,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.27446574076637686,
+              "rmse": 0.46721315302271443,
+              "poissonDeviance": 2.370151054826838,
+              "spearman": 0.14562216876452247,
+              "bias": -0.0017755100360614525,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 0.6536666115006755,
+              "residual": 0.6645850889176929,
+              "productionBaseline": 0.6636724209663611
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.317950643000345,
+                "baselineMae": 0.3216082569941498,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 0.14035416779327797,
+                "baselineMae": 0.14125844725379158,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 0.35671536936803355,
+                "baselineMae": 0.3629957698454705,
+                "n": 3004
+              }
+            }
+          }
+        }
+      },
+      "assists": {
+        "selected": "residual",
+        "dispersion": 0.2938781844440809,
+        "validationWeeklyRmse": {
+          "direct": 0.8982799983287932,
+          "residual": 0.8824913297158707,
+          "baseline": 0.883152185066685
+        },
+        "trees": {
+          "direct": 125,
+          "residual": 153
+        },
+        "topFeatures": [
+          "team_gf_l10",
+          "team_gf_pg",
+          "opp_sa_pg",
+          "opp_ga_pg",
+          "std_gp",
+          "home",
+          "team_sf_pg",
+          "opp_ga_l10"
+        ],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 0.38706406966126494,
+              "rmse": 0.5299640638441364,
+              "poissonDeviance": 0.7645004587880935,
+              "spearman": 0.26175924642651704,
+              "bias": -0.016609540118485016,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 0.3834312822826826,
+              "rmse": 0.5444976858201438,
+              "poissonDeviance": 0.9268695679404091,
+              "spearman": 0.2146167303196399,
+              "bias": -0.01831658140157841,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 0.39221613879275874,
+              "rmse": 0.5487955591135996,
+              "poissonDeviance": 1.3368798090987601,
+              "spearman": 0.21000368991120233,
+              "bias": 0.0012843777613924347,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.3926924817488799,
+              "rmse": 0.5468906336108044,
+              "poissonDeviance": 1.3278595994551927,
+              "spearman": 0.21621583637608335,
+              "bias": 0.0024981567331389377,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 0.8982799983287932,
+              "residual": 0.8824913297158707,
+              "productionBaseline": 0.883152185066685
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.3934906771186914,
+                "baselineMae": 0.40191396979226757,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 0.36735338137421825,
+                "baselineMae": 0.37640191932644373,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 0.3897859158658007,
+                "baselineMae": 0.3986511495020578,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 0.3899955491181735,
+              "rmse": 0.538361845470084,
+              "poissonDeviance": 0.7752865807820248,
+              "spearman": 0.26557194823198427,
+              "bias": -0.027949585580583674,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 0.38839062245559774,
+              "rmse": 0.553207990581205,
+              "poissonDeviance": 0.9459757836710607,
+              "spearman": 0.21485993567305978,
+              "bias": -0.027075717683887234,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 0.3988655903885622,
+              "rmse": 0.5563603881803993,
+              "poissonDeviance": 1.373291169265189,
+              "spearman": 0.21350904089782163,
+              "bias": -0.00011792781558697243,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.3990764508260973,
+              "rmse": 0.55446768974565,
+              "poissonDeviance": 1.3648191658841624,
+              "spearman": 0.21880616167625852,
+              "bias": -0.0005216977672741572,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 0.9254974031295072,
+              "residual": 0.9112367177659547,
+              "productionBaseline": 0.9071398751270203
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.39789654344366865,
+                "baselineMae": 0.4094087421990627,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.3708152167375836,
+                "baselineMae": 0.3810611205899057,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 0.39667382801907464,
+                "baselineMae": 0.4063669248087235,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 0.40100798129145526,
+              "rmse": 0.5464492849776453,
+              "poissonDeviance": 0.7828121545625388,
+              "spearman": 0.26230040723806247,
+              "bias": -0.017519951788291823,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 0.4017234200404775,
+              "rmse": 0.5941436228869338,
+              "poissonDeviance": 1.3566773158910086,
+              "spearman": 0.1636100059346941,
+              "bias": -0.01813550146629288,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 0.40780602732222726,
+              "rmse": 0.6004340474301854,
+              "poissonDeviance": 2.975083774995196,
+              "spearman": 0.15933846446264588,
+              "bias": -0.004240263595397172,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.40776157865651946,
+              "rmse": 0.6000158255231075,
+              "poissonDeviance": 2.973899061691986,
+              "spearman": 0.1590511160347282,
+              "bias": -0.004362414939880576,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 0.8474039723952438,
+              "residual": 0.8480910802147109,
+              "productionBaseline": 0.8525870349110563
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.4326604261815923,
+                "baselineMae": 0.43671012098352885,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 0.37107792659686917,
+                "baselineMae": 0.37662686851505833,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 0.402905286992459,
+                "baselineMae": 0.411451717781525,
+                "n": 3004
+              }
+            }
+          }
+        }
+      },
+      "shots": {
+        "selected": "residual",
+        "dispersion": 0.11009376957367187,
+        "validationWeeklyRmse": {
+          "direct": 2.239457392032689,
+          "residual": 2.2155411856559017,
+          "baseline": 2.2189837537933466
+        },
+        "trees": {
+          "direct": 180,
+          "residual": 238
+        },
+        "topFeatures": [
+          "opp_sa_pg",
+          "team_sf_pg",
+          "home",
+          "std_gp",
+          "std_toi",
+          "opp_ga_pg",
+          "l10_ppToi",
+          "std_ppToi"
+        ],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 1.018339293477437,
+              "rmse": 1.3268465074561981,
+              "poissonDeviance": 1.236738671055414,
+              "spearman": 0.42378185535428864,
+              "bias": -0.02826120182828216,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 1.0426053226909195,
+              "rmse": 1.3583883266011423,
+              "poissonDeviance": 1.4067356302862983,
+              "spearman": 0.3975175392266675,
+              "bias": -0.045863626535330375,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 1.051730335769,
+              "rmse": 1.3630856916175746,
+              "poissonDeviance": 1.689100468781778,
+              "spearman": 0.3952894045263126,
+              "bias": 0.012463824176590298,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 1.0506824775982442,
+              "rmse": 1.3617980072628735,
+              "poissonDeviance": 1.6866425979097661,
+              "spearman": 0.39474300710113874,
+              "bias": 0.019320219266629666,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 2.239457392032689,
+              "residual": 2.2155411856559017,
+              "productionBaseline": 2.2189837537933466
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 1.063553466898741,
+                "baselineMae": 1.072618290437305,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 0.9449847284622993,
+                "baselineMae": 0.9539491321521758,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 1.1188705911488355,
+                "baselineMae": 1.128209959005205,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 1.0095765443958427,
+              "rmse": 1.319485515944255,
+              "poissonDeviance": 1.2398125939728448,
+              "spearman": 0.4238572373217634,
+              "bias": -0.050446618325810065,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 1.0340176131306138,
+              "rmse": 1.3520356216384042,
+              "poissonDeviance": 1.406740400857928,
+              "spearman": 0.3956916125722314,
+              "bias": -0.05575948153588331,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 1.044164782550525,
+              "rmse": 1.3568985970869671,
+              "poissonDeviance": 1.6755551399634245,
+              "spearman": 0.39384234901370224,
+              "bias": 0.011940519472122445,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 1.0423253736876432,
+              "rmse": 1.3540992085304566,
+              "poissonDeviance": 1.6712578855815068,
+              "spearman": 0.39458130656249774,
+              "bias": 0.013443022440515947,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 2.2551585523017503,
+              "residual": 2.2251387775542817,
+              "productionBaseline": 2.229270803590832
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 1.0640137278054798,
+                "baselineMae": 1.073776731005642,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.9195865590120758,
+                "baselineMae": 0.9287948858914801,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 1.1190230316092598,
+                "baselineMae": 1.1304816664894066,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 1.0044135612601972,
+              "rmse": 1.3022302292347234,
+              "poissonDeviance": 1.237261742228569,
+              "spearman": 0.4104951448018001,
+              "bias": -7.44790179717178e-05,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 1.078167134883023,
+              "rmse": 1.4075018370951233,
+              "poissonDeviance": 1.8971018334220398,
+              "spearman": 0.3352804163862058,
+              "bias": -0.012308882774326003,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 1.080039195384182,
+              "rmse": 1.415412082233532,
+              "poissonDeviance": 3.0940816116651226,
+              "spearman": 0.33699062812093217,
+              "bias": 0.008779691591352477,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 1.0789050735457968,
+              "rmse": 1.4147498570349424,
+              "poissonDeviance": 3.09302363027722,
+              "spearman": 0.3375169423755486,
+              "bias": 0.007757251627777348,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 1.981778436277814,
+              "residual": 2.035566337814924,
+              "productionBaseline": 2.0446697936421994
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 1.1215079677595021,
+                "baselineMae": 1.121454834215709,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 0.9604694905217355,
+                "baselineMae": 0.9618135951128033,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 1.1544138403162152,
+                "baselineMae": 1.1586416890130578,
+                "n": 3004
+              }
+            }
+          }
+        }
+      },
+      "ppPoints": {
+        "selected": "residual",
+        "dispersion": 0.4396193179315121,
+        "validationWeeklyRmse": {
+          "direct": 0.5178461862547022,
+          "residual": 0.504852496093028,
+          "baseline": 0.5064214700850164
+        },
+        "trees": {
+          "direct": 115,
+          "residual": 117
+        },
+        "topFeatures": [
+          "team_gf_l10",
+          "opp_sa_pg",
+          "opp_ga_pg",
+          "team_gf_pg",
+          "std_ppToi",
+          "l10_ppToi",
+          "home",
+          "std_gp"
+        ],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 0.14716554419938976,
+              "rmse": 0.3074832286999014,
+              "poissonDeviance": 0.3515948867337006,
+              "spearman": 0.3141891336748409,
+              "bias": -0.008546670006012771,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 0.14600534720482986,
+              "rmse": 0.31410454907275487,
+              "poissonDeviance": 0.4222485541169037,
+              "spearman": 0.2830164118139421,
+              "bias": -0.0074484012982141195,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 0.15128272074614454,
+              "rmse": 0.3164191525961968,
+              "poissonDeviance": 0.6739413063627887,
+              "spearman": 0.2949505894039347,
+              "bias": 0.001891938743387076,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.15250809378936417,
+              "rmse": 0.31600273801440665,
+              "poissonDeviance": 0.6722405955478552,
+              "spearman": 0.2952244839073832,
+              "bias": 0.0030556671342241407,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 0.5178461862547022,
+              "residual": 0.504852496093028,
+              "productionBaseline": 0.5064214700850164
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.16858850675654707,
+                "baselineMae": 0.17458852342878395,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 0.09390199538391762,
+                "baselineMae": 0.09684610813063232,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 0.17600380218267778,
+                "baselineMae": 0.18289559992521887,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 0.14979004871262178,
+              "rmse": 0.31288418829255216,
+              "poissonDeviance": 0.3549583095885969,
+              "spearman": 0.32268721673132755,
+              "bias": -0.010889380542406162,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 0.14922880016317802,
+              "rmse": 0.3200607579328157,
+              "poissonDeviance": 0.42792315424662053,
+              "spearman": 0.28819987310812806,
+              "bias": -0.009651117112672528,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 0.15565293394181878,
+              "rmse": 0.32127765647238354,
+              "poissonDeviance": 0.6703042823823523,
+              "spearman": 0.29977814398344815,
+              "bias": 0.0023686304788441974,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.15694305987047139,
+              "rmse": 0.320738695558871,
+              "poissonDeviance": 0.6692490620276733,
+              "spearman": 0.2991112383089504,
+              "bias": 0.0032929585940270033,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 0.5414949436585313,
+              "residual": 0.5321887273190014,
+              "productionBaseline": 0.5309335982938596
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.16885237396225986,
+                "baselineMae": 0.17604325180652722,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.09339769905753151,
+                "baselineMae": 0.09688078877627679,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 0.18584307244128695,
+                "baselineMae": 0.19445605892111106,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 0.17059338509051203,
+              "rmse": 0.3462713123465546,
+              "poissonDeviance": 0.3894039468424266,
+              "spearman": 0.3463153274937243,
+              "bias": -0.013629738849209726,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 0.16921091557680026,
+              "rmse": 0.3696396375475199,
+              "poissonDeviance": 0.6512492832198742,
+              "spearman": 0.22717079838927587,
+              "bias": -0.012649954571393413,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 0.17200125848119263,
+              "rmse": 0.37646694969769745,
+              "poissonDeviance": 1.5079894378496173,
+              "spearman": 0.277078409881227,
+              "bias": -0.005472994173492726,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.17210380619384763,
+              "rmse": 0.3762904011262963,
+              "poissonDeviance": 1.5075004732472144,
+              "spearman": 0.27689070324221865,
+              "bias": -0.005418907974855443,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 0.5646127310709341,
+              "residual": 0.5657537045945344,
+              "productionBaseline": 0.5755354773935275
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.18643963741178626,
+                "baselineMae": 0.18954609550413998,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 0.1023319906486335,
+                "baselineMae": 0.10282110026853496,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 0.2195655646755571,
+                "baselineMae": 0.2243514462880645,
+                "n": 3004
+              }
+            }
+          }
+        }
+      },
+      "hits": {
+        "selected": "residual",
+        "dispersion": 0.13143430782481155,
+        "validationWeeklyRmse": {
+          "direct": 2.06662960162435,
+          "residual": 2.026637454201079,
+          "baseline": 2.027097523013497
+        },
+        "trees": {
+          "direct": 156,
+          "residual": 22
+        },
+        "topFeatures": [
+          "opp_sa_pg",
+          "opp_ga_pg",
+          "std_gp",
+          "home",
+          "opp_ga_l10",
+          "days_since_last_game",
+          "team_games_next7",
+          "team_sf_pg"
+        ],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 0.9147905529369886,
+              "rmse": 1.2063140929036287,
+              "poissonDeviance": 1.2399238849954457,
+              "spearman": 0.5086563831607864,
+              "bias": 0.05739302427856829,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 0.910019816072679,
+              "rmse": 1.2245292081842927,
+              "poissonDeviance": 1.3826759813542109,
+              "spearman": 0.4968448946042261,
+              "bias": 0.013082200798860565,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 0.9092289195455399,
+              "rmse": 1.2251067992839626,
+              "poissonDeviance": 1.6771162275628106,
+              "spearman": 0.4963836008703922,
+              "bias": 0.006415114999916356,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.9123446603173861,
+              "rmse": 1.2273996163046692,
+              "poissonDeviance": 1.6797311975836373,
+              "spearman": 0.49305231402510874,
+              "bias": 0.006664013905494847,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 2.06662960162435,
+              "residual": 2.026637454201079,
+              "productionBaseline": 2.027097523013497
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.8990719791899866,
+                "baselineMae": 0.8980569080138113,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 0.8750185001546674,
+                "baselineMae": 0.8741097540732194,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 0.9546969318562782,
+                "baselineMae": 0.9542323497989815,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 0.8741160025257936,
+              "rmse": 1.156671299141738,
+              "poissonDeviance": 1.1874037210875237,
+              "spearman": 0.5277643603585592,
+              "bias": 0.06970828500622162,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 0.8700953581778007,
+              "rmse": 1.1814881324073896,
+              "poissonDeviance": 1.309286861882337,
+              "spearman": 0.5156758282918619,
+              "bias": 0.0355115812849112,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 0.8692370647137249,
+              "rmse": 1.1819127243525405,
+              "poissonDeviance": 1.5531194367771515,
+              "spearman": 0.5152685120752515,
+              "bias": 0.02895071048191198,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.8734655178485714,
+              "rmse": 1.1845240357682574,
+              "poissonDeviance": 1.557177765259614,
+              "spearman": 0.5118979501556313,
+              "bias": 0.03477462945705133,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 2.0340561701412665,
+              "residual": 2.0202332655823056,
+              "productionBaseline": 2.02077703905041
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.8731474095365512,
+                "baselineMae": 0.8719178122575684,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.8082647753862191,
+                "baselineMae": 0.8077784636120915,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 0.9288434932790542,
+                "baselineMae": 0.9279756196810803,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 0.9061990089910463,
+              "rmse": 1.2120323426888207,
+              "poissonDeviance": 1.236568506373586,
+              "spearman": 0.5230244467265079,
+              "bias": -0.049307634681530314,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 0.9516494045684576,
+              "rmse": 1.3005225355336094,
+              "poissonDeviance": 1.778280340202197,
+              "spearman": 0.4791670995634134,
+              "bias": 0.021527595420129213,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 0.9554813826648819,
+              "rmse": 1.3059706556912973,
+              "poissonDeviance": 2.882142568775067,
+              "spearman": 0.47850700229292786,
+              "bias": 0.03654851399053364,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.9562678001184364,
+              "rmse": 1.3066081048479825,
+              "poissonDeviance": 2.8830111897878745,
+              "spearman": 0.47826858730900457,
+              "bias": 0.03941254878878621,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 1.8763960053768778,
+              "residual": 1.86813721270678,
+              "productionBaseline": 1.8784781821767709
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.9828117016833581,
+                "baselineMae": 0.9866799683396678,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 0.8526436910690648,
+                "baselineMae": 0.8552010672648838,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 1.0208181553646472,
+                "baselineMae": 1.0258872886302466,
+                "n": 3004
+              }
+            }
+          }
+        }
+      },
+      "blocks": {
+        "selected": "baseline",
+        "dispersion": 0.13163348562109545,
+        "validationWeeklyRmse": {
+          "direct": 1.6274473474072466,
+          "residual": 1.6199419805259014,
+          "baseline": 1.6184144451706746
+        },
+        "trees": {
+          "direct": 84,
+          "residual": 252
+        },
+        "topFeatures": [],
+        "scores": {
+          "validation": {
+            "direct": {
+              "mae": 0.7598323732229075,
+              "rmse": 0.9704697176907768,
+              "poissonDeviance": 1.1236807627259466,
+              "spearman": 0.41588467458712763,
+              "bias": 0.052487536783700044,
+              "n": 47224
+            },
+            "residual": {
+              "mae": 0.7634180877164749,
+              "rmse": 1.0012555093978077,
+              "poissonDeviance": 1.305557536923787,
+              "spearman": 0.3835733485249984,
+              "bias": 0.029507703364150394,
+              "n": 47224
+            },
+            "productionBaseline": {
+              "mae": 0.7595518102084224,
+              "rmse": 1.0007811673961966,
+              "poissonDeviance": 1.6507658785258186,
+              "spearman": 0.38373737476202613,
+              "bias": 0.008947693766357963,
+              "n": 47224
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.7598071351696273,
+              "rmse": 0.9991165694531048,
+              "poissonDeviance": 1.6445175468298434,
+              "spearman": 0.3873871486378086,
+              "bias": 0.012117092536249364,
+              "n": 47224
+            },
+            "weeklyRmse": {
+              "direct": 1.6274473474072466,
+              "residual": 1.6199419805259014,
+              "productionBaseline": 1.6184144451706746
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.6545207089259064,
+                "baselineMae": 0.6545207089259064,
+                "n": 15177
+              },
+              "D": {
+                "selectedMae": 1.0332807029213342,
+                "baselineMae": 1.0332807029213342,
+                "n": 15884
+              },
+              "W": {
+                "selectedMae": 0.5891717626942758,
+                "baselineMae": 0.5891717626942758,
+                "n": 16163
+              }
+            }
+          },
+          "test": {
+            "direct": {
+              "mae": 0.7396786788566029,
+              "rmse": 0.9330250721051201,
+              "poissonDeviance": 1.1062875034201645,
+              "spearman": 0.4024888615472903,
+              "bias": 0.08773277911634407,
+              "n": 47230
+            },
+            "residual": {
+              "mae": 0.7361335879805931,
+              "rmse": 0.9594107242022777,
+              "poissonDeviance": 1.2887669905893924,
+              "spearman": 0.3703699043618209,
+              "bias": 0.040686007798749674,
+              "n": 47230
+            },
+            "productionBaseline": {
+              "mae": 0.7305829881629878,
+              "rmse": 0.9575443739027751,
+              "poissonDeviance": 1.6515865296422712,
+              "spearman": 0.370293633524108,
+              "bias": 0.01647371849321547,
+              "n": 47230
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.7324345835963505,
+              "rmse": 0.9566126646503509,
+              "poissonDeviance": 1.646468895992762,
+              "spearman": 0.37278029533265744,
+              "bias": 0.024105259030769967,
+              "n": 47230
+            },
+            "weeklyRmse": {
+              "direct": 1.6056915631881408,
+              "residual": 1.588006260420309,
+              "productionBaseline": 1.5799511549738594
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.6280658605123741,
+                "baselineMae": 0.6280658605123741,
+                "n": 15480
+              },
+              "D": {
+                "selectedMae": 0.9906057420931067,
+                "baselineMae": 0.9906057420931067,
+                "n": 15861
+              },
+              "W": {
+                "selectedMae": 0.5708966791255965,
+                "baselineMae": 0.5708966791255965,
+                "n": 15889
+              }
+            }
+          },
+          "live": {
+            "direct": {
+              "mae": 0.7258193845073191,
+              "rmse": 0.9302244008674859,
+              "poissonDeviance": 1.096585097879148,
+              "spearman": 0.4030081041002613,
+              "bias": 0.029084465401634375,
+              "n": 8855
+            },
+            "residual": {
+              "mae": 0.7499641898656295,
+              "rmse": 1.018575345890547,
+              "poissonDeviance": 1.7496514561850962,
+              "spearman": 0.31920867450111845,
+              "bias": 0.008967703306313824,
+              "n": 8855
+            },
+            "productionBaseline": {
+              "mae": 0.7479187198027847,
+              "rmse": 1.0189518431405802,
+              "poissonDeviance": 3.137918696835581,
+              "spearman": 0.3220661819092024,
+              "bias": 0.009640755027581393,
+              "n": 8855
+            },
+            "seasonAverageBaseline": {
+              "mae": 0.7480892287436212,
+              "rmse": 1.019293076022395,
+              "poissonDeviance": 3.1375712840339216,
+              "spearman": 0.3226618268893761,
+              "bias": 0.01004352587176941,
+              "n": 8855
+            },
+            "weeklyRmse": {
+              "direct": 1.4236738519890029,
+              "residual": 1.479417962679109,
+              "productionBaseline": 1.4811667374333692
+            },
+            "byPosition": {
+              "C": {
+                "selectedMae": 0.6336035240823765,
+                "baselineMae": 0.6336035240823765,
+                "n": 2854
+              },
+              "D": {
+                "selectedMae": 1.044066887186923,
+                "baselineMae": 1.044066887186923,
+                "n": 2997
+              },
+              "W": {
+                "selectedMae": 0.5610676914019134,
+                "baselineMae": 0.5610676914019134,
+                "n": 3004
+              }
+            }
+          }
+        }
+      }
+    },
+    "calibration": {
+      "validation": {
+        "anyGoal_selected": {
+          "brier": 0.12351831974656623,
+          "logLoss": 0.4502986389383491,
+          "ece": 0.0326689161856726,
+          "n": 47224,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 21803,
+              "predicted": 0.0363,
+              "observed": 0.0821
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 12729,
+              "predicted": 0.1466,
+              "observed": 0.1539
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 7806,
+              "predicted": 0.2446,
+              "observed": 0.2314
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 3572,
+              "predicted": 0.3426,
+              "observed": 0.3029
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 991,
+              "predicted": 0.4387,
+              "observed": 0.3219
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 234,
+              "predicted": 0.539,
+              "observed": 0.3291
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 50,
+              "predicted": 0.6329,
+              "observed": 0.2
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 30,
+              "predicted": 0.7506,
+              "observed": 0.3
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 8,
+              "predicted": 0.873,
+              "observed": 0.25
+            },
+            {
+              "bin": "0.9-1.0",
+              "n": 1,
+              "predicted": 0.9368,
+              "observed": 0.0
+            }
+          ]
+        },
+        "anyGoal_baseline": {
+          "brier": 0.12422446236835871,
+          "logLoss": 0.5439674895419074,
+          "ece": 0.03566472719293408,
+          "n": 47224,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 21094,
+              "predicted": 0.0358,
+              "observed": 0.0815
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 12207,
+              "predicted": 0.147,
+              "observed": 0.1464
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 7964,
+              "predicted": 0.246,
+              "observed": 0.2238
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 4194,
+              "predicted": 0.3461,
+              "observed": 0.2842
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 1293,
+              "predicted": 0.441,
+              "observed": 0.3271
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 271,
+              "predicted": 0.5347,
+              "observed": 0.3948
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 170,
+              "predicted": 0.6319,
+              "observed": 0.2059
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 12,
+              "predicted": 0.7523,
+              "observed": 0.1667
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 16,
+              "predicted": 0.8589,
+              "observed": 0.375
+            },
+            {
+              "bin": "0.9-1.0",
+              "n": 3,
+              "predicted": 0.9502,
+              "observed": 0.3333
+            }
+          ]
+        }
+      },
+      "test": {
+        "anyGoal_selected": {
+          "brier": 0.12584481371736517,
+          "logLoss": 0.45943739565225533,
+          "ece": 0.03631508627295246,
+          "n": 47230,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 21717,
+              "predicted": 0.0364,
+              "observed": 0.0862
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 13147,
+              "predicted": 0.1466,
+              "observed": 0.16
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 7746,
+              "predicted": 0.2445,
+              "observed": 0.2294
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 3278,
+              "predicted": 0.3434,
+              "observed": 0.3057
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 1068,
+              "predicted": 0.4384,
+              "observed": 0.323
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 165,
+              "predicted": 0.5389,
+              "observed": 0.2485
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 68,
+              "predicted": 0.6405,
+              "observed": 0.2647
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 35,
+              "predicted": 0.7498,
+              "observed": 0.2571
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 6,
+              "predicted": 0.8441,
+              "observed": 0.5
+            }
+          ]
+        },
+        "anyGoal_baseline": {
+          "brier": 0.1263092418910753,
+          "logLoss": 0.5551527952844117,
+          "ece": 0.03827607170876405,
+          "n": 47230,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 20516,
+              "predicted": 0.0353,
+              "observed": 0.0853
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 12654,
+              "predicted": 0.1472,
+              "observed": 0.1481
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 8079,
+              "predicted": 0.2458,
+              "observed": 0.2203
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 4017,
+              "predicted": 0.3467,
+              "observed": 0.2768
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 1469,
+              "predicted": 0.4413,
+              "observed": 0.3397
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 293,
+              "predicted": 0.5352,
+              "observed": 0.3345
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 176,
+              "predicted": 0.6336,
+              "observed": 0.2557
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 12,
+              "predicted": 0.7403,
+              "observed": 0.5833
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 12,
+              "predicted": 0.8602,
+              "observed": 0.3333
+            },
+            {
+              "bin": "0.9-1.0",
+              "n": 2,
+              "predicted": 0.9502,
+              "observed": 0.5
+            }
+          ]
+        }
+      },
+      "live": {
+        "anyGoal_selected": {
+          "brier": 0.13802944418289026,
+          "logLoss": 0.592198830082951,
+          "ece": 0.08310561060335794,
+          "n": 8855,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 4497,
+              "predicted": 0.0142,
+              "observed": 0.1099
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 1798,
+              "predicted": 0.149,
+              "observed": 0.158
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 1197,
+              "predicted": 0.2434,
+              "observed": 0.183
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 717,
+              "predicted": 0.3434,
+              "observed": 0.2678
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 387,
+              "predicted": 0.4474,
+              "observed": 0.2584
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 144,
+              "predicted": 0.5411,
+              "observed": 0.2361
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 79,
+              "predicted": 0.642,
+              "observed": 0.3038
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 21,
+              "predicted": 0.7331,
+              "observed": 0.2857
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 14,
+              "predicted": 0.8563,
+              "observed": 0.2143
+            },
+            {
+              "bin": "0.9-1.0",
+              "n": 1,
+              "predicted": 0.9772,
+              "observed": 0.0
+            }
+          ]
+        },
+        "anyGoal_baseline": {
+          "brier": 0.1390167185469356,
+          "logLoss": 0.8995337724663149,
+          "ece": 0.0890397455414825,
+          "n": 8855,
+          "reliability": [
+            {
+              "bin": "0.0-0.1",
+              "n": 4465,
+              "predicted": 0.0133,
+              "observed": 0.1082
+            },
+            {
+              "bin": "0.1-0.2",
+              "n": 1744,
+              "predicted": 0.1511,
+              "observed": 0.1674
+            },
+            {
+              "bin": "0.2-0.3",
+              "n": 1290,
+              "predicted": 0.2488,
+              "observed": 0.1744
+            },
+            {
+              "bin": "0.3-0.4",
+              "n": 727,
+              "predicted": 0.3606,
+              "observed": 0.2435
+            },
+            {
+              "bin": "0.4-0.5",
+              "n": 329,
+              "predicted": 0.4547,
+              "observed": 0.3283
+            },
+            {
+              "bin": "0.5-0.6",
+              "n": 105,
+              "predicted": 0.5361,
+              "observed": 0.2476
+            },
+            {
+              "bin": "0.6-0.7",
+              "n": 170,
+              "predicted": 0.6351,
+              "observed": 0.2118
+            },
+            {
+              "bin": "0.7-0.8",
+              "n": 13,
+              "predicted": 0.7609,
+              "observed": 0.3077
+            },
+            {
+              "bin": "0.8-0.9",
+              "n": 11,
+              "predicted": 0.8647,
+              "observed": 0.3636
+            },
+            {
+              "bin": "0.9-1.0",
+              "n": 1,
+              "predicted": 0.9502,
+              "observed": 1.0
+            }
+          ]
+        }
+      }
+    },
+    "weekly": {
+      "validation": {
+        "benchBossSelected": {
+          "mae": 1.5667167888977818,
+          "rmse": 2.1281805456265808,
+          "spearman": 0.7175684699650945,
+          "bias": -0.12649522115465597,
+          "n": 16914,
+          "weeklySpearman": 0.694544048305331,
+          "top50Precision": 0.4392592592592593,
+          "startSitAccuracy": 0.7553300437575645,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.374717390977553,
+            "F": 1.666704247336369
+          },
+          "interval80Coverage": 0.7999881754759371
+        },
+        "directModelOnly": {
+          "mae": 1.607200912357264,
+          "rmse": 2.1691528192109653,
+          "spearman": 0.7060501442407744,
+          "bias": -0.05736381603883621,
+          "n": 16914,
+          "weeklySpearman": 0.6827111056544756,
+          "top50Precision": 0.41555555555555557,
+          "startSitAccuracy": 0.7466716320640536,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.4035133375282172,
+            "F": 1.7132752185440863
+          }
+        },
+        "residualModelOnly": {
+          "mae": 1.5682404609600904,
+          "rmse": 2.1266957337469146,
+          "spearman": 0.7175971884333295,
+          "bias": -0.09779337965080859,
+          "n": 16914,
+          "weeklySpearman": 0.6948072514078739,
+          "top50Precision": 0.4362962962962963,
+          "startSitAccuracy": 0.7570989665766689,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.375330880999435,
+            "F": 1.668701914577436
+          }
+        },
+        "productionBaseline": {
+          "mae": 1.5783292106045703,
+          "rmse": 2.1289330710553727,
+          "spearman": 0.7176604982004157,
+          "bias": 0.0338790356852905,
+          "n": 16914,
+          "weeklySpearman": 0.694731921395637,
+          "top50Precision": 0.44444444444444453,
+          "startSitAccuracy": 0.7575644725816963,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.386400222012261,
+            "F": 1.6782800020028488
+          }
+        },
+        "seasonAverageBaseline": {
+          "mae": 1.6241475698031667,
+          "rmse": 2.189431070532213,
+          "spearman": 0.7013266135747968,
+          "bias": 0.051881014969361025,
+          "n": 16914,
+          "weeklySpearman": 0.6775083727562757,
+          "top50Precision": 0.422962962962963,
+          "startSitAccuracy": 0.7503025789032679,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.421198162044746,
+            "F": 1.7298374609865668
+          }
+        }
+      },
+      "test": {
+        "benchBossSelected": {
+          "mae": 1.5924146544870899,
+          "rmse": 2.1876635511284346,
+          "spearman": 0.7223778285878966,
+          "bias": -0.17804727338585508,
+          "n": 16432,
+          "weeklySpearman": 0.7028909416011075,
+          "top50Precision": 0.4461538461538461,
+          "startSitAccuracy": 0.7591063623118018,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.3998509527662295,
+            "F": 1.691268041242669
+          },
+          "interval80Coverage": 0.7967989289191821
+        },
+        "directModelOnly": {
+          "mae": 1.6340727570572604,
+          "rmse": 2.2158103954554402,
+          "spearman": 0.7120264256788039,
+          "bias": -0.08400481362569696,
+          "n": 16432,
+          "weeklySpearman": 0.6907466120799243,
+          "top50Precision": 0.44,
+          "startSitAccuracy": 0.7527926177756192,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.440569286351074,
+            "F": 1.7334085781768296
+          }
+        },
+        "residualModelOnly": {
+          "mae": 1.595545283215629,
+          "rmse": 2.1858906165002314,
+          "spearman": 0.7221854530458851,
+          "bias": -0.14325094837844937,
+          "n": 16432,
+          "weeklySpearman": 0.7028017935072461,
+          "top50Precision": 0.4476923076923077,
+          "startSitAccuracy": 0.7577464788732394,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.4042023039018254,
+            "F": 1.6937720069856734
+          }
+        },
+        "productionBaseline": {
+          "mae": 1.6041130245264559,
+          "rmse": 2.1701895995232436,
+          "spearman": 0.7234096935020583,
+          "bias": 0.04081544566612767,
+          "n": 16432,
+          "weeklySpearman": 0.7043314592190413,
+          "top50Precision": 0.4592307692307692,
+          "startSitAccuracy": 0.7595920349684313,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.410112255645248,
+            "F": 1.7037041357577005
+          }
+        },
+        "seasonAverageBaseline": {
+          "mae": 1.6502515025151372,
+          "rmse": 2.2328613689884853,
+          "spearman": 0.7073000761332945,
+          "bias": 0.05202211245136929,
+          "n": 16432,
+          "weeklySpearman": 0.6870279656522853,
+          "top50Precision": 0.44076923076923075,
+          "startSitAccuracy": 0.7492957746478873,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.4524244297897677,
+            "F": 1.7518068629292292
+          }
+        }
+      },
+      "live": {
+        "benchBossSelected": {
+          "mae": 1.4720957954484368,
+          "rmse": 2.091958534090158,
+          "spearman": 0.7199533982972541,
+          "bias": -0.10336181146603914,
+          "n": 3626,
+          "weeklySpearman": 0.6551336560278048,
+          "top50Precision": 0.48,
+          "startSitAccuracy": 0.7652284263959391,
+          "startSitPairs": 2364,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.2209562973721961,
+            "F": 1.6037355407620444
+          },
+          "interval80Coverage": 0.7959183673469388
+        },
+        "directModelOnly": {
+          "mae": 1.4992238262737483,
+          "rmse": 2.0797638606952216,
+          "spearman": 0.7122355781783994,
+          "bias": -0.10775234612404534,
+          "n": 3626,
+          "weeklySpearman": 0.6426311040447549,
+          "top50Precision": 0.48333333333333334,
+          "startSitAccuracy": 0.754653130287648,
+          "startSitPairs": 2364,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.24021201797534,
+            "F": 1.634989999013603
+          }
+        },
+        "residualModelOnly": {
+          "mae": 1.472124650177191,
+          "rmse": 2.0917260095889216,
+          "spearman": 0.7199043586729672,
+          "bias": -0.1041836360727441,
+          "n": 3626,
+          "weeklySpearman": 0.654767705478107,
+          "top50Precision": 0.48,
+          "startSitAccuracy": 0.7648054145516074,
+          "startSitPairs": 2364,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.218917503967272,
+            "F": 1.6048481942393051
+          }
+        },
+        "productionBaseline": {
+          "mae": 1.4883742349889733,
+          "rmse": 2.128097549172767,
+          "spearman": 0.7214512657630385,
+          "bias": -0.008260278867163653,
+          "n": 3626,
+          "weeklySpearman": 0.6551233492868398,
+          "top50Precision": 0.47,
+          "startSitAccuracy": 0.7597292724196277,
+          "startSitPairs": 2364,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.2347577051991414,
+            "F": 1.621312365568595
+          }
+        },
+        "seasonAverageBaseline": {
+          "mae": 1.4983736596924793,
+          "rmse": 2.1423132210890445,
+          "spearman": 0.7189173901199807,
+          "bias": -0.008775880857255901,
+          "n": 3626,
+          "weeklySpearman": 0.6535633243862319,
+          "top50Precision": 0.45999999999999996,
+          "startSitAccuracy": 0.7614213197969543,
+          "startSitPairs": 2364,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.2419627285349786,
+            "F": 1.6327765311319093
+          }
+        }
+      }
+    },
+    "gate": {
+      "validation": {
+        "passed": false,
+        "checks": {
+          "weeklyMaeImproves": true,
+          "weeklyRmseImproves": true,
+          "startSitNotWorse": true,
+          "top50NotWorse": false
+        }
+      },
+      "test": {
+        "passed": false,
+        "checks": {
+          "weeklyMaeImproves": true,
+          "weeklyRmseImproves": false,
+          "startSitNotWorse": true,
+          "top50NotWorse": false
+        }
+      },
+      "live": {
+        "passed": true,
+        "checks": {
+          "weeklyMaeImproves": true,
+          "weeklyRmseImproves": true,
+          "startSitNotWorse": true,
+          "top50NotWorse": true
+        }
+      }
+    },
+    "promotion": {
+      "eligible": false,
+      "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season."
+    }
+  },
+  "goalie": {
+    "targets": {
+      "started": {
+        "selected": "model",
+        "bestIteration": 125,
+        "scores": {
+          "validation": {
+            "model": {
+              "brier": 0.16003878952042658,
+              "logLoss": 0.48832055721089135,
+              "ece": 0.027526422391221116,
+              "n": 6285,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 987,
+                  "predicted": 0.0638,
+                  "observed": 0.0578
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 858,
+                  "predicted": 0.1487,
+                  "observed": 0.1119
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 788,
+                  "predicted": 0.2497,
+                  "observed": 0.1954
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 616,
+                  "predicted": 0.3496,
+                  "observed": 0.3084
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 591,
+                  "predicted": 0.4484,
+                  "observed": 0.4585
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 607,
+                  "predicted": 0.5508,
+                  "observed": 0.5568
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 685,
+                  "predicted": 0.6504,
+                  "observed": 0.6803
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 687,
+                  "predicted": 0.7489,
+                  "observed": 0.7715
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 424,
+                  "predicted": 0.8412,
+                  "observed": 0.8892
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 42,
+                  "predicted": 0.9193,
+                  "observed": 0.9524
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.20939602182551292,
+              "logLoss": 0.721397258144389,
+              "ece": 0.05705484728567643,
+              "n": 6285,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 686,
+                  "predicted": 0.0,
+                  "observed": 0.0466
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 541,
+                  "predicted": 0.1021,
+                  "observed": 0.1793
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 1519,
+                  "predicted": 0.2542,
+                  "observed": 0.2969
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 64,
+                  "predicted": 0.3418,
+                  "observed": 0.4062
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 660,
+                  "predicted": 0.4016,
+                  "observed": 0.3788
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 1305,
+                  "predicted": 0.5468,
+                  "observed": 0.5303
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 801,
+                  "predicted": 0.6971,
+                  "observed": 0.6667
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 49,
+                  "predicted": 0.7458,
+                  "observed": 0.6327
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 470,
+                  "predicted": 0.8017,
+                  "observed": 0.6234
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 190,
+                  "predicted": 0.9395,
+                  "observed": 0.5947
+                }
+              ]
+            }
+          },
+          "test": {
+            "model": {
+              "brier": 0.1767544416095488,
+              "logLoss": 0.5280863268871328,
+              "ece": 0.017105350269553725,
+              "n": 6074,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 837,
+                  "predicted": 0.0643,
+                  "observed": 0.0621
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 872,
+                  "predicted": 0.1489,
+                  "observed": 0.1376
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 854,
+                  "predicted": 0.2488,
+                  "observed": 0.2845
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 645,
+                  "predicted": 0.3478,
+                  "observed": 0.3783
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 551,
+                  "predicted": 0.449,
+                  "observed": 0.4519
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 624,
+                  "predicted": 0.5526,
+                  "observed": 0.5737
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 687,
+                  "predicted": 0.6487,
+                  "observed": 0.6667
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 638,
+                  "predicted": 0.7487,
+                  "observed": 0.7586
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 341,
+                  "predicted": 0.8432,
+                  "observed": 0.8651
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 25,
+                  "predicted": 0.9156,
+                  "observed": 0.96
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.2242407962820004,
+              "logLoss": 0.7457052226760343,
+              "ece": 0.06782738442280654,
+              "n": 6074,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 514,
+                  "predicted": 0.0,
+                  "observed": 0.0467
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 440,
+                  "predicted": 0.1032,
+                  "observed": 0.225
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 1441,
+                  "predicted": 0.2571,
+                  "observed": 0.3178
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 52,
+                  "predicted": 0.3405,
+                  "observed": 0.3654
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 773,
+                  "predicted": 0.4009,
+                  "observed": 0.4101
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 1553,
+                  "predicted": 0.5486,
+                  "observed": 0.5158
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 660,
+                  "predicted": 0.6967,
+                  "observed": 0.6212
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 57,
+                  "predicted": 0.7466,
+                  "observed": 0.6842
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 409,
+                  "predicted": 0.8035,
+                  "observed": 0.6333
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 175,
+                  "predicted": 0.9457,
+                  "observed": 0.5771
+                }
+              ]
+            }
+          },
+          "live": {
+            "model": {
+              "brier": 0.18511948527151545,
+              "logLoss": 0.5458147491063126,
+              "ece": 0.04846351459907216,
+              "n": 898,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 81,
+                  "predicted": 0.0608,
+                  "observed": 0.0123
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 116,
+                  "predicted": 0.1492,
+                  "observed": 0.181
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 113,
+                  "predicted": 0.2468,
+                  "observed": 0.354
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 107,
+                  "predicted": 0.3471,
+                  "observed": 0.3364
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 101,
+                  "predicted": 0.4458,
+                  "observed": 0.5347
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 99,
+                  "predicted": 0.5489,
+                  "observed": 0.5354
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 110,
+                  "predicted": 0.649,
+                  "observed": 0.6455
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 98,
+                  "predicted": 0.7494,
+                  "observed": 0.8265
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 59,
+                  "predicted": 0.8439,
+                  "observed": 0.9153
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 14,
+                  "predicted": 0.9153,
+                  "observed": 0.9286
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.26369693447052,
+              "logLoss": 1.2107459973987669,
+              "ece": 0.11697237176087963,
+              "n": 898,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 15,
+                  "predicted": 0.0,
+                  "observed": 0.4
+                },
+                {
+                  "bin": "0.1-0.2",
+                  "n": 53,
+                  "predicted": 0.122,
+                  "observed": 0.3396
+                },
+                {
+                  "bin": "0.2-0.3",
+                  "n": 178,
+                  "predicted": 0.2585,
+                  "observed": 0.3539
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 64,
+                  "predicted": 0.3424,
+                  "observed": 0.2812
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 80,
+                  "predicted": 0.4082,
+                  "observed": 0.35
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 190,
+                  "predicted": 0.5408,
+                  "observed": 0.5263
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 123,
+                  "predicted": 0.6779,
+                  "observed": 0.6667
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 66,
+                  "predicted": 0.7449,
+                  "observed": 0.5606
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 59,
+                  "predicted": 0.8162,
+                  "observed": 0.6102
+                },
+                {
+                  "bin": "0.9-1.0",
+                  "n": 70,
+                  "predicted": 0.9929,
+                  "observed": 0.5143
+                }
+              ]
+            }
+          }
+        },
+        "rows": {
+          "train": 12498,
+          "validation": 6285
+        }
+      },
+      "saves": {
+        "selected": "model",
+        "bestIteration": 65,
+        "scores": {
+          "validation": {
+            "model": {
+              "mae": 5.356193129360334,
+              "rmse": 6.929276835761097,
+              "poissonDeviance": 2.0860200674877927,
+              "spearman": 0.18768644771500625,
+              "bias": 0.01889415981065196,
+              "n": 2519
+            },
+            "productionBaseline": {
+              "mae": 5.548800886212205,
+              "rmse": 7.133750356136868,
+              "poissonDeviance": 2.1973095747551517,
+              "spearman": 0.09419501475651015,
+              "bias": 0.975672556093684,
+              "n": 2519
+            }
+          },
+          "test": {
+            "model": {
+              "mae": 5.4160452932763725,
+              "rmse": 6.923665436379832,
+              "poissonDeviance": 2.1591398427648243,
+              "spearman": 0.2317668694105841,
+              "bias": 0.18547029186694075,
+              "n": 2527
+            },
+            "productionBaseline": {
+              "mae": 5.616358049129568,
+              "rmse": 7.1525711274198684,
+              "poissonDeviance": 2.285464348124545,
+              "spearman": 0.1410239273387189,
+              "bias": 1.0941368850310187,
+              "n": 2527
+            }
+          },
+          "live": {
+            "model": {
+              "mae": 5.300436911969457,
+              "rmse": 6.819027474922068,
+              "poissonDeviance": 2.070542025851097,
+              "spearman": 0.20843754023731248,
+              "bias": 0.35100896489195965,
+              "n": 424
+            },
+            "productionBaseline": {
+              "mae": 5.728989932242799,
+              "rmse": 7.2655380850178535,
+              "poissonDeviance": 2.318134072173837,
+              "spearman": 0.06266282226081846,
+              "bias": 1.9269537138854904,
+              "n": 424
+            }
+          }
+        },
+        "rows": {
+          "train": 5044,
+          "validation": 2519
+        }
+      },
+      "ga": {
+        "selected": "model",
+        "bestIteration": 28,
+        "scores": {
+          "validation": {
+            "model": {
+              "mae": 1.2283226902961275,
+              "rmse": 1.530601530794021,
+              "poissonDeviance": 0.9768630455016587,
+              "spearman": 0.12719381711379296,
+              "bias": -0.06312007492014568,
+              "n": 2519
+            },
+            "productionBaseline": {
+              "mae": 1.2421766289918703,
+              "rmse": 1.5504703324008664,
+              "poissonDeviance": 0.9986812838618156,
+              "spearman": 0.05985490452065063,
+              "bias": 0.0005172304156754908,
+              "n": 2519
+            }
+          },
+          "test": {
+            "model": {
+              "mae": 1.2063470490940384,
+              "rmse": 1.499071864160688,
+              "poissonDeviance": 0.9035204044186943,
+              "spearman": 0.08126157306175,
+              "bias": -0.15669223892027084,
+              "n": 2527
+            },
+            "productionBaseline": {
+              "mae": 1.2047521147072024,
+              "rmse": 1.5055264499165135,
+              "poissonDeviance": 0.9102887896429499,
+              "spearman": 0.06553408348592714,
+              "bias": -0.012714759145015233,
+              "n": 2527
+            }
+          },
+          "live": {
+            "model": {
+              "mae": 1.2510460844284832,
+              "rmse": 1.540921678831158,
+              "poissonDeviance": 0.9079755202568176,
+              "spearman": 0.1074068376134464,
+              "bias": -0.15687996922113603,
+              "n": 424
+            },
+            "productionBaseline": {
+              "mae": 1.2714580605871246,
+              "rmse": 1.557431280760061,
+              "poissonDeviance": 0.9266226777031626,
+              "spearman": 0.06150717587136881,
+              "bias": -0.09799229261334991,
+              "n": 424
+            }
+          }
+        },
+        "rows": {
+          "train": 5044,
+          "validation": 2519
+        }
+      },
+      "win": {
+        "selected": "model",
+        "bestIteration": 44,
+        "scores": {
+          "validation": {
+            "model": {
+              "brier": 0.2437582706395704,
+              "logLoss": 0.6805588591096771,
+              "ece": 0.05598784480330715,
+              "n": 2519,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 14,
+                  "predicted": 0.2755,
+                  "observed": 0.2857
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 165,
+                  "predicted": 0.3596,
+                  "observed": 0.2667
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 557,
+                  "predicted": 0.4601,
+                  "observed": 0.4129
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 1030,
+                  "predicted": 0.5506,
+                  "observed": 0.4864
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 622,
+                  "predicted": 0.6418,
+                  "observed": 0.6077
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 130,
+                  "predicted": 0.7293,
+                  "observed": 0.6385
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 1,
+                  "predicted": 0.8022,
+                  "observed": 1.0
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.25194393750000577,
+              "logLoss": 0.697769383039431,
+              "ece": 0.04876157039048625,
+              "n": 2519,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 50,
+                  "predicted": 0.2767,
+                  "observed": 0.42
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 350,
+                  "predicted": 0.3557,
+                  "observed": 0.4486
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 930,
+                  "predicted": 0.4553,
+                  "observed": 0.4634
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 700,
+                  "predicted": 0.5524,
+                  "observed": 0.5171
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 381,
+                  "predicted": 0.6325,
+                  "observed": 0.5223
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 107,
+                  "predicted": 0.7396,
+                  "observed": 0.6636
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 1,
+                  "predicted": 0.8031,
+                  "observed": 0.0
+                }
+              ]
+            }
+          },
+          "test": {
+            "model": {
+              "brier": 0.25309551612834563,
+              "logLoss": 0.6999271568665801,
+              "ece": 0.0713345625974888,
+              "n": 2527,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 8,
+                  "predicted": 0.2841,
+                  "observed": 0.125
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 99,
+                  "predicted": 0.3707,
+                  "observed": 0.4444
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 488,
+                  "predicted": 0.4612,
+                  "observed": 0.4221
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 1100,
+                  "predicted": 0.5508,
+                  "observed": 0.51
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 704,
+                  "predicted": 0.6416,
+                  "observed": 0.5099
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 127,
+                  "predicted": 0.7312,
+                  "observed": 0.6142
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 1,
+                  "predicted": 0.8148,
+                  "observed": 1.0
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.2544665518647738,
+              "logLoss": 0.7027600768693024,
+              "ece": 0.05795445951018824,
+              "n": 2527,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 45,
+                  "predicted": 0.2723,
+                  "observed": 0.4444
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 294,
+                  "predicted": 0.3617,
+                  "observed": 0.4966
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 1020,
+                  "predicted": 0.4574,
+                  "observed": 0.4745
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 794,
+                  "predicted": 0.5512,
+                  "observed": 0.5025
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 325,
+                  "predicted": 0.6378,
+                  "observed": 0.5231
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 47,
+                  "predicted": 0.7464,
+                  "observed": 0.6383
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 2,
+                  "predicted": 0.8046,
+                  "observed": 0.5
+                }
+              ]
+            }
+          },
+          "live": {
+            "model": {
+              "brier": 0.23914214952683358,
+              "logLoss": 0.6709187843087846,
+              "ece": 0.031394291935254455,
+              "n": 424,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 2,
+                  "predicted": 0.2864,
+                  "observed": 0.0
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 27,
+                  "predicted": 0.3664,
+                  "observed": 0.2963
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 136,
+                  "predicted": 0.4564,
+                  "observed": 0.4412
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 192,
+                  "predicted": 0.5503,
+                  "observed": 0.5156
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 63,
+                  "predicted": 0.6357,
+                  "observed": 0.6667
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 4,
+                  "predicted": 0.708,
+                  "observed": 0.75
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.2525422352685022,
+              "logLoss": 0.6991143020879906,
+              "ece": 0.06540463843427222,
+              "n": 424,
+              "reliability": [
+                {
+                  "bin": "0.2-0.3",
+                  "n": 8,
+                  "predicted": 0.2732,
+                  "observed": 0.375
+                },
+                {
+                  "bin": "0.3-0.4",
+                  "n": 58,
+                  "predicted": 0.3504,
+                  "observed": 0.4138
+                },
+                {
+                  "bin": "0.4-0.5",
+                  "n": 158,
+                  "predicted": 0.4539,
+                  "observed": 0.4747
+                },
+                {
+                  "bin": "0.5-0.6",
+                  "n": 114,
+                  "predicted": 0.5642,
+                  "observed": 0.6053
+                },
+                {
+                  "bin": "0.6-0.7",
+                  "n": 70,
+                  "predicted": 0.6329,
+                  "observed": 0.4429
+                },
+                {
+                  "bin": "0.7-0.8",
+                  "n": 13,
+                  "predicted": 0.7328,
+                  "observed": 0.6154
+                },
+                {
+                  "bin": "0.8-0.9",
+                  "n": 3,
+                  "predicted": 0.8176,
+                  "observed": 0.6667
+                }
+              ]
+            }
+          }
+        },
+        "rows": {
+          "train": 5044,
+          "validation": 2519
+        }
+      },
+      "shutout": {
+        "selected": "model",
+        "bestIteration": 4,
+        "scores": {
+          "validation": {
+            "model": {
+              "brier": 0.05341980329932566,
+              "logLoss": 0.21688878540042367,
+              "ece": 0.002773872028571711,
+              "n": 2519,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 2519,
+                  "predicted": 0.054,
+                  "observed": 0.0568
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.053592241390193404,
+              "logLoss": 0.2184505209562944,
+              "ece": 0.006808210022543976,
+              "n": 2519,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 2519,
+                  "predicted": 0.05,
+                  "observed": 0.0568
+                }
+              ]
+            }
+          },
+          "test": {
+            "model": {
+              "brier": 0.04036501376809196,
+              "logLoss": 0.17575110242559294,
+              "ece": 0.011904682380014409,
+              "n": 2527,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 2527,
+                  "predicted": 0.0539,
+                  "observed": 0.0419
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.04025163837530492,
+              "logLoss": 0.17479688753965927,
+              "ece": 0.008013376234525957,
+              "n": 2527,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 2527,
+                  "predicted": 0.05,
+                  "observed": 0.0419
+                }
+              ]
+            }
+          },
+          "live": {
+            "model": {
+              "brier": 0.03451443635226353,
+              "logLoss": 0.15717796273750428,
+              "ece": 0.016037609414991147,
+              "n": 424,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 424,
+                  "predicted": 0.0514,
+                  "observed": 0.0354
+                }
+              ]
+            },
+            "productionBaseline": {
+              "brier": 0.034338464606935744,
+              "logLoss": 0.15544757329013328,
+              "ece": 0.014582990438855067,
+              "n": 424,
+              "reliability": [
+                {
+                  "bin": "0.0-0.1",
+                  "n": 424,
+                  "predicted": 0.05,
+                  "observed": 0.0354
+                }
+              ]
+            }
+          }
+        },
+        "rows": {
+          "train": 5044,
+          "validation": 2519
+        }
+      }
+    },
+    "weekly": {
+      "validation": {
+        "benchBossSelected": {
+          "mae": 2.3980790020705203,
+          "rmse": 3.5090756911686203,
+          "spearman": 0.22657242942702563,
+          "bias": 0.21523723613495674,
+          "n": 2074
+        },
+        "usageBaseline": {
+          "mae": 2.28998857563536,
+          "rmse": 3.4608498899968825,
+          "spearman": 0.2660913857948223,
+          "bias": 0.11887029049812754,
+          "n": 2074
+        }
+      },
+      "test": {
+        "benchBossSelected": {
+          "mae": 2.443385922785704,
+          "rmse": 3.44587574489574,
+          "spearman": 0.1924954694338324,
+          "bias": 0.4237366954744815,
+          "n": 1951
+        },
+        "usageBaseline": {
+          "mae": 2.3258532282264883,
+          "rmse": 3.398764194679519,
+          "spearman": 0.2259139082215184,
+          "bias": 0.23803367105189796,
+          "n": 1951
+        }
+      },
+      "live": {
+        "benchBossSelected": {
+          "mae": 2.2438106661422004,
+          "rmse": 3.268546006953515,
+          "spearman": 0.09177639537707945,
+          "bias": 0.27945720336462504,
+          "n": 370
+        },
+        "usageBaseline": {
+          "mae": 2.2338021323064643,
+          "rmse": 3.214337922207824,
+          "spearman": 0.17611629227708417,
+          "bias": 0.49134037644657735,
+          "n": 370
+        }
+      }
+    }
+  },
+  "rows": {
+    "skaterGames": 197738,
+    "goalieCandidates": 25755
+  }
+}
