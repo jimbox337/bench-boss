@@ -8,11 +8,14 @@ import {
   CheckCircle2,
   ChevronRight,
   Clipboard,
+  Download,
   ExternalLink,
   KeyRound,
   Lock,
+  Puzzle,
   RefreshCw,
   ShieldCheck,
+  Wifi,
 } from 'lucide-react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useData } from '@/lib/DataContext';
@@ -41,7 +44,10 @@ function ESPNSetupInner() {
   const { players, setMyTeam, setESPNConfig, setLeagueSettings } = useData();
   const [leagueId, setLeagueId] = useState('');
   const [leagueIdInput, setLeagueIdInput] = useState('');
-  const [seasonId] = useState('2025');
+  const [seasonId, setSeasonId] = useState(() => {
+    const now = new Date();
+    return String(now.getMonth() >= 6 ? now.getFullYear() + 1 : now.getFullYear());
+  });
   const [espnS2, setEspnS2] = useState('');
   const [swid, setSwid] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +57,8 @@ function ESPNSetupInner() {
   const [availableTeams, setAvailableTeams] = useState<ESPNTeam[]>([]);
   const [leagueInfo, setLeagueInfo] = useState<LeagueInfo | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [extensionInstalled, setExtensionInstalled] = useState(false);
+  const [sessionDetected, setSessionDetected] = useState(false);
 
   useEffect(() => {
     const s2 = searchParams.get('espn_s2');
@@ -67,8 +75,37 @@ function ESPNSetupInner() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const handleReady = () => setExtensionInstalled(true);
+    window.addEventListener('BENCH_BOSS_EXTENSION_READY', handleReady);
+    window.dispatchEvent(new CustomEvent('BENCH_BOSS_EXTENSION_PING'));
+
+    const encoded = window.location.hash.match(/^#espn=([^&]+)/)?.[1];
+    if (encoded) {
+      try {
+        const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(encoded.length / 4) * 4, '=');
+        const bytes = Uint8Array.from(window.atob(normalized), character => character.charCodeAt(0));
+        const payload = JSON.parse(new TextDecoder().decode(bytes));
+        if (payload.leagueId) {
+          setLeagueId(String(payload.leagueId));
+          setLeagueIdInput(String(payload.leagueId));
+        }
+        if (payload.seasonId) setSeasonId(String(payload.seasonId));
+        if (payload.espnS2) setEspnS2(String(payload.espnS2));
+        if (payload.swid) setSwid(String(payload.swid));
+        setShowAdvanced(true);
+        setSessionDetected(true);
+        window.history.replaceState({}, '', `${window.location.pathname}${window.location.search}`);
+      } catch {
+        setError('The ESPN extension handoff could not be read. Please try syncing again.');
+      }
+    }
+
+    return () => window.removeEventListener('BENCH_BOSS_EXTENSION_READY', handleReady);
+  }, []);
+
   const handleOpenESPN = () => {
-    window.open('https://www.espn.com/fantasy/hockey/', '_blank');
+    window.open('https://www.espn.com/fantasy/hockey/#benchboss-sync', '_blank', 'noopener,noreferrer');
   };
 
   const parseLeagueInput = (value: string) => {
@@ -313,6 +350,31 @@ function ESPNSetupInner() {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
           <aside className="space-y-4">
+            <div className="bb-panel border-accent/30 p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center bg-accent/10 text-accent">
+                  <Puzzle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-ink">Bench Boss Sync</h2>
+                  <p className="text-sm text-muted">FantasyPros-style ESPN import.</p>
+                </div>
+              </div>
+              <div className={`mb-4 flex items-center gap-2 text-sm font-medium ${extensionInstalled ? 'text-success' : 'text-muted'}`}>
+                <Wifi className="h-4 w-4" />
+                {extensionInstalled ? 'Extension detected' : 'Chrome extension required'}
+              </div>
+              <div className="space-y-2">
+                <a href="/bench-boss-espn-sync.zip" download className="bb-button-secondary flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-medium">
+                  <Download className="h-4 w-4" /> Download extension
+                </a>
+                <button type="button" onClick={handleOpenESPN} className="fantasy-button flex w-full items-center justify-center gap-2 px-5 py-3 text-sm font-medium">
+                  Open ESPN & sync <ExternalLink className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-muted">Install once from chrome://extensions using “Load unpacked,” then open your ESPN hockey league and choose Connect to Bench Boss.</p>
+            </div>
+
             <div className="bb-panel p-6">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center bg-error/10 text-error">
@@ -355,6 +417,12 @@ function ESPNSetupInner() {
           </aside>
 
           <section className="bb-panel p-6 md:p-7">
+            {sessionDetected && (
+              <div className="mb-5 flex items-start gap-3 border border-success/30 bg-success/10 px-4 py-3 text-success">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                <span className="text-sm font-medium">ESPN session detected. Your private league credentials are ready—confirm the league below.</span>
+              </div>
+            )}
             {error && (
               <div className="mb-5 flex items-start gap-3 border border-error/30 bg-error/10 px-4 py-3 text-error">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
