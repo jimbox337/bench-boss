@@ -126,9 +126,9 @@ export function GameHero({ game, footer }: { game: ScoreboardGame; footer?: Reac
       <TeamColorBar away={game.away.abbrev} home={game.home.abbrev} />
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
         {side('away')}
-        <span className="bb-led-score">{started ? game.away.score ?? 0 : ''}</span>
+        <span className="bb-led-score" data-dim={game.isFinal && (game.away.score ?? 0) < (game.home.score ?? 0) || undefined}>{started ? game.away.score ?? 0 : ''}</span>
         <span className="bb-faceoff" data-live={game.isLive || undefined}><strong>{top}</strong>{bottom && <span>{bottom}</span>}</span>
-        <span className="bb-led-score">{started ? game.home.score ?? 0 : ''}</span>
+        <span className="bb-led-score" data-dim={game.isFinal && (game.home.score ?? 0) < (game.away.score ?? 0) || undefined}>{started ? game.home.score ?? 0 : ''}</span>
         {side('home')}
       </div>
       {footer}

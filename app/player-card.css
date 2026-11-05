@@ -49,7 +49,7 @@
 .pc-tabs button::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -11px; height: 3px; border-radius: 2px; background: transparent; }
 .pc-tabs button:hover { color: var(--color-ink); }
 .pc-tabs button[aria-current] { color: var(--color-ink); }
-.pc-tabs button[aria-current]::before { background: var(--color-goal-red); box-shadow: 0 0 10px 2px color-mix(in oklch, var(--color-goal-red) 70%, transparent); }
+.pc-tabs button[aria-current]::before { background: var(--color-goal-red); }
 .pc-tabs button[aria-current]::after { background: var(--color-goal-red); }
 
 /* Sections */

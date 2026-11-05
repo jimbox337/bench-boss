@@ -371,9 +371,9 @@ export default function GamePage() {
             <div className="flex h-1.5 gap-1" aria-hidden><span className="flex-1" style={{ background: teamColor(game.away.abbrev) }} /><span className="flex-1" style={{ background: teamColor(game.home.abbrev) }} /></div>
             <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
               {heroTeam('away')}
-              <span className="bb-led-score">{started ? game.away.score ?? 0 : ''}</span>
+              <span className="bb-led-score" data-dim={game.isFinal && (game.away.score ?? 0) < (game.home.score ?? 0) || undefined}>{started ? game.away.score ?? 0 : ''}</span>
               <span className="bb-faceoff" data-live={game.isLive || undefined}><strong>{status[0]}</strong>{status[1] && <span>{status[1]}</span>}</span>
-              <span className="bb-led-score">{started ? game.home.score ?? 0 : ''}</span>
+              <span className="bb-led-score" data-dim={game.isFinal && (game.home.score ?? 0) < (game.away.score ?? 0) || undefined}>{started ? game.home.score ?? 0 : ''}</span>
               {heroTeam('home')}
             </div>
             {game.broadcasts.length > 0 && <p className="pb-4 text-center text-sm text-muted">{game.broadcasts.join(' · ')}</p>}
