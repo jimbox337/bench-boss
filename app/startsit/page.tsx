@@ -2,11 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import { calculateFantasyPoints, defaultLeagueSettings } from '@/lib/calculator';
+import { calculateFantasyPoints, calculateFantasyRange } from '@/lib/calculator';
+import { pointsScoring } from '@/components/gamecenter/shared';
 import { useData } from '@/lib/DataContext';
 
 export default function StartSit() {
-  const { players, projections } = useData();
+  const { players, projections, leagueSettings } = useData();
+  const scoring = pointsScoring(leagueSettings);
   const [player1Name, setPlayer1Name] = useState('');
   const [player2Name, setPlayer2Name] = useState('');
   const [timeframe, setTimeframe] = useState('next_7');
@@ -35,8 +37,8 @@ export default function StartSit() {
   const proj1 = player1 ? projections.find(p => p.playerId === player1.id) : undefined;
   const proj2 = player2 ? projections.find(p => p.playerId === player2.id) : undefined;
 
-  const points1 = proj1 ? calculateFantasyPoints(proj1, defaultLeagueSettings) : 0;
-  const points2 = proj2 ? calculateFantasyPoints(proj2, defaultLeagueSettings) : 0;
+  const points1 = proj1 ? calculateFantasyPoints(proj1, scoring.settings) : 0;
+  const points2 = proj2 ? calculateFantasyPoints(proj2, scoring.settings) : 0;
 
   const winner = points1 > points2 ? player1 : player2;
   const winnerProj = points1 > points2 ? proj1 : proj2;
@@ -136,7 +138,7 @@ export default function StartSit() {
           <div>
             <h3 className="text-lg font-medium text-success">Start {winner?.name}</h3>
             <p className="text-sm text-success mt-1">
-              {winner?.name} has {winnerProj?.gamesPlayed} games vs {points1 > points2 ? player2?.name : player1?.name}’s {points1 > points2 ? proj2?.gamesPlayed : proj1?.gamesPlayed},
+              {winner?.name} has {winnerProj?.gamesPlayed?.toFixed(1)} games vs {points1 > points2 ? player2?.name : player1?.name}’s {(points1 > points2 ? proj2?.gamesPlayed : proj1?.gamesPlayed)?.toFixed(1)},
               and projects {Math.abs(points1 - points2).toFixed(1)} more fantasy points this week.
             </p>
           </div>
@@ -152,7 +154,7 @@ export default function StartSit() {
               {player1?.name}
             </h4>
             <p className={`text-sm ${points1 > points2 ? 'text-success' : 'text-muted'}`}>
-              {player1?.nhlTeam} / {player1?.positions?.join('/') ?? ''} / {proj1?.gamesPlayed} games this week
+              {player1?.nhlTeam} / {player1?.positions?.join('/') ?? ''} / {proj1?.gamesPlayed?.toFixed(1)} games this week{proj1?.source === 'model' ? ' · model estimate' : ''}
             </p>
           </div>
           <div className="p-6 space-y-3">
@@ -162,6 +164,9 @@ export default function StartSit() {
                 {points1.toFixed(1)}
               </span>
             </div>
+            {proj1 && calculateFantasyRange(proj1, scoring.settings) && (() => { const r = calculateFantasyRange(proj1, scoring.settings)!; return (
+              <div className="flex justify-between text-sm"><span className="text-muted">80% range</span><span className="tabular-nums text-ink-2">{r.low.toFixed(1)} – {r.high.toFixed(1)}</span></div>
+            ); })()}
             <div className="flex justify-between">
               <span className="text-muted">Goals</span>
               <span className="font-medium text-ink">{proj1?.skaterStats?.G.toFixed(1) || '-'}</span>
@@ -188,7 +193,7 @@ export default function StartSit() {
               {player2?.name}
             </h4>
             <p className={`text-sm ${points2 > points1 ? 'text-success' : 'text-muted'}`}>
-              {player2?.nhlTeam} / {player2?.positions?.join('/') ?? ''} / {proj2?.gamesPlayed} games this week
+              {player2?.nhlTeam} / {player2?.positions?.join('/') ?? ''} / {proj2?.gamesPlayed?.toFixed(1)} games this week{proj2?.source === 'model' ? ' · model estimate' : ''}
             </p>
           </div>
           <div className="p-6 space-y-3">
@@ -198,6 +203,9 @@ export default function StartSit() {
                 {points2.toFixed(1)}
               </span>
             </div>
+            {proj2 && calculateFantasyRange(proj2, scoring.settings) && (() => { const r = calculateFantasyRange(proj2, scoring.settings)!; return (
+              <div className="flex justify-between text-sm"><span className="text-muted">80% range</span><span className="tabular-nums text-ink-2">{r.low.toFixed(1)} – {r.high.toFixed(1)}</span></div>
+            ); })()}
             <div className="flex justify-between">
               <span className="text-muted">Goals</span>
               <span className="font-medium text-ink">{proj2?.skaterStats?.G.toFixed(1) || '-'}</span>

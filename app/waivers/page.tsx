@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { rankWaiverTargets, defaultLeagueSettings, Player } from '@/lib/calculator';
+import { rankWaiverTargets, Player } from '@/lib/calculator';
+import { pointsScoring } from '@/components/gamecenter/shared';
 import { useData } from '@/lib/DataContext';
 import PlayerDetailModal from '@/components/PlayerDetailModal';
 
 export default function WaiverWire() {
-  const { players, projections, myTeam, addToMyTeam } = useData();
+  const { players, projections, myTeam, addToMyTeam, leagueSettings } = useData();
+  const scoring = pointsScoring(leagueSettings);
   const [timeframe, setTimeframe] = useState('next_7');
   const [sortBy, setSortBy] = useState('best_overall');
   const [position, setPosition] = useState('all');
@@ -14,7 +16,7 @@ export default function WaiverWire() {
 
   // Free agents are all players not on my team
   const freeAgents = players.filter(p => !myTeam.some(tp => tp.id === p.id));
-  const targets = rankWaiverTargets(freeAgents, projections, defaultLeagueSettings);
+  const targets = rankWaiverTargets(freeAgents, projections, scoring.settings);
 
   return (
     <>

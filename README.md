@@ -133,7 +133,7 @@ bench-boss/
 - **Next.js API Routes** - Serverless functions
 - **NextAuth.js** - Authentication
 - **bcryptjs** - Password hashing
-- **Groq API** - FREE AI-powered player analysis (Llama 3.1 70B)
+- **Groq API** - Free-tier AI player analysis (`openai/gpt-oss-120b` by default; see `lib/aiModel.ts`)
 
 ### Data
 - **NHL API** - Real-time hockey data
@@ -144,7 +144,7 @@ bench-boss/
 
 ### Features
 Click on any player in your team roster to get:
-- **AI-Powered Outlook** - Comprehensive analysis using Llama 3.1 70B
+- **AI-Powered Outlook** - Analysis of verified NHL stats using Groq-hosted `openai/gpt-oss-120b`
 - **Fantasy Value Rating** - Must-Start, Start, Flex, Bench, or Drop
 - **Trend Analysis** - Hot 🔥, Cold 🥶, or Steady ➡️
 - **Strengths & Weaknesses** - Key performance indicators
@@ -160,10 +160,14 @@ Click on any player in your team roster to get:
 
 ### API Usage
 The AI analysis uses the **FREE** Groq API with the following model:
-- **Model**: `llama-3.1-70b-versatile` (Meta's Llama 3.1 70B)
+- **Model**: `openai/gpt-oss-120b` (default in `lib/aiModel.ts`; override server-side with `GROQ_MODEL`)
 - **Max Tokens**: 1500 per request
 - **Cost**: **$0.00** - Completely FREE! 🎉
 - **Rate Limits**: 30 requests/minute (very generous)
+
+## 📈 Projection model research
+
+An offline, free, locally trained projection pipeline lives in [`ml/`](ml/README.md). It is **not** used by the app yet: the latest evaluation ([`ml/reports/evaluation.md`](ml/reports/evaluation.md)) did not pass the promotion gate against the current schedule-aware baseline.
 
 ## 📚 Documentation
 

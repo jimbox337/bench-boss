@@ -55,6 +55,12 @@ export interface Projection {
   gamesPlayed: number;
   confidence?: number;
   modelVersion?: string;
+  /** 'model' for Bench Boss model estimates, 'baseline' for the schedule-aware fallback. */
+  source?: 'model' | 'baseline';
+  /** Per-stat variance of the projected totals (negative-binomial), for low/high ranges. */
+  variance?: Partial<SkaterStats>;
+  /** Validation-calibrated multiplier on the analytic standard deviation. */
+  intervalScale?: number;
   context?: {
     opponents: string[];
     homeGames: number;
@@ -134,6 +140,25 @@ export function calculateFantasyPoints(
   }
 
   return Math.round(points * 10) / 10;
+}
+
+/**
+ * Low/high fantasy-point range (default 80%) from per-stat variances. Points count for both
+ * goals and assists, so their weights add; covariance between stats is ignored, which the
+ * validation-calibrated intervalScale partly absorbs.
+ */
+export function calculateFantasyRange(projection: Projection, settings: LeagueSettings, z = 1.2816): { mean: number; low: number; high: number } | null {
+  if (settings.scoringType !== 'H2H_Points' || !settings.pointsPerStat || !projection.skaterStats || !projection.variance) return null;
+  const w = settings.pointsPerStat;
+  const v = projection.variance;
+  const weights: [keyof SkaterStats, number][] = [
+    ['G', (w.G || 0) + (w.PTS || 0)], ['A', (w.A || 0) + (w.PTS || 0)], ['PPP', w.PPP || 0], ['SOG', w.SOG || 0], ['HIT', w.HIT || 0], ['BLK', w.BLK || 0],
+  ];
+  const variance = weights.reduce((sum, [stat, weight]) => sum + weight * weight * (v[stat] || 0), 0);
+  const mean = calculateFantasyPoints(projection, settings);
+  const sd = Math.sqrt(variance) * (projection.intervalScale ?? 1);
+  const allPositive = weights.every(([, weight]) => weight >= 0);
+  return { mean, low: Math.round((allPositive ? Math.max(0, mean - z * sd) : mean - z * sd) * 10) / 10, high: Math.round((mean + z * sd) * 10) / 10 };
 }
 
 // ============================================================================
