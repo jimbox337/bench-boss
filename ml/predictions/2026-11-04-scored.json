@@ -45,13 +45,13 @@
         "baselineRmse": 0.6407830286823523
       },
       "shots": {
-        "actualMean": 1.534351145038168,
+        "actualMean": 1.5419847328244274,
         "modelMean": 1.5811885496183207,
         "baselineMean": 1.5482656488549615,
-        "modelMae": 1.0228175572519085,
-        "baselineMae": 1.0158549618320611,
-        "modelRmse": 1.2519328953372384,
-        "baselineRmse": 1.2504002598862751
+        "modelMae": 1.030451145038168,
+        "baselineMae": 1.0234885496183206,
+        "modelRmse": 1.2571341838112868,
+        "baselineRmse": 1.2555890503499856
       },
       "ppPoints": {
         "actualMean": 0.12213740458015267,
@@ -81,18 +81,18 @@
         "baselineRmse": 0.9157578724708657
       },
       "fp": {
-        "actualMean": 1.4061068702290076,
+        "actualMean": 1.4068702290076336,
         "modelMean": 1.451358778625954,
         "baselineMean": 1.4265038167938933,
-        "modelMae": 1.0181221374045801,
-        "baselineMae": 1.0061832061068703,
-        "modelRmse": 1.4260117179908895,
-        "baselineRmse": 1.4101729253496937
+        "modelMae": 1.0173587786259541,
+        "baselineMae": 1.0054198473282443,
+        "modelRmse": 1.4256958499233103,
+        "baselineRmse": 1.409854050158417
       }
     },
     "fpSpearman": {
-      "model": 0.28284298512763417,
-      "baseline": 0.2845687900804006
+      "model": 0.28067360754255843,
+      "baseline": 0.2824554782302759
     },
     "topPerformers": [
       {
@@ -209,7 +209,7 @@
         "usageCorrect": false,
         "probOnActualStarter": 0.263,
         "savesPred": 24.47,
-        "savesActual": 23.0,
+        "savesActual": 24.0,
         "gaPred": 2.73,
         "gaActual": 1.0,
         "winProb": 0.517,
@@ -359,13 +359,13 @@
         "baselineRmse": 0.6407830286823523
       },
       "shots": {
-        "actualMean": 1.534351145038168,
+        "actualMean": 1.5419847328244274,
         "modelMean": 1.5703167938931297,
         "baselineMean": 1.5482656488549615,
-        "modelMae": 0.9955610687022902,
-        "baselineMae": 1.0158549618320611,
-        "modelRmse": 1.2233522391332623,
-        "baselineRmse": 1.2504002598862751
+        "modelMae": 1.0031946564885499,
+        "baselineMae": 1.0234885496183206,
+        "modelRmse": 1.2284564317911972,
+        "baselineRmse": 1.2555890503499856
       },
       "ppPoints": {
         "actualMean": 0.12213740458015267,
@@ -395,18 +395,18 @@
         "baselineRmse": 0.9157578724708657
       },
       "fp": {
-        "actualMean": 1.4061068702290076,
+        "actualMean": 1.4068702290076336,
         "modelMean": 1.4135343511450382,
         "baselineMean": 1.4265038167938933,
-        "modelMae": 0.9721603053435114,
-        "baselineMae": 1.0061832061068703,
-        "modelRmse": 1.3563644576531533,
-        "baselineRmse": 1.4101729253496937
+        "modelMae": 0.9713969465648854,
+        "baselineMae": 1.0054198473282443,
+        "modelRmse": 1.3560481284665222,
+        "baselineRmse": 1.409854050158417
       }
     },
     "fpSpearman": {
-      "model": 0.2987420701686077,
-      "baseline": 0.2845687900804006
+      "model": 0.2966419656885208,
+      "baseline": 0.2824554782302759
     },
     "topPerformers": [
       {
@@ -523,7 +523,7 @@
         "usageCorrect": false,
         "probOnActualStarter": 0.227,
         "savesPred": 24.82,
-        "savesActual": 23.0,
+        "savesActual": 24.0,
         "gaPred": 2.75,
         "gaActual": 1.0,
         "winProb": 0.483,
