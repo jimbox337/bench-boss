@@ -213,18 +213,17 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {pathname === '/' && <ScoreStrip />}
-
-        {showBanner && (
-          <div className="bb-connect" role="region" aria-label="Connect your league">
-            <span className="bb-connect-icon" aria-hidden><RefreshCw className="h-4 w-4" /></span>
-            <p><span className="font-semibold">Connect your ESPN league</span> to get projections and advice in your league’s scoring.</p>
-            <Link href="/teams/new" className="bb-connect-cta">Connect league</Link>
-            <button type="button" className="bb-connect-close" onClick={dismissBanner} aria-label="Dismiss"><X className="h-4 w-4" /></button>
-          </div>
-        )}
-
         <main className="bb-main fantasy-main">
+          {pathname === '/' && <ScoreStrip />}
+
+          {showBanner && (
+            <div className="bb-connect" role="region" aria-label="Connect your league">
+              <span className="bb-connect-icon" aria-hidden><RefreshCw className="h-4 w-4" /></span>
+              <p><span className="font-semibold">Connect your ESPN league</span> to get projections and advice in your league’s scoring.</p>
+              <Link href="/teams/new" className="bb-connect-cta">Connect league</Link>
+              <button type="button" className="bb-connect-close" onClick={dismissBanner} aria-label="Dismiss"><X className="h-4 w-4" /></button>
+            </div>
+          )}
           {inTools && (
             <nav className="bb-section-tabs" aria-label="Tools">
               {toolTabs.map(tab => (

@@ -47,7 +47,7 @@
   --shadow-card: inset 0 1px 0 oklch(100% 0 0 / 0.045), 0 1px 2px oklch(0% 0 0 / 0.35), 0 8px 24px -12px oklch(0% 0 0 / 0.55);
   --shadow-pop: inset 0 1px 0 oklch(100% 0 0 / 0.06), 0 2px 6px oklch(0% 0 0 / 0.4), 0 24px 48px -16px oklch(0% 0 0 / 0.7);
   --tracking-display: -0.01em;
-  --stretch-display: 125%;
+  --stretch-display: 112%;
 }
 :root {
   color-scheme: dark;
