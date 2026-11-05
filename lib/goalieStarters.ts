@@ -1,8 +1,11 @@
 /**
  * Starting goalies for a day's NHL games.
  *
- * Confirmed: the NHL marks `starter: true` in the game boxscore once the official
- * lineup is posted (typically around warmups) and keeps it after the game.
+ * Confirmed, in order of preference:
+ *   1. the boxscore `starter: true` flag (the NHL sets it once the game is final);
+ *   2. during a live game, the only goalie the boxscore shows with ice time;
+ *   3. if a goalie was pulled (both have ice time), the goalie in net for the first
+ *      shot against his team in the play-by-play.
  * Not yet confirmed: we show the goalie with the most starts in the team's last 10
  * games, clearly labelled as usage-based. Nothing is inferred from news or rumours.
  */
@@ -21,7 +24,7 @@ export type GoalieAppearance = {
   started: boolean;
 };
 
-export type BoxscoreGoalie = { playerId: number; name: string; starter?: boolean };
+export type BoxscoreGoalie = { playerId: number; name: string; starter?: boolean; toi?: string };
 
 export type TeamStarter =
   | { status: 'confirmed'; playerId: number; name: string; source: string }
@@ -36,6 +39,21 @@ export type GameStarters = {
 };
 
 export const CONFIRMED_SOURCE = 'NHL official game lineup';
+export const IN_NET_SOURCE = 'NHL game data: in net since puck drop';
+const STARTED_STATES = new Set(['LIVE', 'CRIT', 'OFF', 'FINAL']);
+
+export function toiSeconds(toi: string | undefined): number {
+  const match = /^(\d+):(\d{2})$/.exec(toi || '');
+  return match ? Number(match[1]) * 60 + Number(match[2]) : 0;
+}
+
+/** Once a game has started: the goalie who started, from ice time or the play-by-play. */
+export function startedGoalie(goalies: BoxscoreGoalie[] | undefined, firstInNetId?: number): BoxscoreGoalie | null {
+  const played = (goalies || []).filter(goalie => toiSeconds(goalie.toi) > 0);
+  if (played.length === 1) return played[0];
+  if (played.length > 1 && firstInNetId) return played.find(goalie => goalie.playerId === firstInNetId) || null;
+  return null;
+}
 export const USAGE_SOURCE = `Not confirmed: most starts in the team's last ${USAGE_WINDOW_GAMES} games`;
 
 /** Returns the single goalie the NHL marked as starter, or null if absent/ambiguous. */
@@ -78,9 +96,15 @@ export function resolveTeamStarter(
   appearances: GoalieAppearance[],
   team: string,
   gameDate: string,
+  gameState?: string,
+  firstInNetId?: number,
 ): TeamStarter {
   const confirmed = confirmedStarter(boxscoreGoalies);
   if (confirmed) return { status: 'confirmed', playerId: confirmed.playerId, name: confirmed.name, source: CONFIRMED_SOURCE };
+  if (gameState && STARTED_STATES.has(gameState)) {
+    const inNet = startedGoalie(boxscoreGoalies, firstInNetId);
+    if (inNet) return { status: 'confirmed', playerId: inNet.playerId, name: inNet.name, source: IN_NET_SOURCE };
+  }
   const [top] = recentStartShares(appearances, team, gameDate);
   if (top) return { status: 'likely', ...top, source: USAGE_SOURCE };
   return { status: 'unknown', source: 'No confirmed starter and no recent starts on record' };
@@ -99,18 +123,47 @@ type ScheduledGame = {
   homeTeam: { abbrev: string };
 };
 
+type RawGoalie = { playerId: number; name?: { default?: string }; starter?: boolean; toi?: string };
+
 type BoxscorePayload = {
   gameState?: string;
+  awayTeam?: { id?: number };
+  homeTeam?: { id?: number };
   playerByGameStats?: {
-    awayTeam?: { goalies?: { playerId: number; name?: { default?: string }; starter?: boolean }[] };
-    homeTeam?: { goalies?: { playerId: number; name?: { default?: string }; starter?: boolean }[] };
+    awayTeam?: { goalies?: RawGoalie[] };
+    homeTeam?: { goalies?: RawGoalie[] };
   };
 };
 
+type PlayByPlayPayload = { plays?: { details?: { goalieInNetId?: number; eventOwnerTeamId?: number } }[] };
+
 const confirmedCache = new Map<number, GameStarters>();
 
-function toBoxscoreGoalies(rows: { playerId: number; name?: { default?: string }; starter?: boolean }[] | undefined): BoxscoreGoalie[] | undefined {
-  return rows?.map(row => ({ playerId: row.playerId, name: row.name?.default || String(row.playerId), starter: row.starter }));
+function toBoxscoreGoalies(rows: RawGoalie[] | undefined): BoxscoreGoalie[] | undefined {
+  return rows?.map(row => ({ playerId: row.playerId, name: row.name?.default || String(row.playerId), starter: row.starter, toi: row.toi }));
+}
+
+/** Goalie in net for the first shot each team faced, keyed by the defending team's id. */
+export function firstGoaliesInNet(payload: PlayByPlayPayload | null, awayId?: number, homeId?: number): { away?: number; home?: number } {
+  const result: { away?: number; home?: number } = {};
+  for (const play of payload?.plays || []) {
+    const goalie = play.details?.goalieInNetId;
+    const shooter = play.details?.eventOwnerTeamId;
+    if (!goalie || !shooter) continue;
+    if (shooter === homeId && result.away === undefined) result.away = goalie;
+    if (shooter === awayId && result.home === undefined) result.home = goalie;
+    if (result.away !== undefined && result.home !== undefined) break;
+  }
+  return result;
+}
+
+async function fetchPlayByPlay(gameId: number): Promise<PlayByPlayPayload | null> {
+  try {
+    const response = await fetch(`${NHL_WEB}/gamecenter/${gameId}/play-by-play`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8_000) });
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchRecentGoalieAppearances(today: Date): Promise<GoalieAppearance[]> {
@@ -151,11 +204,19 @@ export async function getStartingGoalies(games: ScheduledGame[], now = new Date(
     if (cached) return cached;
     const gameDate = game.gameDate || game.startTimeUTC.slice(0, 10);
     const boxscore = await fetchBoxscore(game.id);
+    const gameState = boxscore?.gameState || game.gameState;
+    const awayGoalies = toBoxscoreGoalies(boxscore?.playerByGameStats?.awayTeam?.goalies);
+    const homeGoalies = toBoxscoreGoalies(boxscore?.playerByGameStats?.homeTeam?.goalies);
+    // Only when a goalie was pulled (two with ice time) do we need the play-by-play.
+    const pulled = [awayGoalies, homeGoalies].some(goalies => !confirmedStarter(goalies) && (goalies || []).filter(g => toiSeconds(g.toi) > 0).length > 1);
+    const firstInNet = pulled && STARTED_STATES.has(gameState)
+      ? firstGoaliesInNet(await fetchPlayByPlay(game.id), boxscore?.awayTeam?.id, boxscore?.homeTeam?.id)
+      : {};
     const result: GameStarters = {
       gameId: game.id,
-      gameState: boxscore?.gameState || game.gameState,
-      away: { team: game.awayTeam.abbrev, starter: resolveTeamStarter(toBoxscoreGoalies(boxscore?.playerByGameStats?.awayTeam?.goalies), appearances, game.awayTeam.abbrev, gameDate) },
-      home: { team: game.homeTeam.abbrev, starter: resolveTeamStarter(toBoxscoreGoalies(boxscore?.playerByGameStats?.homeTeam?.goalies), appearances, game.homeTeam.abbrev, gameDate) },
+      gameState,
+      away: { team: game.awayTeam.abbrev, starter: resolveTeamStarter(awayGoalies, appearances, game.awayTeam.abbrev, gameDate, gameState, firstInNet.away) },
+      home: { team: game.homeTeam.abbrev, starter: resolveTeamStarter(homeGoalies, appearances, game.homeTeam.abbrev, gameDate, gameState, firstInNet.home) },
     };
     // Once both starters are confirmed they cannot change; skip refetching this game.
     if (result.away.starter.status === 'confirmed' && result.home.starter.status === 'confirmed') confirmedCache.set(game.id, result);

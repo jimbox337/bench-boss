@@ -105,7 +105,7 @@ export default function GamesPage() {
         ))}</div>
       </section>
 
-      <p className="flex items-center gap-2 text-xs text-muted"><Clock3 className="h-4 w-4" /> Live scores refresh every 30 seconds. Goalies are marked confirmed only when the NHL posts the official game lineup; otherwise the likely starter comes from recent starts.</p>
+      <p className="flex items-center gap-2 text-xs text-muted"><Clock3 className="h-4 w-4" /> Live scores refresh every 30 seconds. Goalies are marked confirmed from NHL game data once the game starts; before puck drop the likely starter comes from recent starts.</p>
     </div>
   );
 }

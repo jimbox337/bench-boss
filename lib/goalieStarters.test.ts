@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CONFIRMED_SOURCE,
+  IN_NET_SOURCE,
   confirmedStarter,
+  firstGoaliesInNet,
+  startedGoalie,
+  toiSeconds,
   getStartingGoalies,
   recentStartShares,
   resolveTeamStarter,
@@ -61,6 +65,34 @@ describe('resolveTeamStarter', () => {
   });
   it('says unknown rather than guessing when there is no data', () => {
     expect(resolveTeamStarter(undefined, [], 'SEA', '2026-11-04').status).toBe('unknown');
+  });
+});
+
+describe('live games (NHL omits the starter flag until the game is final)', () => {
+  const live = [{ playerId: 1, name: 'Ersson', toi: '09:18' }, { playerId: 2, name: 'Johansson', toi: '00:00' }];
+
+  it('parses ice time', () => {
+    expect(toiSeconds('09:18')).toBe(558);
+    expect(toiSeconds('00:00')).toBe(0);
+    expect(toiSeconds(undefined)).toBe(0);
+  });
+  it('confirms the only goalie with ice time once the game is live', () => {
+    expect(resolveTeamStarter(live, history, 'OTT', '2026-11-04', 'LIVE')).toEqual({ status: 'confirmed', playerId: 1, name: 'Ersson', source: IN_NET_SOURCE });
+  });
+  it('does not treat ice time as confirmation before puck drop', () => {
+    expect(resolveTeamStarter(live, history, 'BUF', '2026-11-04', 'PRE').status).toBe('likely');
+  });
+  it('uses the first goalie in net when a starter was pulled', () => {
+    const pulled = [{ playerId: 1, name: 'A', toi: '25:00' }, { playerId: 2, name: 'B', toi: '20:00' }];
+    expect(startedGoalie(pulled)).toBeNull();
+    expect(startedGoalie(pulled, 2)?.name).toBe('B');
+    expect(resolveTeamStarter(pulled, [], 'OTT', '2026-11-04', 'LIVE', 2)).toMatchObject({ status: 'confirmed', playerId: 2 });
+  });
+  it('reads the first goalie each team faced from the play-by-play', () => {
+    // OTT (away, id 9) shoots first at BUF goalie 8481551; BUF (home, id 7) shoots at 8481035.
+    const pbp = { plays: [{ details: {} }, { details: { goalieInNetId: 8481551, eventOwnerTeamId: 9 } },
+      { details: { goalieInNetId: 8481035, eventOwnerTeamId: 7 } }, { details: { goalieInNetId: 999, eventOwnerTeamId: 7 } }] };
+    expect(firstGoaliesInNet(pbp, 9, 7)).toEqual({ home: 8481551, away: 8481035 });
   });
 });
 
