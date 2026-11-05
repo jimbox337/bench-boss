@@ -257,7 +257,7 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
               )}
             </div>
             <div className="pc-table-wrap" data-loading={logLoading || undefined}>
-              {!card ? <div className="pc-skeleton" /> : games.length === 0 && !card.upcoming.length ? <p className="pc-note">No NHL games this season.</p> : (
+              {!card ? <div className="pc-skeleton" /> : games.length === 0 ? <p className="pc-note">No NHL games this season.</p> : (
                 <table className="pc-table">
                   <thead>
                     <tr className="pc-groups"><th colSpan={3} /><th colSpan={isGoalie ? 2 : 3}>Fantasy</th><th colSpan={isGoalie ? 4 : 7}>{isGoalie ? 'Goaltending' : 'Scoring'}</th></tr>
@@ -268,11 +268,12 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
                     </tr>
                   </thead>
                   <tbody>
-                    {games.map((game, index) => {
+                    {/* Newest game first; GM keeps the season game number. */}
+                    {[...games].reverse().map((game, index) => {
                       const fp = fpts(game);
                       return (
                         <tr key={game.gameId}>
-                          <td className="pc-dim">{index + 1}</td>
+                          <td className="pc-dim">{games.length - index}</td>
                           <td className="pc-dim">{new Date(`${game.date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
                           <td className="pc-opp"><span><TeamLogo team={{ abbrev: game.opponent }} size={18} />{game.home ? '' : '@'}{game.opponent}</span></td>
                           <Cell value={fp.toFixed(1)} tone={heat(fp, means.fp)} />
@@ -295,14 +296,6 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
                         </tr>
                       );
                     })}
-                    {viewingCurrent && card.upcoming.slice(0, 10).map((game, index) => (
-                      <tr key={game.gameId} className="pc-future">
-                        <td className="pc-dim">{games.length + index + 1}</td>
-                        <td className="pc-dim">{new Date(`${game.date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                        <td className="pc-opp"><span><TeamLogo team={{ abbrev: game.opponent }} size={18} />{game.home ? '' : '@'}{game.opponent}</span></td>
-                        {Array.from({ length: isGoalie ? 6 : 10 }, (_, i) => <td key={i} className="pc-dash">–</td>)}
-                      </tr>
-                    ))}
                   </tbody>
                 </table>
               )}

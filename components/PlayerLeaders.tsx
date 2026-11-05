@@ -38,8 +38,9 @@ export default function PlayerLeaders() {
               <button onClick={() => openPlayer(player.id)} className="flex w-full items-center gap-3 px-5 py-2 text-left hover:bg-paper-3" aria-label={`View ${player.name}, ${player.seasonStats?.PTS} points`}>
                 <span className="w-4 shrink-0 text-xs tabular-nums text-muted">{index + 1}</span>
                 <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper-3 text-xs font-medium text-muted">
-                  {player.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
-                  {player.headshotUrl && <img src={player.headshotUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}
+                  {/* Initials only when there is no photo (NHL headshots are transparent PNGs). */}
+                  <span className={player.headshotUrl ? 'hidden' : undefined}>{player.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</span>
+                  {player.headshotUrl && <img src={player.headshotUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.previousElementSibling?.classList.remove('hidden'); }} />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm leading-5 font-semibold text-accent">{player.name}</span>

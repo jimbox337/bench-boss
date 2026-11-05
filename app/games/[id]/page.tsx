@@ -43,7 +43,7 @@ function PlayRow({ play }: { play: PlayEvent }) {
         <span className="block font-display text-base font-bold tabular-nums">{play.time}</span>
         <span className={`block text-sm ${play.kind === 'goal' ? 'font-semibold text-ink' : 'text-ink-2'}`}>{play.text}</span>
       </span>
-      {play.score && <span className="mr-2 self-center rounded-md bg-ink px-2 py-0.5 font-display text-sm font-bold text-on-brand tabular-nums">{play.score}</span>}
+      {play.score && <span className="bb-score-chip mr-2 self-center">{play.score}</span>}
     </li>
   );
 }
@@ -154,7 +154,7 @@ function LeaderCard({ label, away, home, game }: { label: string; away: { name: 
         const entry = side === 'away' ? away : home;
         return (
           <div key={side} className={`flex min-h-32 flex-col justify-end gap-1 p-4 ${side === 'home' ? 'items-end text-right' : ''}`} style={{ background: teamColor(game[side].abbrev) }}>
-            <span className="rounded-full bg-white/90 p-1"><TeamLogo team={game[side]} size={26} /></span>
+            <span className="bb-logo-disc"><TeamLogo team={game[side]} size={26} /></span>
             <span className="font-display text-3xl font-bold leading-none tabular-nums">{entry?.value ?? '–'}</span>
             <span className="font-display text-sm font-bold uppercase tracking-wide">{entry?.name ?? 'No data yet'}</span>
           </div>
@@ -178,6 +178,27 @@ function GameTab({ detail, settings, onAllPlays }: { detail: GameDetail; setting
   };
   return (
     <div className="space-y-8">
+      {detail.threeStars.length > 0 && (
+        <section>
+          <SectionTitle>Three stars</SectionTitle>
+          <ol className="grid gap-3 sm:grid-cols-3">
+            {[...detail.threeStars].sort((a, b) => a.star - b.star).map(star => (
+              <li key={star.playerId} className="bb-star" data-star={star.star} style={{ '--team': teamColor(star.team) } as React.CSSProperties}>
+                <span className="bb-star-rank" aria-label={`${['First', 'Second', 'Third'][star.star - 1] || `Star ${star.star}`} star`}>
+                  <span aria-hidden>★</span>{star.star}
+                </span>
+                {star.headshot && <img src={star.headshot} alt="" className="bb-star-photo" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                <span className="min-w-0">
+                  <PlayerLink id={star.playerId} className="bb-player-link bb-star-name">{star.name}</PlayerLink>
+                  <span className="flex items-center gap-1.5 text-xs text-muted"><TeamLogo team={{ abbrev: star.team }} size={16} />{star.team}{star.position ? ` · ${star.position === 'L' ? 'LW' : star.position === 'R' ? 'RW' : star.position}` : ''}{star.number !== undefined ? ` · #${star.number}` : ''}</span>
+                  {star.line && <span className="bb-star-line">{star.line}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       <div className="grid gap-6 2xl:grid-cols-2">
         <section>
           <SectionTitle>Shot chart</SectionTitle>
@@ -224,7 +245,7 @@ function GameTab({ detail, settings, onAllPlays }: { detail: GameDetail; setting
                 <span className="block font-display text-base font-bold">{goal.period === 'SO' ? 'Shootout' : `${periodText(goal.period)} · ${goal.time}`}{goal.strength !== 'ev' && <span className="ml-2 rounded bg-paper-3 px-1.5 text-xs uppercase">{goal.strength}</span>}</span>
                 <span className="block text-sm"><span className="font-semibold">{goal.scorer}</span>{goal.goalsToDate ? ` (${goal.goalsToDate})` : ''} · <span className="text-ink-2">{goal.assists.length ? goal.assists.map(a => a.name).join(', ') : 'Unassisted'}</span></span>
               </span>
-              <span className="mr-2 self-center rounded-md bg-ink px-2 py-0.5 font-display text-sm font-bold text-on-brand tabular-nums">{goal.awayScore}–{goal.homeScore}</span>
+              <span className="bb-score-chip mr-2 self-center">{goal.awayScore}–{goal.homeScore}</span>
             </li>
           ))}</ol>
         )}

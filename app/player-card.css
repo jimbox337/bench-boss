@@ -97,8 +97,6 @@
 .pc-dim { padding: 0 6px !important; color: var(--color-muted); font-size: 13px !important; }
 .pc-opp { font-weight: 800; font-family: var(--font-display); padding: 0 6px !important; }
 .pc-opp span { display: inline-flex; align-items: center; gap: 6px; color: var(--color-ink); }
-.pc-future td { height: 32px; }
-.pc-dash { color: var(--color-muted); }
 .pc-skeleton { height: 220px; border-radius: 12px; background: var(--color-paper-3); }
 .pc-more { display: block; margin: 16px auto 0; min-height: 40px; padding: 0 16px; border-radius: 8px; font-weight: 600; color: var(--color-accent); }
 .pc-more:hover { background: var(--color-paper-3); }
