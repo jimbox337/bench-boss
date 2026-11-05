@@ -38,9 +38,15 @@ def actuals(date: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     return skaters, goalies
 
 
-def score(date: str, tag: str, skaters: pd.DataFrame, goalies: pd.DataFrame) -> dict:
+def final_game_ids(date: str) -> set[int]:
+    """Only games the NHL marks final; in-progress games would be scored on partial stats."""
+    games = requests.get(f"https://api-web.nhle.com/v1/score/{date}", headers={"User-Agent": USER_AGENT}, timeout=30).json().get("games", [])
+    return {g["id"] for g in games if g.get("gameState") in ("OFF", "FINAL")}
+
+
+def score(date: str, tag: str, skaters: pd.DataFrame, goalies: pd.DataFrame, final_ids: set[int]) -> dict:
     payload = json.loads((PREDICTIONS_DIR / f"{date}-{tag}.json").read_text())
-    final_games = set(skaters["gameId"])
+    final_games = set(skaters["gameId"]) & final_ids
     pred = pd.DataFrame(payload["skaters"])
     pred = pred[pred["gameId"].isin(final_games)]
     merged = pred.merge(skaters, on=["gameId", "playerId"], how="left", indicator=True)
@@ -91,9 +97,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tags", nargs="+", required=True)
     args = parser.parse_args(argv)
     skaters, goalies = actuals(args.date)
-    if skaters.empty:
+    final_ids = final_game_ids(args.date)
+    if skaters.empty or not final_ids:
         raise SystemExit("No final results yet.")
-    results = [score(args.date, tag, skaters, goalies) for tag in args.tags]
+    results = [score(args.date, tag, skaters, goalies, final_ids) for tag in args.tags]
     path = PREDICTIONS_DIR / f"{args.date}-scored.json"
     path.write_text(json.dumps(results, indent=2, default=str))
     for r in results:
