@@ -16,6 +16,7 @@ import pandas as pd
 
 SKATER_RATE_STATS = ("goals", "assists", "shots", "ppPoints", "hits", "blocks", "toi", "ppToi")
 SKATER_TARGETS = ("goals", "assists", "shots", "ppPoints", "hits", "blocks")
+RATE_STATS_FOR_EXPORT = SKATER_RATE_STATS  # stats the TypeScript runtime receives per game row
 # Shot-quality stats from play-by-play (benchboss_ml.xg); NaN for seasons without coverage.
 XG_STATS = ("ixg", "hdAtt")
 XG_FEATURES: tuple[str, ...] = tuple(f"{w}_{s}" for s in XG_STATS for w in ("std", "l5", "l10", "l20", "prev"))
