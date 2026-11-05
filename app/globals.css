@@ -65,7 +65,7 @@ h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--stretch-displ
   .rink-divider { height: 1px; background: var(--color-rule); }
   .bb-page { max-width: var(--container); margin-inline: auto; padding: 28px 32px var(--space-xl); }
   .bb-page-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); margin-bottom: var(--space-lg); }
-  .bb-page-header h1, .bb-page-header h2 { font-size: 34px; font-weight: 800; font-style: italic; line-height: 1.05; letter-spacing: 0; text-transform: uppercase; }
+  .bb-page-header h1, .bb-page-header h2 { font-size: 34px; font-weight: 800; line-height: 1.05; letter-spacing: 0; text-transform: uppercase; }
   /* Goal-line rule under page titles: red line with a blue line beside it. */
   .bb-page-header h1::after { content: ""; display: block; width: 72px; height: 4px; margin-top: 10px; border-radius: 2px; background: linear-gradient(90deg, var(--color-goal-red) 0 62%, transparent 62% 70%, var(--color-accent) 70%); }
   .bb-page-header p { color: var(--color-muted); font-size: var(--text-sm); line-height: 1.6; margin-top: var(--space-xs); max-width: 65ch; }
@@ -110,7 +110,7 @@ h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--stretch-displ
 .bb-masthead-links a:first-child { color: var(--color-on-brand); border-bottom-color: var(--color-accent); font-weight: 600; }
 .bb-masthead-links a:hover { color: var(--color-on-brand); }
 .bb-topbar :focus-visible, .bg-brand-navy :focus-visible { outline-color: var(--color-on-brand) !important; }
-.bb-main > div { max-width: var(--container); margin-inline: auto; }
+.bb-main > div:not(.bb-strip, .bb-connect) { max-width: var(--container); margin-inline: auto; }
 .bb-mobile-nav { background: var(--color-paper-2); border-top: 1px solid var(--color-rule); bottom: 0; inset-inline: 0; box-shadow: none; padding-bottom: max(var(--space-xs),env(safe-area-inset-bottom)); }
 .bb-mobile-nav a { border-radius: var(--radius-pill); }
 .bb-mobile-nav a[aria-current="page"] { background: var(--color-selection); color: var(--color-accent); }

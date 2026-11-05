@@ -186,7 +186,7 @@
   background: radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--team) 94%, white) 0%, color-mix(in srgb, var(--team) 72%, black) 55%, color-mix(in srgb, var(--team) 42%, black) 100%);
   box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.18), inset 0 -80px 120px -60px oklch(0% 0 0 / 0.45); }
 .bb-jersey::after { content: ""; position: absolute; left: 0; right: 0; bottom: 14px; height: 13px; pointer-events: none; background: linear-gradient(180deg, oklch(100% 0 0 / 0.85) 0 4px, transparent 4px 9px, oklch(100% 0 0 / 0.85) 9px 13px); opacity: 0.2; }
-.bb-jersey[data-mark]::before { content: attr(data-mark); position: absolute; right: 24px; bottom: -36px; font: italic 900 190px/1 var(--font-display); font-stretch: 125%; color: transparent; -webkit-text-stroke: 2px oklch(100% 0 0 / 0.14); pointer-events: none; }
+.bb-jersey[data-mark]::before { content: attr(data-mark); position: absolute; right: 24px; bottom: -36px; font: 900 190px/1 var(--font-display); font-stretch: 112%; color: transparent; -webkit-text-stroke: 2px oklch(100% 0 0 / 0.14); pointer-events: none; }
 .bb-jersey > * { position: relative; z-index: 1; }
 .bb-jersey .text-muted, .bb-jersey .text-ink-2 { color: oklch(100% 0 0 / 0.78); }
 
@@ -197,8 +197,8 @@
 .bb-faceoff[data-live] strong { color: var(--color-goal-red); }
 .bb-game-hero { background: linear-gradient(90deg, color-mix(in srgb, var(--away) 24%, transparent), transparent 38% 62%, color-mix(in srgb, var(--home) 24%, transparent)), var(--color-paper-2); box-shadow: var(--shadow-card); }
 .bb-led-score { font: 800 56px/1 var(--font-display); font-stretch: 112%; font-variant-numeric: tabular-nums; color: var(--color-led); text-shadow: 0 0 18px color-mix(in oklch, var(--color-led) 35%, transparent); }
-.bb-team-nick { display: block; font: italic 800 26px/1 var(--font-display); font-stretch: 122%; text-transform: uppercase; color: var(--color-ink); }
-.bb-team-title { font: italic 800 42px/1 var(--font-display); font-stretch: 125%; text-transform: uppercase; text-shadow: 0 2px 12px oklch(0% 0 0 / 0.3); }
+.bb-team-nick { display: block; font: 800 26px/1 var(--font-display); font-stretch: 112%; text-transform: uppercase; color: var(--color-ink); }
+.bb-team-title { font: 800 42px/1 var(--font-display); font-stretch: 112%; text-transform: uppercase; text-shadow: 0 2px 12px oklch(0% 0 0 / 0.3); }
 @media (max-width: 640px) {
   .bb-led-score { font-size: 36px; }
   .bb-team-title { font-size: 28px; }
@@ -218,9 +218,9 @@
 .bb-logo-disc { display: inline-grid; place-items: center; align-self: flex-start; width: 40px; height: 40px; border-radius: 50%; background: oklch(0% 0 0 / 0.28); box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.15); }
 .items-end > .bb-logo-disc { align-self: flex-end; }
 .bb-star { position: relative; display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 12px; overflow: hidden; border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: linear-gradient(100deg, color-mix(in srgb, var(--team) 26%, transparent), transparent 70%), var(--color-paper-2); box-shadow: var(--shadow-card), inset 3px 0 0 var(--team); }
-.bb-star-rank { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; font: italic 800 26px/1 var(--font-display); font-stretch: 112%; color: var(--color-muted); }
+.bb-star-rank { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; font: 800 26px/1 var(--font-display); font-stretch: 112%; color: var(--color-muted); }
 .bb-star-rank span { font-size: 18px; font-style: normal; }
 .bb-star[data-star="1"] .bb-star-rank { color: var(--color-led); text-shadow: 0 0 12px color-mix(in oklch, var(--color-led) 40%, transparent); }
 .bb-star-photo { width: 56px; height: 56px; flex-shrink: 0; border-radius: 50%; object-fit: cover; object-position: top; background: color-mix(in srgb, var(--team) 45%, var(--color-paper-3)); }
-.bb-star-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 800 17px/1.2 var(--font-display); font-stretch: 112%; text-transform: uppercase; }
+.bb-star-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 17px/1.2 var(--font-display); font-stretch: 112%; text-transform: uppercase; }
 .bb-star-line { display: block; margin-top: 3px; font-size: 13px; font-weight: 600; color: var(--color-ink-2); font-variant-numeric: tabular-nums; }

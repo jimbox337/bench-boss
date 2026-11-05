@@ -6,9 +6,9 @@ import { DataProvider } from "@/lib/DataContext";
 import { AuthProvider } from "@/lib/AuthContext";
 import { PlayerCardProvider } from "@/components/player/PlayerCardProvider";
 
-// Saira: squared, jersey-number shapes. Normal width for text; its extended cut (font-stretch)
-// for headings and scores, like arena boards and broadcast score bugs.
-const saira = Saira({ subsets: ["latin"], axes: ["wdth"], style: ["normal", "italic"], variable: "--font-app" });
+// Saira: squared, jersey-number shapes. Normal width for text; a slightly extended heavy cut
+// (font-stretch 112%) for headings and scores, like arena boards and broadcast score bugs.
+const saira = Saira({ subsets: ["latin"], axes: ["wdth"], variable: "--font-app" });
 
 export const viewport: Viewport = { themeColor: "#0d121b", colorScheme: "dark" };
 
