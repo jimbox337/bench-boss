@@ -30,6 +30,9 @@ SKATER_FEATURES: tuple[str, ...] = tuple(
         "rest_days", "b2b", "team_games_next7", "availability_30d", "days_since_last_game",
         "team_gf_pg", "team_gf_l10", "team_sf_pg",
         "opp_ga_pg", "opp_ga_l10", "opp_sa_pg",
+        # Deployment proxies (no public line-combination feed exists): share of the team's
+        # power-play time and TOI rank among same-position teammates, from prior games.
+        "l10_pp_share", "l5_toi_rank",
     ]
 )
 
@@ -42,6 +45,7 @@ RESIDUAL_FEATURES: tuple[str, ...] = (
     "team_gf_pg", "team_gf_l10", "team_sf_pg", "opp_ga_pg", "opp_ga_l10", "opp_sa_pg",
     "std_gp", "pos_C", "pos_W", "pos_D",
     "std_toi", "l5_toi", "l10_toi", "std_ppToi", "l5_ppToi", "l10_ppToi",
+    "l10_pp_share", "l5_toi_rank",
 )
 
 GOALIE_FEATURES: tuple[str, ...] = (
@@ -139,11 +143,14 @@ def skater_features(skaters: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataF
     frame = skaters.sort_values(["playerId", "gameDate", "gameId"], kind="stable").reset_index(drop=True)
     _assert_sorted(frame, "playerId")
     cols = list(SKATER_RATE_STATS)
+    frame = add_deployment(frame)
 
     std = prior_season_mean(frame, ["playerId", "season"], cols).add_prefix("std_")
     parts = [std]
     for window in WINDOWS:
         parts.append(prior_rolling_mean(frame, ["playerId", "season"], cols, window).add_prefix(f"l{window}_"))
+    parts.append(prior_rolling_mean(frame, ["playerId", "season"], ["pp_share"], 10).add_prefix("l10_"))
+    parts.append(prior_rolling_mean(frame, ["playerId", "season"], ["toi_rank"], 5).add_prefix("l5_"))
     std_gp = frame.groupby(["playerId", "season"], sort=False).cumcount().astype(float)
 
     season_totals = frame.groupby(["playerId", "season"])[cols].mean()
@@ -180,6 +187,17 @@ def skater_features(skaters: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataF
     return out
 
 
+def add_deployment(frame: pd.DataFrame) -> pd.DataFrame:
+    """Same-game deployment descriptors. They describe the game they come from, so they
+    are only ever used through prior-game rolling means (never for the game itself)."""
+    frame = frame.copy()
+    group = np.where(frame["position"] == "D", "D", "F")
+    team_pp = frame.groupby(["gameId", "team"])["ppToi"].transform("max")
+    frame["pp_share"] = (frame["ppToi"] / team_pp).where(team_pp > 0, 0.0)
+    frame["toi_rank"] = frame.assign(_g=group).groupby(["gameId", "team", "_g"])["toi"].rank(ascending=False, method="min")
+    return frame
+
+
 def skater_baseline(features: pd.DataFrame, stat: str, fallback: dict[str, float] | None = None) -> pd.Series:
     """Re-implementation of the production schedule-aware blend (lib/projectionEngine.ts):
     45% season-to-date, 25% last-20, 20% last-10, 10% last-5, re-weighted over the parts
@@ -196,6 +214,56 @@ def skater_baseline(features: pd.DataFrame, stat: str, fallback: dict[str, float
     if fallback:
         result = result.fillna(features["position"].map(fallback))
     return result.fillna(0.0)
+
+
+SHRINK_PRIOR_GAMES = 20.0   # weight of the TOI-based prior relative to last season's games
+SHRINK_K_GRID = (2.0, 5.0, 10.0, 20.0, 40.0)
+PRIOR_WEIGHT_GRID = (0.0, 0.2, 0.35, 0.5)
+SEASON_WEIGHT_GRID = (0.45, 0.0)  # production weight on season-to-date, or recent windows only
+
+
+def shrinkage_reference(train: pd.DataFrame, stat: str) -> dict[str, dict[str, float]]:
+    """Positional rate per minute and mean TOI, from training seasons only."""
+    by_pos = train.groupby("position")
+    return {"perMinute": (by_pos[stat].sum() / by_pos["toi"].sum()).to_dict(), "toi": by_pos["toi"].mean().to_dict()}
+
+
+def player_prior(features: pd.DataFrame, stat: str, reference: dict[str, dict[str, float]]) -> pd.Series:
+    """Last season's rate blended with a TOI-based expectation (position rate per minute
+    x recent ice time), weighted by last season's games vs SHRINK_PRIOR_GAMES."""
+    toi = features["l10_toi"].fillna(features["prev_toi"]).fillna(features["position"].map(reference["toi"]))
+    toi_prior = features["position"].map(reference["perMinute"]) * toi
+    prev_gp = features["prev_gp"].fillna(0.0)
+    return (prev_gp * features[f"prev_{stat}"].fillna(0.0) + SHRINK_PRIOR_GAMES * toi_prior) / (prev_gp + SHRINK_PRIOR_GAMES)
+
+
+def current_season_blend(features: pd.DataFrame, stat: str, season_weight: float = 0.45) -> pd.Series:
+    """Production weights (45/25/20/10) over the windows that exist this season. With
+    season_weight=0 only the last-20/10/5 windows are used."""
+    weights = {f"std_{stat}": season_weight, f"l20_{stat}": 0.25, f"l10_{stat}": 0.20, f"l5_{stat}": 0.10}
+    values = features[list(weights)].to_numpy(dtype=float)
+    vector = np.array(list(weights.values()))
+    mask = ~np.isnan(values)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        blend = np.nansum(values * vector, axis=1) / (mask * vector).sum(axis=1)
+    return pd.Series(blend, index=features.index)
+
+
+def shrunk_baseline(features: pd.DataFrame, stat: str, k: float, reference: dict[str, dict[str, float]],
+                    prior_weight: float = 0.0, season_weight: float = 0.45) -> pd.Series:
+    """Empirical-Bayes version of the production blend.
+
+    inner    = (gp * current-season blend + k * prior) / (gp + k)   -- small samples, e.g.
+               one game with one goal, lean on the prior instead of being taken at face value
+    estimate = prior_weight * prior + (1 - prior_weight) * inner    -- last season and ice
+               time keep some weight all season
+    k, prior_weight and season_weight are tuned per statistic on the validation season.
+    """
+    prior = player_prior(features, stat, reference)
+    gp = features["std_gp"].fillna(0.0)
+    blend = current_season_blend(features, stat, season_weight).fillna(prior)
+    inner = (gp * blend + k * prior) / (gp + k)
+    return (prior_weight * prior + (1 - prior_weight) * inner).fillna(0.0).clip(lower=0.0)
 
 
 def season_average_baseline(features: pd.DataFrame, stat: str, fallback: dict[str, float] | None = None) -> pd.Series:

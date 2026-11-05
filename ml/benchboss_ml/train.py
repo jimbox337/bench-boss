@@ -33,10 +33,11 @@ import pandas as pd
 from scipy.stats import spearmanr
 
 from . import FEATURE_SCHEMA_VERSION, PIPELINE_VERSION
+from .availability import AVAILABILITY_FEATURES, availability_rows
 from .dataset import load_processed
 from .export import compact_booster
-from .features import (GOALIE_FEATURES, RESIDUAL_FEATURES, SKATER_FEATURES, SKATER_TARGETS, goalie_features,
-                       season_average_baseline, skater_baseline, skater_features)
+from .features import (GOALIE_FEATURES, PRIOR_WEIGHT_GRID, RESIDUAL_FEATURES, SEASON_WEIGHT_GRID, SHRINK_K_GRID, SKATER_FEATURES, SKATER_TARGETS, goalie_features,
+                       season_average_baseline, shrinkage_reference, shrunk_baseline, skater_baseline, skater_features)
 from .paths import ARTIFACT_DIR, MANIFEST_PATH, REPORTS_DIR
 
 SEED = 20261104
@@ -231,9 +232,15 @@ def promotion_gate(candidate: dict[str, Any], baseline: dict[str, Any]) -> dict[
 # ---------------------------------------------------------------------------------------
 
 SKATER_CANDIDATES = {
-    "direct": {"features": SKATER_FEATURES, "init": False, "params": DIRECT_PARAMS},
-    "residual": {"features": RESIDUAL_FEATURES, "init": True, "params": RESIDUAL_PARAMS},
+    "direct": {"features": SKATER_FEATURES, "init": None, "params": DIRECT_PARAMS},
+    "residual": {"features": RESIDUAL_FEATURES, "init": "base", "params": RESIDUAL_PARAMS},
+    "residualShrunk": {"features": RESIDUAL_FEATURES, "init": "shr", "params": RESIDUAL_PARAMS},
 }
+INIT_LABELS = {"base": "log(productionBaseline)", "shr": "log(shrunkBaseline)"}
+
+
+def prediction_column(name: str, target: str) -> str:
+    return {"baseline": f"base_{target}", "shrunk": f"shr_{target}"}.get(name, f"{name}_{target}")
 
 
 def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
@@ -244,6 +251,21 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     for target in SKATER_TARGETS:
         feats[f"base_{target}"] = skater_baseline(feats, target, fallback[target])
         feats[f"avg_{target}"] = season_average_baseline(feats, target, fallback[target])
+    # Shrinkage strength per stat, tuned on the validation season only.
+    shrinkage: dict[str, Any] = {}
+    validation_rows = feats["season"] == split.validation
+    for target in SKATER_TARGETS:
+        reference = shrinkage_reference(feats[train_rows], target)
+        grid = {}
+        for k in SHRINK_K_GRID:
+            for prior_weight in PRIOR_WEIGHT_GRID:
+                for season_weight in SEASON_WEIGHT_GRID:
+                    candidate = feats[validation_rows].assign(_p=shrunk_baseline(feats[validation_rows], target, k, reference, prior_weight, season_weight))
+                    grid[f"{k}|{prior_weight}|{season_weight}"] = weekly_stat_rmse(candidate, target, "_p")
+        best_key = min(grid, key=grid.get)
+        k_best, weight_best, season_best = (float(v) for v in best_key.split("|"))
+        feats[f"shr_{target}"] = shrunk_baseline(feats, target, k_best, reference, weight_best, season_best)
+        shrinkage[target] = {"k": k_best, "priorWeight": weight_best, "seasonWeight": season_best, "reference": reference, "validationGrid": grid}
 
     train = feats[train_rows]
     full = feats[feats["season"].isin(split.train + [split.validation, split.test])]
@@ -260,7 +282,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         base_col = f"base_{target}"
         candidates: dict[str, dict[str, Any]] = {}
         for name, spec in SKATER_CANDIDATES.items():
-            init = base_col if spec["init"] else None
+            init = f"{spec['init']}_{target}" if spec["init"] else None
             model = fit(train, spec["features"], target, "poisson", valid=frames["validation"], init_col=init, params=spec["params"])
             best = model.best_iteration or model.current_iteration()
             export_model = fit(full, spec["features"], target, "poisson", rounds=best, init_col=init, params=spec["params"])
@@ -272,17 +294,20 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         valid = frames["validation"]
         weekly_rmse = {name: weekly_stat_rmse(valid, target, f"{name}_{target}") for name in candidates}
         weekly_rmse["baseline"] = weekly_stat_rmse(valid, target, base_col)
+        weekly_rmse["shrunk"] = weekly_stat_rmse(valid, target, f"shr_{target}")
         selected = min(weekly_rmse, key=weekly_rmse.get)
 
         scores: dict[str, Any] = {}
         for split_name, frame in frames.items():
-            frame[f"final_{target}"] = frame[base_col] if selected == "baseline" else frame[f"{selected}_{target}"]
+            frame[f"final_{target}"] = frame[prediction_column(selected, target)]
             scores[split_name] = {
                 **{name: regression_metrics(frame[target], frame[f"{name}_{target}"]) for name in candidates},
                 "productionBaseline": regression_metrics(frame[target], frame[base_col]),
+                "shrunkBaseline": regression_metrics(frame[target], frame[f"shr_{target}"]),
                 "seasonAverageBaseline": regression_metrics(frame[target], frame[f"avg_{target}"]),
                 "weeklyRmse": {**{name: weekly_stat_rmse(frame, target, f"{name}_{target}") for name in candidates},
-                               "productionBaseline": weekly_stat_rmse(frame, target, base_col)},
+                               "productionBaseline": weekly_stat_rmse(frame, target, base_col),
+                               "shrunkBaseline": weekly_stat_rmse(frame, target, f"shr_{target}")},
                 "byPosition": {
                     pos: {"selectedMae": float(np.mean(np.abs(group[target] - group[f"final_{target}"]))),
                           "baselineMae": float(np.mean(np.abs(group[target] - group[base_col]))), "n": int(len(group))}
@@ -291,19 +316,21 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             }
         dispersion = nb_dispersion(valid[target].to_numpy(float), valid[f"final_{target}"].to_numpy(float))
         entry: dict[str, Any] = {"selected": selected, "objective": "poisson", "dispersion": dispersion,
-                                 "validationWeeklyRmse": weekly_rmse}
-        if selected != "baseline":
+                                 "validationWeeklyRmse": weekly_rmse,
+                                 "shrinkage": {k: v for k, v in shrinkage[target].items() if k != "validationGrid"}}
+        if selected in candidates:
             chosen = candidates[selected]
             importance = dict(zip(chosen["export"].feature_name(), chosen["export"].feature_importance("gain").tolist()))
             entry.update({
                 "features": list(chosen["spec"]["features"]),
-                "initScore": "log(productionBaseline)" if chosen["spec"]["init"] else None,
+                "initScore": INIT_LABELS.get(chosen["spec"]["init"]),
                 "bestIteration": chosen["best"],
                 "topFeatures": sorted(importance, key=importance.get, reverse=True)[:8],
                 "booster": compact_booster(chosen["export"], chosen["spec"]["features"], frames.get("test", full)),
             })
         artifact["targets"][target] = entry
         report["targets"][target] = {"selected": selected, "dispersion": dispersion, "validationWeeklyRmse": weekly_rmse,
+                                     "shrinkK": shrinkage[target]["k"], "priorWeight": shrinkage[target]["priorWeight"], "seasonWeight": shrinkage[target]["seasonWeight"], "shrinkGrid": shrinkage[target]["validationGrid"],
                                      "trees": {n: c["best"] for n, c in candidates.items()},
                                      "topFeatures": entry.get("topFeatures", []), "scores": scores}
         print(f"  skater {target}: selected={selected} weekly rmse " + " ".join(f"{k}={v:.4f}" for k, v in weekly_rmse.items()))
@@ -324,6 +351,8 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             "benchBossSelected": weekly_table(frame, {s: f"final_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING, "pred_var"),
             "directModelOnly": weekly_table(frame, {s: f"direct_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
             "residualModelOnly": weekly_table(frame, {s: f"residual_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
+            "shrunkBaselineOnly": weekly_table(frame, {s: f"shr_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
+            "residualOnShrunkOnly": weekly_table(frame, {s: f"residualShrunk_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
             "productionBaseline": weekly_table(frame, {s: f"base_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
             "seasonAverageBaseline": weekly_table(frame, {s: f"avg_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
         }
@@ -416,8 +445,12 @@ def train_goalies(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         actual = sum(frame[s].fillna(0) * w for s, w in DEFAULT_GOALIE_SCORING.items()) * frame["started"]
         frame["actual_fp_game"] = actual
         out = {}
-        for label, prefix in (("benchBossSelected", "final"), ("usageBaseline", "base")):
-            frame["pred_fp_game"] = frame[f"{prefix}_started"] * sum(frame[f"{prefix}_{s}"] * w for s, w in DEFAULT_GOALIE_SCORING.items())
+        frame["confirmed_started"] = frame["started"].astype(float)
+        # "confirmedStarter" = the selected conditional models when the starter is known,
+        # i.e. what the official NHL lineup flag adds once it is posted.
+        variants = (("benchBossSelected", "final", "final"), ("usageBaseline", "base", "base"), ("confirmedStarter", "confirmed", "final"))
+        for label, start_prefix, prefix in variants:
+            frame["pred_fp_game"] = frame[f"{start_prefix}_started"] * sum(frame[f"{prefix}_{s}"] * w for s, w in DEFAULT_GOALIE_SCORING.items())
             table = frame.assign(week=week_key(frame["gameDate"])).groupby(["playerId", "week"]).agg(
                 pred_fp=("pred_fp_game", "sum"), actual_fp=("actual_fp_game", "sum"), group=("positionGroup", "first")).reset_index()
             metrics = regression_metrics(table["actual_fp"], table["pred_fp"].clip(lower=1e-9))
@@ -425,6 +458,69 @@ def train_goalies(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             out[label] = metrics
         report["weekly"][name] = out
     return artifact, report
+
+
+# ---------------------------------------------------------------------------------------
+# Availability (scratches / injuries / absences)
+# ---------------------------------------------------------------------------------------
+
+def train_availability(rows: pd.DataFrame, skater_feats: pd.DataFrame, split: Split) -> dict[str, Any]:
+    """Score weekly fantasy points *including* games a player missed (actual = 0)."""
+    train_rows = skater_feats["season"].isin(split.train)
+    per_game = skater_feats[["playerId", "gameId", "gameDate", "position"]].copy()
+    per_game["base_fp"] = 0.0
+    per_game["actual_fp"] = 0.0
+    for stat, weight in DEFAULT_SKATER_SCORING.items():
+        fallback = skater_feats[train_rows].groupby("position")[stat].mean().to_dict()
+        per_game["base_fp"] += weight * skater_baseline(skater_feats, stat, fallback)
+        per_game["actual_fp"] += weight * skater_feats[stat]
+    # Per-game projection if he plays: the baseline as of that game, or as of his last game
+    # when he missed it (slightly stale for misses; documented).
+    rows = pd.merge_asof(rows.sort_values("gameDate"), per_game[["playerId", "gameDate", "base_fp"]].sort_values("gameDate"),
+                         on="gameDate", by="playerId", direction="backward")
+    rows = rows.merge(per_game[["playerId", "gameId", "actual_fp"]], on=["playerId", "gameId"], how="left")
+    rows["actual_fp"] = rows["actual_fp"].fillna(0.0)
+    rows = rows.dropna(subset=["base_fp"])
+
+    train = rows[rows["season"].isin(split.train)]
+    valid = rows[rows["season"] == split.validation].copy()
+    frames = {"validation": valid, "test": rows[rows["season"] == split.test].copy()}
+    if split.live:
+        frames["live"] = rows[rows["season"] == split.live].copy()
+    full = rows[rows["season"].isin(split.train + [split.validation, split.test])]
+    model = fit(train, AVAILABILITY_FEATURES, "played", "binary", valid=valid)
+    best = model.best_iteration or model.current_iteration()
+    export_model = fit(full, AVAILABILITY_FEATURES, "played", "binary", rounds=best)
+
+    report: dict[str, Any] = {"bestIteration": int(best), "rows": {k: len(v) for k, v in frames.items()},
+                              "playRate": {k: float(v["played"].mean()) for k, v in frames.items()}, "splits": {}}
+    for name, frame in frames.items():
+        booster, iteration = (export_model, None) if name == "live" else (model, best)
+        frame["p_model"] = booster.predict(frame[list(AVAILABILITY_FEATURES)], num_iteration=iteration)
+        frame["p_share"] = frame["played_share_l10"]
+        frame["p_one"] = 1.0
+        frame["week"] = week_key(frame["gameDate"])
+        out: dict[str, Any] = {
+            "probability": {"availabilityModel": probability_metrics(frame["played"], frame["p_model"]),
+                            "recentShare": probability_metrics(frame["played"], frame["p_share"])},
+            "assumesPlaysBrier": float(np.mean((1 - frame["played"]) ** 2)),
+            "weekly": {},
+        }
+        for label, column in (("assumesPlaysEveryGame", "p_one"), ("recentShare", "p_share"), ("availabilityModel", "p_model")):
+            weekly = frame.assign(pred_games=frame[column], pred_fp=frame[column] * frame["base_fp"]).groupby(["playerId", "week"]).agg(
+                pred_games=("pred_games", "sum"), games=("played", "sum"), pred_fp=("pred_fp", "sum"), actual_fp=("actual_fp", "sum"))
+            out["weekly"][label] = {
+                "gamesMae": float(np.mean(np.abs(weekly["games"] - weekly["pred_games"]))),
+                "fpMae": float(np.mean(np.abs(weekly["actual_fp"] - weekly["pred_fp"]))),
+                "fpRmse": float(math.sqrt(np.mean((weekly["actual_fp"] - weekly["pred_fp"]) ** 2))),
+                "fpBias": float(np.mean(weekly["pred_fp"] - weekly["actual_fp"])),
+            }
+        report["splits"][name] = out
+    importance = dict(zip(export_model.feature_name(), export_model.feature_importance("gain").tolist()))
+    report["topFeatures"] = sorted(importance, key=importance.get, reverse=True)[:6]
+    print(f"  availability: trees={best} val logloss model={report['splits']['validation']['probability']['availabilityModel']['logLoss']:.4f} "
+          f"share={report['splits']['validation']['probability']['recentShare']['logLoss']:.4f}")
+    return report
 
 
 # ---------------------------------------------------------------------------------------
@@ -454,6 +550,8 @@ def main(argv: list[str] | None = None) -> int:
     print("Building goalie features...")
     goalie_feats = goalie_features(tables["goalie_games"], tables["team_games"])
     goalie_artifact, goalie_report = train_goalies(goalie_feats, split)
+    print("Building availability rows...")
+    availability_report = train_availability(availability_rows(tables["skater_games"], tables["team_games"]), skater_feats, split)
 
     promotion = skater_report["promotion"]
     artifact = {**meta, "promotion": promotion, "skater": skater_artifact, "goalie": goalie_artifact}
@@ -463,7 +561,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Wrote {artifact_path} ({artifact_path.stat().st_size / 1024:.0f} KB)")
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    full_report = {**meta, "skater": skater_report, "goalie": goalie_report,
+    full_report = {**meta, "skater": skater_report, "goalie": goalie_report, "availability": availability_report,
                    "rows": {"skaterGames": len(skater_feats), "goalieCandidates": len(goalie_feats)}}
     (REPORTS_DIR / "evaluation.json").write_text(json.dumps(full_report, indent=2, default=float))
     from .report import render_markdown

@@ -137,3 +137,17 @@ def test_goalie_candidates_only_use_prior_starts():
     assert row["share_l5"] == pytest.approx(2 / 3)
     assert row["started_prev_team_game"] == 0.0
     assert row["std_starts"] == 2
+
+
+def test_shrunk_baseline_tempers_tiny_samples_but_trusts_large_ones():
+    from benchboss_ml.features import shrunk_baseline
+    reference = {"perMinute": {"W": 0.012}, "toi": {"W": 15.0}}
+    frame = pd.DataFrame({
+        # one game, one goal, 8.5 minutes, nearly no prior production
+        "std_goals": [1.0, 0.45], "l20_goals": [1.0, 0.45], "l10_goals": [1.0, 0.5], "l5_goals": [1.0, 0.6],
+        "prev_goals": [0.02, 0.45], "prev_gp": [30.0, 82.0], "prev_toi": [8.0, 20.0], "l10_toi": [8.5, 20.0],
+        "std_gp": [1.0, 60.0], "position": ["W", "W"],
+    })
+    result = shrunk_baseline(frame, "goals", 40.0, reference).tolist()
+    assert result[0] < 0.15          # production blend would say ~1.0 goals per game
+    assert result[1] == pytest.approx(0.47, abs=0.03)  # an established scorer keeps his rate

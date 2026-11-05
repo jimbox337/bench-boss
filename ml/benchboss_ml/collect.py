@@ -78,10 +78,11 @@ REPORTS: tuple[Report, ...] = (
 
 
 def season_bounds(season: str, today: dt.date) -> tuple[dt.date, dt.date]:
-    """Regular-season search bounds. Generous margins; empty windows are cheap."""
+    """Regular-season search bounds. Generous margins (empty windows are cheap) so that
+    unusual calendars are covered, e.g. 2020-21 ran January to mid-May."""
     start_year = int(season[:4])
     start = dt.date(start_year, 9, 25)
-    end = min(dt.date(start_year + 1, 5, 5), today)
+    end = min(dt.date(start_year + 1, 6, 1), today)
     return start, end
 
 
