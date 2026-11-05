@@ -4,88 +4,111 @@
     "madeAt": "2026-11-05T00:02:12.848464+00:00",
     "games": [
       2026020247,
-      2026020248
+      2026020248,
+      2026020249,
+      2026020250
     ],
-    "predictedSkaters": 72,
-    "dressed": 66,
+    "predictedSkaters": 144,
+    "dressed": 131,
     "notDressed": [
       "Patrick Kane",
       "Radko Gudas",
       "Andrew Mangiapane",
+      "Adam Gaudette",
+      "Cale Fleury",
+      "Curtis Douglas",
       "Ridly Greig",
       "Tyler Kleven",
-      "Xavier Bourgault"
+      "Xavier Bourgault",
+      "Nolan Allan",
+      "Samuel Helenius",
+      "Taylor Ward",
+      "Shane Wright"
     ],
     "stats": {
       "goals": {
-        "actualMean": 0.16666666666666666,
-        "modelMean": 0.18188636363636362,
-        "baselineMean": 0.18341212121212125,
-        "modelMae": 0.26806818181818176,
-        "baselineMae": 0.2693151515151515,
-        "modelRmse": 0.45030899643769867,
-        "baselineRmse": 0.45277560700973096
+        "actualMean": 0.15267175572519084,
+        "modelMean": 0.18922290076335876,
+        "baselineMean": 0.18091908396946565,
+        "modelMae": 0.27558778625954194,
+        "baselineMae": 0.26836183206106873,
+        "modelRmse": 0.4457097691554569,
+        "baselineRmse": 0.4346130561195997
       },
       "assists": {
-        "actualMean": 0.2878787878787879,
-        "modelMean": 0.2989060606060606,
-        "baselineMean": 0.3040363636363636,
-        "modelMae": 0.38613939393939395,
-        "baselineMae": 0.38760909090909085,
-        "modelRmse": 0.5736688248511161,
-        "baselineRmse": 0.5774223610411213
+        "actualMean": 0.2900763358778626,
+        "modelMean": 0.29283358778625956,
+        "baselineMean": 0.2876648854961832,
+        "modelMae": 0.41274656488549616,
+        "baselineMae": 0.4088282442748092,
+        "modelRmse": 0.6392308271521949,
+        "baselineRmse": 0.6407830286823523
       },
       "shots": {
-        "actualMean": 1.4848484848484849,
-        "modelMean": 1.5717348484848483,
-        "baselineMean": 1.5655121212121212,
-        "modelMae": 1.050980303030303,
-        "baselineMae": 1.0523606060606063,
-        "modelRmse": 1.2810309452061481,
-        "baselineRmse": 1.27919009817647
+        "actualMean": 1.534351145038168,
+        "modelMean": 1.5811885496183207,
+        "baselineMean": 1.5482656488549615,
+        "modelMae": 1.0228175572519085,
+        "baselineMae": 1.0158549618320611,
+        "modelRmse": 1.2519328953372384,
+        "baselineRmse": 1.2504002598862751
       },
       "ppPoints": {
-        "actualMean": 0.045454545454545456,
-        "modelMean": 0.11189545454545453,
-        "baselineMean": 0.11751515151515152,
-        "modelMae": 0.10718333333333332,
-        "baselineMae": 0.1070121212121212,
-        "modelRmse": 0.20463637854556171,
-        "baselineRmse": 0.20810992142120327
+        "actualMean": 0.12213740458015267,
+        "modelMean": 0.11970916030534352,
+        "baselineMean": 0.1185381679389313,
+        "modelMae": 0.18733358778625955,
+        "baselineMae": 0.1830908396946565,
+        "modelRmse": 0.4324297347502634,
+        "baselineRmse": 0.4297836843616931
       },
       "hits": {
-        "actualMean": 1.1515151515151516,
-        "modelMean": 1.2933015151515153,
-        "baselineMean": 1.3060348484848485,
-        "modelMae": 0.9482590909090909,
-        "baselineMae": 0.95185,
-        "modelRmse": 1.249397472178029,
-        "baselineRmse": 1.2497750064784388
+        "actualMean": 1.1908396946564885,
+        "modelMean": 1.224720610687023,
+        "baselineMean": 1.238346564885496,
+        "modelMae": 0.9224091603053435,
+        "baselineMae": 0.9254717557251908,
+        "modelRmse": 1.2501718471797851,
+        "baselineRmse": 1.2500421410301115
       },
       "blocks": {
-        "actualMean": 0.8181818181818182,
-        "modelMean": 0.682680303030303,
-        "baselineMean": 0.682680303030303,
-        "modelMae": 0.7498257575757576,
-        "baselineMae": 0.7498257575757576,
-        "modelRmse": 0.9956252866232539,
-        "baselineRmse": 0.9956252866232539
+        "actualMean": 0.8320610687022901,
+        "modelMean": 0.7595519083969465,
+        "baselineMean": 0.7595519083969465,
+        "modelMae": 0.7073946564885496,
+        "baselineMae": 0.7073946564885496,
+        "modelRmse": 0.9157578724708657,
+        "baselineRmse": 0.9157578724708657
       },
       "fp": {
-        "actualMean": 1.3393939393939394,
-        "modelMean": 1.4024393939393938,
-        "baselineMean": 1.4168636363636364,
-        "modelMae": 0.9254393939393939,
-        "baselineMae": 0.9333181818181818,
-        "modelRmse": 1.2574932676487052,
-        "baselineRmse": 1.266963065401241
+        "actualMean": 1.4061068702290076,
+        "modelMean": 1.451358778625954,
+        "baselineMean": 1.4265038167938933,
+        "modelMae": 1.0181221374045801,
+        "baselineMae": 1.0061832061068703,
+        "modelRmse": 1.4260117179908895,
+        "baselineRmse": 1.4101729253496937
       }
     },
     "fpSpearman": {
-      "model": 0.3964932694157025,
-      "baseline": 0.3988299029108536
+      "model": 0.2828429851276341,
+      "baseline": 0.2845687900804006
     },
     "topPerformers": [
+      {
+        "name": "Artemi Panarin",
+        "team": "LAK",
+        "fp": 7.8,
+        "model_fp": 2.46,
+        "base_fp": 2.29
+      },
+      {
+        "name": "Quinton Byfield",
+        "team": "LAK",
+        "fp": 6.4,
+        "model_fp": 1.03,
+        "base_fp": 0.97
+      },
       {
         "name": "Sandis Vilmanis",
         "team": "FLA",
@@ -108,42 +131,35 @@
         "base_fp": 2.34
       },
       {
+        "name": "Dmitry Orlov",
+        "team": "SJS",
+        "fp": 4.5,
+        "model_fp": 1.57,
+        "base_fp": 1.52
+      },
+      {
+        "name": "Erik Haula",
+        "team": "LAK",
+        "fp": 4.4,
+        "model_fp": 1.4,
+        "base_fp": 1.35
+      },
+      {
         "name": "Frank Nazar",
         "team": "CHI",
         "fp": 4.4,
         "model_fp": 1.18,
         "base_fp": 1.13
-      },
-      {
-        "name": "Brady Tkachuk",
-        "team": "FLA",
-        "fp": 3.2,
-        "model_fp": 3.05,
-        "base_fp": 3.16
-      },
-      {
-        "name": "Thomas Chabot",
-        "team": "OTT",
-        "fp": 3.1,
-        "model_fp": 2.03,
-        "base_fp": 2.06
-      },
-      {
-        "name": "Seth Jones",
-        "team": "FLA",
-        "fp": 2.9,
-        "model_fp": 3.09,
-        "base_fp": 3.17
-      },
-      {
-        "name": "Shane Pinto",
-        "team": "OTT",
-        "fp": 2.9,
-        "model_fp": 1.8,
-        "base_fp": 1.84
       }
     ],
     "biggestMisses": [
+      {
+        "name": "William Stromgren",
+        "team": "CGY",
+        "fp": 0.1,
+        "model_fp": 4.35,
+        "base_fp": 3.3
+      },
       {
         "name": "Rasmus Dahlin",
         "team": "BUF",
@@ -152,25 +168,18 @@
         "base_fp": 2.66
       },
       {
-        "name": "Drake Batherson",
-        "team": "OTT",
-        "fp": 0.4,
-        "model_fp": 2.6,
-        "base_fp": 2.72
+        "name": "Artemi Panarin",
+        "team": "LAK",
+        "fp": 7.8,
+        "model_fp": 2.46,
+        "base_fp": 2.29
       },
       {
-        "name": "Frank Nazar",
-        "team": "CHI",
-        "fp": 4.4,
-        "model_fp": 1.18,
-        "base_fp": 1.13
-      },
-      {
-        "name": "Sandis Vilmanis",
-        "team": "FLA",
-        "fp": 6.3,
-        "model_fp": 1.05,
-        "base_fp": 1.05
+        "name": "Quinton Byfield",
+        "team": "LAK",
+        "fp": 6.4,
+        "model_fp": 1.03,
+        "base_fp": 0.97
       }
     ],
     "goalies": [
@@ -237,6 +246,70 @@
         "gaActual": 3.0,
         "winProb": 0.661,
         "won": 1
+      },
+      {
+        "team": "LAK",
+        "modelPick": "Anton Forsberg",
+        "modelProb": 0.504,
+        "usagePick": "Darcy Kuemper",
+        "actualStarter": 8475311,
+        "modelCorrect": false,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.496,
+        "savesPred": 23.82,
+        "savesActual": 30.0,
+        "gaPred": 2.71,
+        "gaActual": 2.0,
+        "winProb": 0.584,
+        "won": 1
+      },
+      {
+        "team": "SJS",
+        "modelPick": "Alex Nedeljkovic",
+        "modelProb": 0.599,
+        "usagePick": "Alex Nedeljkovic",
+        "actualStarter": 8482137,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.401,
+        "savesPred": 24.4,
+        "savesActual": 20.0,
+        "gaPred": 2.86,
+        "gaActual": 7.0,
+        "winProb": 0.382,
+        "won": 0
+      },
+      {
+        "team": "CGY",
+        "modelPick": "Devin Cooley",
+        "modelProb": 0.576,
+        "usagePick": "Devin Cooley",
+        "actualStarter": 8481692,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.26,
+        "savesPred": 24.21,
+        "savesActual": 27.0,
+        "gaPred": 2.96,
+        "gaActual": 2.0,
+        "winProb": 0.365,
+        "won": 0
+      },
+      {
+        "team": "SEA",
+        "modelPick": "Philipp Grubauer",
+        "modelProb": 0.727,
+        "usagePick": "Philipp Grubauer",
+        "actualStarter": 8478916,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.273,
+        "savesPred": 24.02,
+        "savesActual": 25.0,
+        "gaPred": 2.71,
+        "gaActual": 1.0,
+        "winProb": 0.57,
+        "won": 1
       }
     ]
   },
@@ -245,88 +318,111 @@
     "madeAt": "2026-11-05T00:13:45.739032+00:00",
     "games": [
       2026020247,
-      2026020248
+      2026020248,
+      2026020249,
+      2026020250
     ],
-    "predictedSkaters": 72,
-    "dressed": 66,
+    "predictedSkaters": 144,
+    "dressed": 131,
     "notDressed": [
       "Patrick Kane",
       "Radko Gudas",
       "Andrew Mangiapane",
+      "Adam Gaudette",
+      "Cale Fleury",
+      "Curtis Douglas",
       "Ridly Greig",
       "Tyler Kleven",
-      "Xavier Bourgault"
+      "Xavier Bourgault",
+      "Nolan Allan",
+      "Samuel Helenius",
+      "Taylor Ward",
+      "Shane Wright"
     ],
     "stats": {
       "goals": {
-        "actualMean": 0.16666666666666666,
-        "modelMean": 0.1828090909090909,
-        "baselineMean": 0.18341212121212125,
-        "modelMae": 0.27232727272727275,
-        "baselineMae": 0.2693151515151515,
-        "modelRmse": 0.442078661586717,
-        "baselineRmse": 0.45277560700973096
+        "actualMean": 0.15267175572519084,
+        "modelMean": 0.17652900763358778,
+        "baselineMean": 0.18091908396946565,
+        "modelMae": 0.2636984732824428,
+        "baselineMae": 0.26836183206106873,
+        "modelRmse": 0.41409714324757363,
+        "baselineRmse": 0.4346130561195997
       },
       "assists": {
-        "actualMean": 0.2878787878787879,
-        "modelMean": 0.30401515151515146,
-        "baselineMean": 0.3040363636363636,
-        "modelMae": 0.3985575757575758,
-        "baselineMae": 0.38760909090909085,
-        "modelRmse": 0.5593617212068727,
-        "baselineRmse": 0.5774223610411213
+        "actualMean": 0.2900763358778626,
+        "modelMean": 0.2892916030534351,
+        "baselineMean": 0.2876648854961832,
+        "modelMae": 0.4177648854961832,
+        "baselineMae": 0.4088282442748092,
+        "modelRmse": 0.622595873851895,
+        "baselineRmse": 0.6407830286823523
       },
       "shots": {
-        "actualMean": 1.4848484848484849,
-        "modelMean": 1.545039393939394,
-        "baselineMean": 1.5655121212121212,
-        "modelMae": 1.033130303030303,
-        "baselineMae": 1.0523606060606063,
-        "modelRmse": 1.2571641090047458,
-        "baselineRmse": 1.27919009817647
+        "actualMean": 1.534351145038168,
+        "modelMean": 1.5703167938931297,
+        "baselineMean": 1.5482656488549615,
+        "modelMae": 0.9955610687022902,
+        "baselineMae": 1.0158549618320611,
+        "modelRmse": 1.2233522391332623,
+        "baselineRmse": 1.2504002598862751
       },
       "ppPoints": {
-        "actualMean": 0.045454545454545456,
-        "modelMean": 0.11585454545454546,
-        "baselineMean": 0.11751515151515152,
-        "modelMae": 0.1125848484848485,
-        "baselineMae": 0.1070121212121212,
-        "modelRmse": 0.20138887905259464,
-        "baselineRmse": 0.20810992142120327
+        "actualMean": 0.12213740458015267,
+        "modelMean": 0.11482595419847329,
+        "baselineMean": 0.1185381679389313,
+        "modelMae": 0.18452671755725192,
+        "baselineMae": 0.1830908396946565,
+        "modelRmse": 0.4235342487300504,
+        "baselineRmse": 0.4297836843616931
       },
       "hits": {
-        "actualMean": 1.1515151515151516,
-        "modelMean": 1.2718969696969697,
-        "baselineMean": 1.3060348484848485,
-        "modelMae": 0.9391757575757577,
-        "baselineMae": 0.95185,
-        "modelRmse": 1.2477385090513544,
-        "baselineRmse": 1.2497750064784388
+        "actualMean": 1.1908396946564885,
+        "modelMean": 1.1962435114503815,
+        "baselineMean": 1.238346564885496,
+        "modelMae": 0.9228908396946566,
+        "baselineMae": 0.9254717557251908,
+        "modelRmse": 1.2505081606175117,
+        "baselineRmse": 1.2500421410301115
       },
       "blocks": {
-        "actualMean": 0.8181818181818182,
-        "modelMean": 0.7074257575757575,
-        "baselineMean": 0.682680303030303,
-        "modelMae": 0.753480303030303,
-        "baselineMae": 0.7498257575757576,
-        "modelRmse": 0.9800833913963184,
-        "baselineRmse": 0.9956252866232539
+        "actualMean": 0.8320610687022901,
+        "modelMean": 0.759430534351145,
+        "baselineMean": 0.7595519083969465,
+        "modelMae": 0.7043251908396945,
+        "baselineMae": 0.7073946564885496,
+        "modelRmse": 0.8945772074002333,
+        "baselineRmse": 0.9157578724708657
       },
       "fp": {
-        "actualMean": 1.3393939393939394,
-        "modelMean": 1.420878787878788,
-        "baselineMean": 1.4168636363636364,
-        "modelMae": 0.9237575757575757,
-        "baselineMae": 0.9333181818181818,
-        "modelRmse": 1.2433618040448144,
-        "baselineRmse": 1.266963065401241
+        "actualMean": 1.4061068702290076,
+        "modelMean": 1.4135343511450382,
+        "baselineMean": 1.4265038167938933,
+        "modelMae": 0.9721603053435114,
+        "baselineMae": 1.0061832061068703,
+        "modelRmse": 1.3563644576531533,
+        "baselineRmse": 1.4101729253496937
       }
     },
     "fpSpearman": {
-      "model": 0.36596886796181854,
-      "baseline": 0.3988299029108536
+      "model": 0.2987420701686077,
+      "baseline": 0.2845687900804006
     },
     "topPerformers": [
+      {
+        "name": "Artemi Panarin",
+        "team": "LAK",
+        "fp": 7.8,
+        "model_fp": 2.26,
+        "base_fp": 2.29
+      },
+      {
+        "name": "Quinton Byfield",
+        "team": "LAK",
+        "fp": 6.4,
+        "model_fp": 1.24,
+        "base_fp": 0.97
+      },
       {
         "name": "Sandis Vilmanis",
         "team": "FLA",
@@ -349,39 +445,25 @@
         "base_fp": 2.34
       },
       {
+        "name": "Dmitry Orlov",
+        "team": "SJS",
+        "fp": 4.5,
+        "model_fp": 1.48,
+        "base_fp": 1.52
+      },
+      {
+        "name": "Erik Haula",
+        "team": "LAK",
+        "fp": 4.4,
+        "model_fp": 1.4,
+        "base_fp": 1.35
+      },
+      {
         "name": "Frank Nazar",
         "team": "CHI",
         "fp": 4.4,
         "model_fp": 1.28,
         "base_fp": 1.13
-      },
-      {
-        "name": "Brady Tkachuk",
-        "team": "FLA",
-        "fp": 3.2,
-        "model_fp": 2.92,
-        "base_fp": 3.16
-      },
-      {
-        "name": "Thomas Chabot",
-        "team": "OTT",
-        "fp": 3.1,
-        "model_fp": 1.94,
-        "base_fp": 2.06
-      },
-      {
-        "name": "Seth Jones",
-        "team": "FLA",
-        "fp": 2.9,
-        "model_fp": 2.82,
-        "base_fp": 3.17
-      },
-      {
-        "name": "Shane Pinto",
-        "team": "OTT",
-        "fp": 2.9,
-        "model_fp": 1.79,
-        "base_fp": 1.84
       }
     ],
     "biggestMisses": [
@@ -400,18 +482,18 @@
         "base_fp": 2.72
       },
       {
-        "name": "Frank Nazar",
-        "team": "CHI",
-        "fp": 4.4,
-        "model_fp": 1.28,
-        "base_fp": 1.13
-      },
-      {
         "name": "Sandis Vilmanis",
         "team": "FLA",
         "fp": 6.3,
         "model_fp": 1.11,
         "base_fp": 1.05
+      },
+      {
+        "name": "Artemi Panarin",
+        "team": "LAK",
+        "fp": 7.8,
+        "model_fp": 2.26,
+        "base_fp": 2.29
       }
     ],
     "goalies": [
@@ -477,6 +559,70 @@
         "gaPred": 2.56,
         "gaActual": 3.0,
         "winProb": 0.655,
+        "won": 1
+      },
+      {
+        "team": "LAK",
+        "modelPick": "Anton Forsberg",
+        "modelProb": 0.524,
+        "usagePick": "Darcy Kuemper",
+        "actualStarter": 8475311,
+        "modelCorrect": false,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.476,
+        "savesPred": 23.45,
+        "savesActual": 30.0,
+        "gaPred": 2.71,
+        "gaActual": 2.0,
+        "winProb": 0.574,
+        "won": 1
+      },
+      {
+        "team": "SJS",
+        "modelPick": "Alex Nedeljkovic",
+        "modelProb": 0.566,
+        "usagePick": "Alex Nedeljkovic",
+        "actualStarter": 8482137,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.434,
+        "savesPred": 24.49,
+        "savesActual": 20.0,
+        "gaPred": 2.76,
+        "gaActual": 7.0,
+        "winProb": 0.461,
+        "won": 0
+      },
+      {
+        "team": "CGY",
+        "modelPick": "Devin Cooley",
+        "modelProb": 0.541,
+        "usagePick": "Devin Cooley",
+        "actualStarter": 8481692,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.214,
+        "savesPred": 24.39,
+        "savesActual": 27.0,
+        "gaPred": 2.84,
+        "gaActual": 2.0,
+        "winProb": 0.46,
+        "won": 0
+      },
+      {
+        "team": "SEA",
+        "modelPick": "Philipp Grubauer",
+        "modelProb": 0.708,
+        "usagePick": "Philipp Grubauer",
+        "actualStarter": 8478916,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.292,
+        "savesPred": 24.07,
+        "savesActual": 25.0,
+        "gaPred": 2.75,
+        "gaActual": 1.0,
+        "winProb": 0.588,
         "won": 1
       }
     ]
