@@ -8,6 +8,7 @@ import { calculateFantasyPoints } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 import type { GameStarters } from '@/lib/goalieStarters';
 import type { ScoreboardGame } from '@/lib/nhlGameCenter';
+import { PlayerLink } from '@/components/player/PlayerCardProvider';
 import { SectionTitle, StarterLine, TeamColorBar, TeamLink, TeamLogo, pointsScoring, shortStatus } from '@/components/gamecenter/shared';
 
 type Scoreboard = { date: string; prevDate?: string; nextDate?: string; games: ScoreboardGame[]; updatedAt: string };
@@ -138,7 +139,7 @@ function ScoreboardView() {
               return (
                 <li key={player.id} className="flex items-center gap-3 py-3" style={{ boxShadow: 'inset 3px 0 0 var(--color-accent)' }}>
                   <span className="pl-4"><TeamLogo team={{ abbrev: player.nhlTeam }} size={26} /></span>
-                  <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam} {opponent}</span></span>
+                  <span className="min-w-0 flex-1"><PlayerLink id={player.id} className="bb-player-link block truncate font-semibold">{player.name}</PlayerLink><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam} {opponent}</span></span>
                   {game && <Link href={`/games/${game.id}`} className="text-sm font-semibold text-accent hover:underline">Game</Link>}
                 </li>
               );
@@ -150,12 +151,12 @@ function ScoreboardView() {
           <p className="mb-2 text-xs text-muted">Model estimate per game, {scoring.label}.</p>
           {leaders.length === 0 ? <p className="text-sm text-muted">Projections are loading.</p> : (
             <ol className="divide-y divide-rule">{leaders.map(({ player, points }, index) => (
-              <li key={player.id}><Link href={`/players?player=${player.id}`} className="flex items-center gap-3 py-2.5 hover:text-accent">
+              <li key={player.id}><PlayerLink id={player.id} className="flex items-center gap-3 py-2.5 hover:text-accent">
                 <span className="w-6 font-display text-lg font-bold text-muted">{index + 1}</span>
                 <TeamLogo team={{ abbrev: player.nhlTeam }} size={24} />
                 <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam}</span></span>
                 <span className="font-display text-xl font-bold tabular-nums">{points.toFixed(1)}</span>
-              </Link></li>
+              </PlayerLink></li>
             ))}</ol>
           )}
         </section>

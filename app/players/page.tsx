@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useData } from '@/lib/DataContext';
-import { Player } from '@/lib/calculator';
-import PlayerDetailModal from '@/components/PlayerDetailModal';
+import { usePlayerCard } from '@/components/player/PlayerCardProvider';
 
 export default function PlayerExplorer() {
   const { players, myTeam } = useData();
@@ -11,7 +10,7 @@ export default function PlayerExplorer() {
   const [position, setPosition] = useState('all');
   const [sortBy, setSortBy] = useState('proj_pts');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { openPlayer } = usePlayerCard();
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
@@ -196,8 +195,8 @@ export default function PlayerExplorer() {
                   className={`hover:bg-paper-3 transition-colors cursor-pointer ${isMyPlayer ? 'bg-paper-3' : ''}`}
                   tabIndex={0}
                   aria-label={`View ${player.name}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPlayer(player); } }}
-                  onClick={() => setSelectedPlayer(player)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(player.id); } }}
+                  onClick={() => openPlayer(player.id)}
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center">
@@ -244,13 +243,6 @@ export default function PlayerExplorer() {
       </div>
 
       {/* Player Detail Modal */}
-      {selectedPlayer && (
-        <PlayerDetailModal
-          player={selectedPlayer}
-          isOpen={!!selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
-        />
-      )}
     </div>
     </>
   );

@@ -478,13 +478,27 @@ export function attachRecords(games: ScoreboardGame[], standings: StandingRow[])
   return games.map(game => ({ ...game, away: enrich(game.away), home: enrich(game.home) }));
 }
 
+/**
+ * The slate the site shows by default: today's games from 10:00 Pacific, otherwise
+ * yesterday's (so last night's finals stay up through the morning).
+ */
+export function slateDate(now: Date = new Date()): string {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).map(part => [part.type, part.value]));
+  const day = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+  if (Number(parts.hour) < 10) day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
 export async function fetchScoreboard(date?: string) {
+  const day = isIsoDate(date) ? date : slateDate();
   const [payload, standings] = await Promise.all([
-    nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${isIsoDate(date) ? date : 'now'}`, 20),
+    nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${day}`, 20),
     fetchStandings().catch(() => [] as StandingRow[]),
   ]);
   return {
-    date: payload.currentDate || date || '',
+    date: payload.currentDate || day,
     prevDate: payload.prevDate,
     nextDate: payload.nextDate,
     games: attachRecords((payload.games || []).map(normalizeScoreGame), standings),

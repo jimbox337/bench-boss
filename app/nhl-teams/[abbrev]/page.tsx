@@ -9,6 +9,7 @@ import { useData } from '@/lib/DataContext';
 import { scheduleVolume, type StandingRow, type TeamGoalieSeason, type TeamScheduleGame, type TeamSkaterSeason } from '@/lib/nhlGameCenter';
 import { SectionTitle, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
 import { teamColor } from '@/lib/teamColors';
+import { PlayerLink } from '@/components/player/PlayerCardProvider';
 
 type TeamPayload = { abbrev: string; standing: StandingRow | null; skaters: TeamSkaterSeason[]; goalies: TeamGoalieSeason[]; schedule: TeamScheduleGame[] };
 
@@ -79,19 +80,18 @@ export default function TeamPage() {
     <div className="bb-page space-y-10">
       <div>
         <Link href="/nhl-teams" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> Teams</Link>
-        <header className="overflow-hidden rounded-2xl border border-rule bg-paper-2">
-          <div className="h-2" style={{ background: color }} aria-hidden />
-          <div className="flex flex-wrap items-center gap-5 px-6 py-6">
+        <header className="bb-jersey rounded-2xl" data-mark={team} style={{ '--team': color } as React.CSSProperties}>
+          <div className="flex flex-wrap items-center gap-5 px-6 pb-12 pt-7">
             <TeamLogo team={{ abbrev: team, logo: s?.logo }} size={84} />
             <div className="min-w-0 flex-1 leading-tight">
               <p className="text-xl text-ink-2">{s?.city}</p>
-              <h1 className="font-display text-4xl font-bold uppercase tracking-wide">{s?.name || team}</h1>
+              <h1 className="bb-team-title">{s?.name || team}</h1>
               {s && <p className="mt-1 text-sm text-muted">{s.w}-{s.l}-{s.otl} · {s.pts} PTS · #{s.divisionRank} {s.division} · L10 {s.l10} · Streak {s.streak}</p>}
             </div>
             {s && (
-              <dl className="grid grid-cols-3 gap-8 text-center">
+              <dl className="bb-board bb-board-rounded">
                 {[['GF/GP', (s.gf / Math.max(s.gp, 1)).toFixed(2)], ['GA/GP', (s.ga / Math.max(s.gp, 1)).toFixed(2)], ['PT%', (s.pointPct * 100).toFixed(1)]].map(([label, value]) => (
-                  <div key={label}><dt className="text-xs font-semibold text-muted">{label}</dt><dd className="font-display text-3xl font-bold tabular-nums">{value}</dd></div>
+                  <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
                 ))}
               </dl>
             )}
@@ -125,7 +125,7 @@ export default function TeamPage() {
             <thead><tr><th className="text-left">Player</th>{['FPTS/GP', 'Next 7', 'GP', 'G', 'A', 'Pts', '+/-', 'PPG', 'SOG', 'TOI'].map(h => <th key={h}>{h}</th>)}</tr></thead>
             <tbody>{skaterRows.map(({ skater, perGame, next7, mine: isMine }) => (
               <tr key={skater.playerId} data-mine={isMine || undefined}>
-                <td className="text-left"><span className="flex justify-between gap-3"><Link href={`/players?player=${skater.playerId}`} className="font-medium hover:text-accent">{skater.name}{isMine ? ' · yours' : ''}</Link><span className="text-muted">{skater.position}</span></span></td>
+                <td className="text-left"><span className="flex justify-between gap-3"><PlayerLink id={skater.playerId} className="font-medium hover:text-accent">{skater.name}{isMine ? ' · yours' : ''}</PlayerLink><span className="text-muted">{skater.position}</span></span></td>
                 <td className="font-bold">{perGame !== null ? perGame.toFixed(2) : '–'}</td>
                 <td>{next7 !== null ? next7.toFixed(1) : '–'}</td>
                 {[skater.gp, skater.goals, skater.assists, skater.points, skater.plusMinus, skater.ppGoals, skater.shots].map((v, i) => <td key={i}>{v}</td>)}
@@ -143,7 +143,7 @@ export default function TeamPage() {
             <thead><tr><th className="text-left">Player</th>{['GP', 'GS', 'W', 'L', 'OTL', 'GAA', 'SV%', 'SO'].map(h => <th key={h}>{h}</th>)}</tr></thead>
             <tbody>{data.goalies.map(g => (
               <tr key={g.playerId} data-mine={mine.has(String(g.playerId)) || undefined}>
-                <td className="text-left font-medium">{g.name}</td>
+                <td className="text-left font-medium"><PlayerLink id={g.playerId} className="bb-player-link">{g.name}</PlayerLink></td>
                 {[g.gp, g.gs, g.wins, g.losses, g.otLosses].map((v, i) => <td key={i}>{v}</td>)}
                 <td>{g.gaa.toFixed(2)}</td><td>{g.savePct.toFixed(3).replace(/^0/, '')}</td><td>{g.shutouts}</td>
               </tr>

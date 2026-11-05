@@ -5,6 +5,7 @@ import { defaultLeagueSettings, type LeagueSettings } from '@/lib/calculator';
 import type { TeamStarter } from '@/lib/goalieStarters';
 import type { ScoreboardGame, TeamSide } from '@/lib/nhlGameCenter';
 import { teamColor } from '@/lib/teamColors';
+import { PlayerLink } from '@/components/player/PlayerCardProvider';
 
 /** League scoring for fantasy points: the user's points league, else Bench Boss defaults. */
 export function pointsScoring(settings: LeagueSettings): { settings: LeagueSettings; label: string } {
@@ -85,9 +86,9 @@ export function StarterLine({ starter }: { starter?: TeamStarter }) {
   if (!starter) return <span className="text-xs text-muted">Goalie loading…</span>;
   if (starter.status === 'unknown') return <span className="text-xs text-muted">Goalie not confirmed</span>;
   if (starter.status === 'confirmed') {
-    return <span className="text-xs"><span className="text-muted">G </span><span className="font-medium">{starter.name}</span> <span className="font-semibold text-success" title={starter.source}>✓ Confirmed</span></span>;
+    return <span className="text-xs"><span className="text-muted">G </span><PlayerLink id={starter.playerId} className="bb-player-link font-medium">{starter.name}</PlayerLink> <span className="font-semibold text-success" title={starter.source}>✓ Confirmed</span></span>;
   }
-  return <span className="text-xs text-muted" title={starter.source}>G {starter.name} · <span className="italic">likely</span> ({starter.starts}/{starter.ofGames} starts)</span>;
+  return <span className="text-xs text-muted" title={starter.source}>G <PlayerLink id={starter.playerId} className="bb-player-link">{starter.name}</PlayerLink> · <span className="italic">likely</span> ({starter.starts}/{starter.ofGames} starts)</span>;
 }
 
 export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
@@ -116,18 +117,18 @@ export function GameHero({ game, footer }: { game: ScoreboardGame; footer?: Reac
       <span className="flex flex-col items-center gap-1"><TeamLogo team={game[s]} size={56} /><span className="text-xs text-muted tabular-nums">{game[s].record}</span></span>
       <TeamLink abbrev={game[s].abbrev} className="hidden leading-tight sm:block">
         <span className="block text-lg text-ink-2">{game[s].city || game[s].abbrev}</span>
-        <span className="block font-display text-2xl font-bold uppercase tracking-wide text-ink">{game[s].name}</span>
+        <span className="bb-team-nick">{game[s].name}</span>
       </TeamLink>
     </div>
   );
   return (
-    <div className="overflow-hidden rounded-2xl border border-rule bg-paper-2">
+    <div className="bb-game-hero overflow-hidden rounded-2xl border border-rule" style={{ '--away': teamColor(game.away.abbrev), '--home': teamColor(game.home.abbrev) } as React.CSSProperties}>
       <TeamColorBar away={game.away.abbrev} home={game.home.abbrev} />
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
         {side('away')}
-        <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.away.score ?? 0 : ''}</span>
-        <span className={`text-center font-display text-lg font-bold leading-tight md:text-xl ${game.isLive ? 'text-error' : ''}`}>{top}<span className="block text-base">{bottom}</span></span>
-        <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.home.score ?? 0 : ''}</span>
+        <span className="bb-led-score">{started ? game.away.score ?? 0 : ''}</span>
+        <span className="bb-faceoff" data-live={game.isLive || undefined}><strong>{top}</strong>{bottom && <span>{bottom}</span>}</span>
+        <span className="bb-led-score">{started ? game.home.score ?? 0 : ''}</span>
         {side('home')}
       </div>
       {footer}
