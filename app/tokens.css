@@ -23,8 +23,8 @@
   --color-ink-2: oklch(38% 0.025 255);
   --color-muted: oklch(48% 0.018 255);
   --color-muted-2: oklch(50% 0.018 255);
-  --color-rule: oklch(86% 0.012 255);
-  --color-rule-2: oklch(92% 0.008 255);
+  --color-rule: oklch(89% 0.01 255);
+  --color-rule-2: oklch(93.5% 0.007 255);
   --color-accent: oklch(51% 0.2 259);
   --color-accent-ink: oklch(99.7% 0.001 255);
   --color-accent-2: oklch(48% 0.16 255);
@@ -37,10 +37,10 @@
   --font-display: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-app), ui-sans-serif, system-ui, sans-serif;
   --font-outlier: "Geist Mono", ui-monospace, monospace;
-  --radius-card: 6px;
-  --radius-pill: 4px;
+  --radius-card: 10px;
+  --radius-pill: 8px;
   --shadow-card: none;
-  --tracking-display: -0.025em;
+  --tracking-display: 0.01em;
 }
 :root {
   color-scheme: light;

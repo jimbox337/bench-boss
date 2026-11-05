@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
 import NoTeamDashboard from '@/components/NoTeamDashboard';
+import FeaturedGame from '@/components/gamecenter/FeaturedGame';
 import {
   Activity,
   BarChart3,
@@ -299,6 +300,7 @@ export default function Dashboard() {
         <div><h1>My dashboard</h1><p>Your roster, weekly projections, and player research.</p></div>
         <button onClick={() => router.push('/lineup')} className="bb-button">Optimize Lineup</button>
       </header>
+      <FeaturedGame />
 
       {isLoading && (
         <div className="mb-5 flex items-center gap-2 text-sm text-muted" role="status">

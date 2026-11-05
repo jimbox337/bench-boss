@@ -2,46 +2,54 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { signOut, useSession } from '@/lib/AuthContext';
+import { ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
-  BarChart3,
-  CalendarDays,
-  ChevronRight,
-  Crosshair,
-  LifeBuoy,
-  LogOut,
-  Plus,
-  RefreshCw,
-  Repeat2,
-  Search,
-  ShieldCheck,
-  Shirt,
-  Swords,
-  User,
-  Zap,
+  BarChart3, CalendarDays, ChevronDown, Home, LifeBuoy, LogOut, Plus, RefreshCw, Search, ShieldCheck,
+  ClipboardList, Shirt, Trophy, User, Wrench, X, Zap,
 } from 'lucide-react';
-import BenchBossLogo from './BenchBossLogo';
+import { signOut, useSession } from '@/lib/AuthContext';
 import { useData } from '@/lib/DataContext';
+import BenchBossLogo from './BenchBossLogo';
+import ScoreStrip from './shell/ScoreStrip';
+import AlertsMenu from './shell/AlertsMenu';
+import CommandSearch, { useSearchShortcut } from './shell/CommandSearch';
 
-const navItems = [
-  { icon: BarChart3, name: 'Dashboard', path: '/' },
-  { icon: CalendarDays, name: 'Games', path: '/games' },
-  { icon: Shirt, name: 'My Team', path: '/myteam' },
-  { icon: Zap, name: 'Lineup', path: '/lineup' },
-  { icon: Swords, name: 'Start / Sit', path: '/startsit' },
-  { icon: Repeat2, name: 'Trades', path: '/trades' },
-  { icon: Crosshair, name: 'Waivers', path: '/waivers' },
-  { icon: Search, name: 'Players', path: '/players' },
+const TOOL_PATHS = ['/startsit', '/trades', '/waivers'];
+
+const railItems = [
+  { icon: Home, name: 'Home', path: '/', match: ['/'] },
+  { icon: CalendarDays, name: 'Scores', path: '/games', match: ['/games'] },
+  { icon: Zap, name: 'Lineup', path: '/lineup', match: ['/lineup'] },
+  { icon: BarChart3, name: 'Rankings', path: '/players', match: ['/players'] },
+  { icon: Wrench, name: 'Tools', path: '/startsit', match: TOOL_PATHS },
+  { icon: Trophy, name: 'Teams', path: '/nhl-teams', match: ['/nhl-teams'] },
+  { icon: Shirt, name: 'My team', path: '/myteam', match: ['/myteam', '/teams'] },
+];
+const mobileItems = railItems.filter(item => ['Home', 'Scores', 'Lineup', 'Tools', 'Teams'].includes(item.name));
+const toolTabs = [
+  { name: 'Start / Sit', path: '/startsit' },
+  { name: 'Trade Analyzer', path: '/trades' },
+  { name: 'Waiver Wire', path: '/waivers' },
 ];
 
-const adminNavItem = { icon: ShieldCheck, name: 'Admin', path: '/admin' };
-
 const publicRoutes = ['/login'];
+const BANNER_KEY = 'benchBossConnectBannerDismissed';
+
+function isActive(pathname: string, match: string[]) {
+  return match.some(path => (path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`)));
+}
 
 function getInitial(name?: string | null) {
   return name?.trim().charAt(0).toUpperCase() || 'B';
 }
+
+// Banner dismissal lives in localStorage; read it without a set-state-in-effect.
+function subscribeStorage(callback: () => void) {
+  window.addEventListener('storage', callback);
+  window.addEventListener('bb-banner', callback);
+  return () => { window.removeEventListener('storage', callback); window.removeEventListener('bb-banner', callback); };
+}
+const readBannerDismissed = () => { try { return localStorage.getItem(BANNER_KEY) === '1'; } catch { return false; } };
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -55,33 +63,38 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [teamPlatform, setTeamPlatform] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const bannerDismissed = useSyncExternalStore(subscribeStorage, readBannerDismissed, () => true);
 
-  const mobileNavRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const rail = mobileNavRef.current;
-    const active = rail?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (rail && active) rail.scrollLeft = active.offsetLeft - (rail.clientWidth - active.clientWidth) / 2;
-  }, [pathname, status]);
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  useSearchShortcut(openSearch);
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
 
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onDown = (event: MouseEvent) => { if (!profileRef.current?.contains(event.target as Node)) setProfileOpen(false); };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setProfileOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [profileOpen]);
+
   const handleSync = async () => {
     if (!espnConfig || isSyncing) return;
-
     setIsSyncing(true);
     setSyncStatus('idle');
-
     try {
       await syncESPNLeague(espnConfig);
       setSyncStatus('success');
-      setTimeout(() => setSyncStatus('idle'), 2200);
     } catch {
       setSyncStatus('error');
-      setTimeout(() => setSyncStatus('idle'), 2200);
     } finally {
       setIsSyncing(false);
+      setTimeout(() => setSyncStatus('idle'), 2200);
     }
   };
 
@@ -91,22 +104,15 @@ export default function Layout({ children }: { children: ReactNode }) {
         setIsAdmin(false);
         return;
       }
-
       try {
-        const [response, teamResponse] = await Promise.all([
-          fetch('/api/user/profile'),
-          fetch('/api/team'),
-        ]);
+        const [response, teamResponse] = await Promise.all([fetch('/api/user/profile'), fetch('/api/team')]);
         const data = await response.json();
-
         if (data.success) {
           setUsername(data.user.username || '');
           setIsAdmin(data.user.role === 'admin');
         }
-
         const teamData = await teamResponse.json();
         const team = teamData.team;
-
         setHasTeam(teamData.success && team !== null);
         if (team) {
           setTeamName(team.name || 'My Team');
@@ -116,13 +122,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         console.error('Error fetching user data:', error);
       }
     };
-
     fetchUserData();
   }, [session]);
 
-  if (publicRoutes.includes(pathname)) {
-    return <>{children}</>;
-  }
+  if (publicRoutes.includes(pathname)) return <>{children}</>;
 
   if (isLoading) {
     return (
@@ -135,210 +138,127 @@ export default function Layout({ children }: { children: ReactNode }) {
     );
   }
 
-  const syncLabel =
-    isSyncing ? 'Syncing' : syncStatus === 'success' ? 'Synced' : syncStatus === 'error' ? 'Failed' : 'Sync ESPN';
-  const visibleNavItems = isAdmin ? [...navItems, adminNavItem] : navItems;
+  const syncLabel = isSyncing ? 'Syncing' : syncStatus === 'success' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : 'Sync ESPN';
+  const showBanner = !hasTeam && !espnConfig && !bannerDismissed;
+  const inTools = isActive(pathname, TOOL_PATHS);
+  const dismissBanner = () => { try { localStorage.setItem(BANNER_KEY, '1'); } catch { /* ignore */ } window.dispatchEvent(new Event('bb-banner')); };
 
   return (
-    <div className="bb-shell h-screen fantasy-app-shell text-ink flex flex-col">
-          <header className="bb-topbar flex shrink-0 items-center justify-between">
-            <button
-              onClick={() => router.push('/')}
-              className="bb-masthead-brand flex items-center gap-3"
-            >
-              <span className="bb-logo-plate"><BenchBossLogo size={48} /></span>
-              <span className="text-xl font-semibold text-on-brand">Bench Boss</span>
-            </button>
-
-            <nav className="bb-masthead-links hidden md:flex" aria-label="Site navigation">
-              <Link href="/">Fantasy hockey</Link>
-              <Link href="/players">Player research</Link>
-              <Link href="/support">Help center</Link>
-            </nav>
-
-            <div className="flex items-center gap-2">
-              {espnConfig && (
-                <button
-                  onClick={handleSync}
-                  disabled={isSyncing}
-                  className="inline-flex items-center gap-2 rounded-pill border border-rule bg-paper-2 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-paper-2 disabled:opacity-60 lg:hidden"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                  Sync
-                </button>
-              )}
-
-              {isAuthenticated ? (
-                <Link
-                  href="/profile"
-                  className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-pill bg-paper-2 text-sm font-medium text-ink"
-                  aria-label="Profile"
-                >
-                  {session?.user?.image ? (
-                    <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
-                  ) : (
-                    getInitial(session?.user?.name)
-                  )}
-                </Link>
-              ) : (
-                <button
-                  onClick={() => router.push('/login')}
-                  className="rounded-pill px-4 py-2 fantasy-button text-sm font-medium transition-colors"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-          </header>
-      <div className="bb-shell-grid grid flex-1 min-h-0 w-full">
-        <aside className="bb-sidebar hidden lg:flex min-h-0 flex-col border-r">
-          <div className="bb-sidebar-brand">
-            <button
-              onClick={() => router.push('/')}
-              className="flex w-full items-center gap-3 rounded-pill px-2 py-2 text-left transition-colors hover:bg-paper-2"
-            >
-              <Shirt className="h-5 w-5 text-accent" aria-hidden="true" />
-              <span className="leading-tight">
-                <span className="bb-wordmark block text-ink">My workspace</span>
-                <span className="fantasy-kicker block text-xs font-medium">Fantasy hockey tools</span>
-              </span>
-            </button>
-          </div>
-
-          <div className="bb-team-switch">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium text-muted">Active Team</p>
-                <p className="mt-1 truncate text-sm font-medium text-ink">{hasTeam ? teamName : 'No team linked'}</p>
-                <p className="mt-0.5 text-xs text-accent">{hasTeam ? teamPlatform : 'Connect a league'}</p>
-              </div>
-              <button
-                onClick={() => router.push(hasTeam ? '/myteam' : '/teams/new')}
-                className="rounded-pill border border-rule bg-paper-2 p-2 text-accent transition-colors hover:bg-paper-2"
-                aria-label={hasTeam ? 'Open team' : 'Add team'}
-              >
-                {hasTeam ? <ChevronRight className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <nav className="bb-nav flex-1 space-y-1 overflow-y-auto">
-            {visibleNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.path;
-
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  aria-current={isActive ? 'page' : undefined}
-                  className="bb-nav-link group flex items-center gap-3 transition-colors"
-                >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-accent' : 'text-muted group-hover:text-accent'}`} />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="bb-sidebar-footer space-y-3 border-t">
-            {espnConfig && (
-              <button
-                onClick={handleSync}
-                disabled={isSyncing}
-                className={`flex w-full items-center justify-center gap-2 rounded-pill border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-60 ${
-                  syncStatus === 'success'
-                    ? 'border-rule bg-success/10 text-success'
-                    : syncStatus === 'error'
-                    ? 'border-rule bg-error/10 text-error'
-                    : 'border-rule bg-paper-2 text-accent hover:bg-paper-2'
-                }`}
-              >
-                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                {syncLabel}
-              </button>
-            )}
-
-            {isAuthenticated ? (
-              <div className="rounded-pill border border-rule bg-paper-2 p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-pill bg-paper-2 text-base font-medium text-ink">
-                    {session?.user?.image ? (
-                      <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      getInitial(session?.user?.name)
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink">{session?.user?.name || 'Manager'}</p>
-                    <p className="truncate text-xs text-muted">{username ? `@${username}` : session?.user?.email}</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-3 gap-2">
-                  <Link
-                    href="/profile"
-                    className="flex items-center justify-center rounded-pill bg-paper-2 py-2 text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
-                    aria-label="Profile"
-                  >
-                    <User className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/support"
-                    className="flex items-center justify-center rounded-pill bg-paper-2 py-2 text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
-                    aria-label="Support"
-                  >
-                    <LifeBuoy className="h-4 w-4" />
-                  </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                    className="flex items-center justify-center rounded-pill bg-error/10 py-2 text-error transition-colors hover:bg-error/10"
-                    aria-label="Sign out"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => router.push('/login')}
-                className="w-full rounded-pill px-4 py-3 fantasy-button text-sm font-medium transition-colors"
-              >
-                Get Started
-              </button>
-            )}
-          </div>
-        </aside>
-
-        <div className="flex min-h-0 flex-col">
-
-
-          <main className="bb-main min-h-0 flex-1 overflow-y-auto fantasy-main pb-24 lg:pb-0">{children}</main>
-        </div>
-      </div>
-
-      <nav className="bb-mobile-nav fixed z-50 p-2 lg:hidden">
-        <div ref={mobileNavRef} className="flex gap-1 overflow-x-auto">
-          {visibleNavItems.map((item) => {
+    <div className="bb-app fantasy-app-shell text-ink">
+      <aside className="bb-rail" aria-label="Main">
+        <Link href="/" className="bb-rail-logo" aria-label="Bench Boss home"><BenchBossLogo size={40} /></Link>
+        <nav className="bb-rail-nav">
+          {railItems.map(item => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
-
+            const active = isActive(pathname, item.match);
             return (
-              <Link
-                key={item.path}
-                href={item.path}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex min-h-14 min-w-[64px] flex-col items-center justify-center rounded-pill text-[11px] font-medium transition-colors ${
-                  isActive ? 'bg-paper-2 text-accent' : 'text-muted hover:bg-paper-2 hover:text-ink'
-                }`}
-              >
-                <Icon className={`mb-1 h-5 w-5 ${isActive ? 'text-accent' : ''}`} />
-                <span>{item.name}</span>
+              <Link key={item.name} href={item.path} className="bb-rail-item" aria-current={active ? 'page' : undefined}>
+                <span className="bb-rail-icon"><Icon className="h-5 w-5" aria-hidden /></span>
+                <span className="bb-rail-label">{item.name}</span>
               </Link>
             );
           })}
+        </nav>
+        <div className="bb-rail-foot">
+          {isAdmin && (
+            <Link href="/admin" className="bb-rail-item" aria-current={pathname.startsWith('/admin') ? 'page' : undefined}>
+              <span className="bb-rail-icon"><ShieldCheck className="h-5 w-5" aria-hidden /></span><span className="bb-rail-label">Admin</span>
+            </Link>
+          )}
+          <Link href="/support" className="bb-rail-item" aria-current={pathname === '/support' ? 'page' : undefined}>
+            <span className="bb-rail-icon"><LifeBuoy className="h-5 w-5" aria-hidden /></span><span className="bb-rail-label">Help</span>
+          </Link>
         </div>
+      </aside>
+
+      <div className="bb-app-body">
+        <header className="bb-bar">
+          <Link href="/" className="bb-bar-logo" aria-label="Bench Boss home"><BenchBossLogo size={34} /></Link>
+          <Link href="/players" className="bb-coach" title="AI player outlooks built from verified NHL data">
+            <ClipboardList className="h-4 w-4" aria-hidden /><span>Coach</span>
+          </Link>
+          <button type="button" className="bb-search-trigger" onClick={openSearch} aria-label="Search players, teams and tools">
+            <span className="bb-search-trigger-text">Search players, teams and tools</span>
+            <kbd className="bb-kbd">⌘K</kbd>
+            <span className="bb-search-go" aria-hidden><Search className="h-[18px] w-[18px]" /></span>
+          </button>
+          <div className="bb-bar-actions">
+            {espnConfig && (
+              <button type="button" onClick={handleSync} disabled={isSyncing} className="bb-sync" data-status={syncStatus}>
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden /><span>{syncLabel}</span>
+              </button>
+            )}
+            <Link href={hasTeam ? '/myteam' : '/teams/new'} className="bb-team-chip">
+              {hasTeam ? <Shirt className="h-4 w-4 text-accent" aria-hidden /> : <Plus className="h-4 w-4 text-accent" aria-hidden />}
+              <span className="bb-team-chip-text"><span className="block truncate font-semibold">{hasTeam ? teamName : 'Add a team'}</span><span className="block text-xs text-muted">{hasTeam ? teamPlatform : 'Connect a league'}</span></span>
+            </Link>
+            <AlertsMenu />
+            {isAuthenticated ? (
+              <div ref={profileRef} className="relative">
+                <button type="button" className="bb-avatar-button" onClick={() => setProfileOpen(o => !o)} aria-expanded={profileOpen} aria-haspopup="true" aria-label="Account menu">
+                  <span className="bb-avatar">
+                    {session?.user?.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- OAuth avatar from the user's provider
+                      <img src={session.user.image} alt="" className="h-full w-full object-cover" />
+                    ) : getInitial(session?.user?.name)}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-muted" aria-hidden />
+                </button>
+                {profileOpen && (
+                  <div className="bb-popover right-0 w-64" role="menu">
+                    <div className="border-b border-rule px-4 py-3">
+                      <p className="truncate text-sm font-semibold">{session?.user?.name || 'Manager'}</p>
+                      <p className="truncate text-xs text-muted">{username ? `@${username}` : session?.user?.email}</p>
+                    </div>
+                    <Link href="/profile" role="menuitem" className="bb-menu-item" onClick={() => setProfileOpen(false)}><User className="h-4 w-4" aria-hidden />Profile</Link>
+                    <Link href="/support" role="menuitem" className="bb-menu-item" onClick={() => setProfileOpen(false)}><LifeBuoy className="h-4 w-4" aria-hidden />Help center</Link>
+                    {isAdmin && <Link href="/admin" role="menuitem" className="bb-menu-item" onClick={() => setProfileOpen(false)}><ShieldCheck className="h-4 w-4" aria-hidden />Admin</Link>}
+                    <button type="button" role="menuitem" className="bb-menu-item text-error" onClick={() => signOut({ callbackUrl: '/' })}><LogOut className="h-4 w-4" aria-hidden />Sign out</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button type="button" onClick={() => router.push('/login')} className="bb-signin">Sign in</button>
+            )}
+          </div>
+        </header>
+
+        <ScoreStrip />
+
+        {showBanner && (
+          <div className="bb-connect" role="region" aria-label="Connect your league">
+            <span className="bb-connect-icon" aria-hidden><RefreshCw className="h-4 w-4" /></span>
+            <p><span className="font-semibold">Connect your ESPN league</span> to get projections and advice in your league’s scoring.</p>
+            <Link href="/teams/new" className="bb-connect-cta">Connect league</Link>
+            <button type="button" className="bb-connect-close" onClick={dismissBanner} aria-label="Dismiss"><X className="h-4 w-4" /></button>
+          </div>
+        )}
+
+        <main className="bb-main fantasy-main">
+          {inTools && (
+            <nav className="bb-section-tabs" aria-label="Tools">
+              {toolTabs.map(tab => (
+                <Link key={tab.path} href={tab.path} className="bb-pill-tab" aria-current={pathname === tab.path ? 'page' : undefined}>{tab.name}</Link>
+              ))}
+            </nav>
+          )}
+          {children}
+        </main>
+      </div>
+
+      <nav className="bb-bottom-nav" aria-label="Main">
+        {mobileItems.map(item => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.match);
+          return (
+            <Link key={item.name} href={item.path} className="bb-bottom-item" aria-current={active ? 'page' : undefined}>
+              <Icon className="h-5 w-5" aria-hidden /><span>{item.name}</span>
+            </Link>
+          );
+        })}
       </nav>
+
+      {searchOpen && <CommandSearch onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
