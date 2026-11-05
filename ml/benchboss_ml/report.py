@@ -85,11 +85,30 @@ def render_markdown(report: dict[str, Any]) -> str:
 
     lines += ["", "## Skater statistics", "",
               "Selection metric is validation weekly RMSE of the statistic (player-week sums).", "",
-              "| Target | Selected | Shrink k / prior weight | baseline | shrunk | direct | residual | residualShrunk |", "|---|---|---|---|---|---|---|---|"]
+              "| Target | Selected (servable) | Best incl. xG | Shrink k / prior weight | baseline | shrunk | direct | residual | residualShrunk | residualXg |", "|---|---|---|---|---|---|---|---|---|---|"]
     for target, info in skater["targets"].items():
         w = info["validationWeeklyRmse"]
-        lines.append(f"| {target} | **{info['selected']}** | {_f(info.get('shrinkK'), 0)} / {_f(info.get('priorWeight'), 2)} | {_f(w['baseline'])} | {_f(w.get('shrunk'))} | "
-                     f"{_f(w['direct'])} | {_f(w['residual'])} | {_f(w.get('residualShrunk'))} |")
+        lines.append(f"| {target} | **{info['selected']}** | {info.get('selectedIncludingXg', '—')} | {_f(info.get('shrinkK'), 0)} / {_f(info.get('priorWeight'), 2)} | {_f(w['baseline'])} | {_f(w.get('shrunk'))} | "
+                     f"{_f(w['direct'])} | {_f(w['residual'])} | {_f(w.get('residualShrunk'))} | {_f(w.get('residualXg'))} |")
+
+    blend = skater.get("blend")
+    if blend:
+        lines += ["", f"Rank-aware blend: model weight **{blend['chosenModelWeight']}** (rest production baseline), chosen on validation "
+                  "start/sit accuracy + top-50 precision among blends within 0.5% of the best weekly RMSE.", "",
+                  "| Model weight | Weekly MAE | Weekly RMSE | Start/sit | Top-50 |", "|---|---|---|---|---|"]
+        for weight, m in blend["validation"].items():
+            lines.append(f"| {weight} | {_f(m['mae'])} | {_f(m['rmse'])} | {_f(m['startSitAccuracy'])} | {_f(m['top50Precision'])} |")
+
+    xg = report.get("xg") or {}
+    if xg.get("available"):
+        lines += ["", "## Expected goals (xG)", "",
+                  f"Logistic model on {xg['trainShots']:,} unblocked, non-empty-net attempts from training seasons (play-by-play seasons: "
+                  f"{', '.join(xg['seasons'])}). Features: distance, angle, shot type, strength, rebound.", "",
+                  "| Split | Shots | Goals | xG total | Log loss | AUC | Distance-only log loss | Distance-only AUC |", "|---|---|---|---|---|---|---|---|"]
+        for name, m in xg["splits"].items():
+            lines.append(f"| {name} | {m['shots']:,} | {m['goals']:,} | {_f(m['xgTotal'], 0)} | {_f(m['logLoss'], 4)} | {_f(m['auc'], 3)} | {_f(m['distanceOnlyLogLoss'], 4)} | {_f(m['distanceOnlyAuc'], 3)} |")
+        lines += ["", "xG features (ixg, high-danger attempts) need per-game play-by-play at serving time, so the `residualXg` candidate "
+                  "is evaluated offline (the `withXgOffline` weekly row) but not exported to the app."]
 
     lines += ["", "Per-game accuracy:", "",
               "| Target | Split | Baseline MAE | Direct MAE | Residual MAE | Baseline RMSE | Direct RMSE | Residual RMSE | Baseline ρ | Direct ρ | Residual ρ |",
@@ -132,6 +151,15 @@ def render_markdown(report: dict[str, Any]) -> str:
     for split_name, result in goalie["weekly"].items():
         for label, m in result.items():
             lines.append(f"| {split_name} | {label} | {_f(m['mae'])} | {_f(m['rmse'])} | {_f(m['bias'])} | {_f(m['spearman'])} |")
+
+    started = goalie["targets"].get("started", {}).get("scores", {})
+    if any("pickAccuracy" in v for v in started.values()):
+        lines += ["", "Starter pick accuracy (top candidate per team-game started; team-games whose starter was a candidate):", "",
+                  "| Split | Model | Usage (last-10 share) | Team-games |", "|---|---|---|---|"]
+        for split_name, score in started.items():
+            pa = score.get("pickAccuracy")
+            if pa:
+                lines.append(f"| {split_name} | {_f(pa['model']['accuracy'])} | {_f(pa['usageBaseline']['accuracy'])} | {pa['model']['teamGames']:,} |")
 
     lines += ["", "Goalie start-probability reliability (test season):", "", "| Bin | n | Predicted | Observed |", "|---|---|---|---|"]
     for row in goalie["targets"].get("started", {}).get("scores", {}).get("test", {}).get("model", {}).get("reliability", []):

@@ -16,6 +16,9 @@ import pandas as pd
 
 SKATER_RATE_STATS = ("goals", "assists", "shots", "ppPoints", "hits", "blocks", "toi", "ppToi")
 SKATER_TARGETS = ("goals", "assists", "shots", "ppPoints", "hits", "blocks")
+# Shot-quality stats from play-by-play (benchboss_ml.xg); NaN for seasons without coverage.
+XG_STATS = ("ixg", "hdAtt")
+XG_FEATURES: tuple[str, ...] = tuple(f"{w}_{s}" for s in XG_STATS for w in ("std", "l5", "l10", "l20", "prev"))
 WINDOWS = (5, 10, 20)
 AVAILABILITY_DAYS = 30
 REST_CAP = 10
@@ -145,7 +148,10 @@ def previous_season_id(season: str) -> str:
 def skater_features(skaters: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataFrame:
     frame = skaters.sort_values(["playerId", "gameDate", "gameId"], kind="stable").reset_index(drop=True)
     _assert_sorted(frame, "playerId")
-    cols = list(SKATER_RATE_STATS)
+    for stat in XG_STATS:
+        if stat not in frame:
+            frame[stat] = np.nan
+    cols = list(SKATER_RATE_STATS) + list(XG_STATS)
     frame = add_deployment(frame)
 
     std = prior_season_mean(frame, ["playerId", "season"], cols).add_prefix("std_")

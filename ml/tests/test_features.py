@@ -151,3 +151,31 @@ def test_shrunk_baseline_tempers_tiny_samples_but_trusts_large_ones():
     result = shrunk_baseline(frame, "goals", 40.0, reference).tolist()
     assert result[0] < 0.15          # production blend would say ~1.0 goals per game
     assert result[1] == pytest.approx(0.47, abs=0.03)  # an established scorer keeps his rate
+
+
+def test_goalie_rotation_features_use_prior_games_only():
+    _, goalies, teams = make_schedule()
+    feats = goalie_features(goalies, teams)
+    aaa = feats[feats["team"] == "AAA"].set_index(["teamGameIndex", "playerId"]).sort_index()
+    # Starters by AAA game index: 10,10,11,10,10,11,10,10,11,...
+    assert aaa.loc[(4, 10), "consecutive_starts"] == 1
+    assert aaa.loc[(5, 10), "consecutive_starts"] == 2
+    assert aaa.loc[(4, 11), "consecutive_starts"] == 0
+    # Game index 7 (day 12) follows day 11: a back-to-back after goalie 10 started game 6.
+    assert aaa.loc[(7, 10), "b2b"] == 1 and aaa.loc[(7, 10), "b2b_started_prev"] == 1
+    assert aaa.loc[(7, 11), "b2b_started_prev"] == 0
+    assert aaa.loc[(4, 10), "pulled_last_start"] == 0
+    assert aaa.loc[(4, 10), "l5_start_sv_pct"] == pytest.approx(25 / 28)
+    assert aaa.loc[(4, 10), "share_rank"] == 1
+
+    # Perturb the result of game index 5 and later: features up to game 5 must not change.
+    cutoff = teams[teams["team"] == "AAA"].sort_values("gameDate").iloc[5]["gameDate"]
+    tampered = goalies.copy()
+    late = tampered["gameDate"] >= cutoff
+    tampered.loc[late, ["saves", "ga", "toi"]] = [1.0, 9.0, 10.0]
+    again = goalie_features(tampered, teams)
+    again = again[again["team"] == "AAA"].set_index(["teamGameIndex", "playerId"]).sort_index()
+    cols = ["consecutive_starts", "pulled_last_start", "last_start_ga", "l5_start_sv_pct", "std_sv_pct", "b2b_started_prev"]
+    early = aaa.index[aaa.index.get_level_values(0) <= 5]
+    pd.testing.assert_frame_equal(aaa.loc[early, cols], again.loc[early, cols])
+    assert again.loc[(7, 10), "pulled_last_start"] == 1  # his tampered game-6 start is visible afterwards

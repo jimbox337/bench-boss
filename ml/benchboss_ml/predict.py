@@ -103,6 +103,10 @@ def main(argv: list[str] | None = None) -> int:
             out[f"model_{stat}"] = predict(booster, out, spec["features"], init)
         else:
             out[f"model_{stat}"] = out[prediction_column(selected, stat)]
+    # Same rank-aware blend with the production baseline that was chosen on validation.
+    model_weight = report["skater"].get("blend", {}).get("chosenModelWeight", 1.0)
+    for stat in SKATER_TARGETS:
+        out[f"model_{stat}"] = model_weight * out[f"model_{stat}"] + (1 - model_weight) * out[f"base_{stat}"]
     for prefix in ("base", "model"):
         out[f"{prefix}_fp"] = sum(out[f"{prefix}_{s}"] * w for s, w in DEFAULT_SKATER_SCORING.items())
 
