@@ -10,7 +10,7 @@ import {
   goalieFantasyPoints, skaterFantasyPoints, type GameDetail, type GoalieLine, type PlayEvent, type SkaterLine, type TeamScheduleGame,
 } from '@/lib/nhlGameCenter';
 import { teamColor } from '@/lib/teamColors';
-import { StarterLine, TeamLink, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
+import { SectionTitle, StarterLine, TeamLink, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
 import ShotChart from '@/components/gamecenter/ShotChart';
 
 const TABS = ['Game', 'Box score', 'Plays', 'Team stats'] as const;
@@ -24,9 +24,6 @@ const STAT_LABELS: Record<string, string> = {
   hits: 'Hits', blockedShots: 'Blocked shots', giveaways: 'Giveaways', takeaways: 'Takeaways',
 };
 
-function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
-  return <div className="mb-3 flex items-center justify-between gap-3 border-b border-rule pb-2"><h2 className="bb-section-title">{children}</h2>{action}</div>;
-}
 
 function splitName(name: string): [string, string] {
   const parts = name.trim().split(' ');

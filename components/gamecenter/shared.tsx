@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { defaultLeagueSettings, type LeagueSettings } from '@/lib/calculator';
 import type { TeamStarter } from '@/lib/goalieStarters';
 import type { ScoreboardGame, TeamSide } from '@/lib/nhlGameCenter';
+import { teamColor } from '@/lib/teamColors';
 
 /** League scoring for fantasy points: the user's points league, else Bench Boss defaults. */
 export function pointsScoring(settings: LeagueSettings): { settings: LeagueSettings; label: string } {
@@ -87,4 +88,49 @@ export function StarterLine({ starter }: { starter?: TeamStarter }) {
     return <span className="text-xs"><span className="text-muted">G </span><span className="font-medium">{starter.name}</span> <span className="font-semibold text-success" title={starter.source}>✓ Confirmed</span></span>;
   }
   return <span className="text-xs text-muted" title={starter.source}>G {starter.name} · <span className="italic">likely</span> ({starter.starts}/{starter.ofGames} starts)</span>;
+}
+
+export function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return <div className="mb-3 flex items-center justify-between gap-3 border-b border-rule pb-2"><h2 className="bb-section-title">{children}</h2>{action}</div>;
+}
+
+export function TeamColorBar({ away, home, className = 'h-1.5' }: { away: string; home: string; className?: string }) {
+  return <div className={`flex gap-1 ${className}`} aria-hidden><span className="flex-1" style={{ background: teamColor(away) }} /><span className="flex-1" style={{ background: teamColor(home) }} /></div>;
+}
+
+export function shortStatus(game: ScoreboardGame): [string, string] {
+  const p = game.periodType === 'SO' ? 'SO' : game.periodType === 'OT' ? 'OT' : ['1ST', '2ND', '3RD'][(game.period || 1) - 1] || `P${game.period}`;
+  if (game.isLive) return game.inIntermission ? [`END ${p}`, 'Intermission'] : [p, game.clock || ''];
+  if (game.isFinal) return ['FINAL', game.periodType && game.periodType !== 'REG' ? game.periodType : ''];
+  if (game.state === 'PPD') return ['PPD', ''];
+  const start = new Date(game.startTimeUTC);
+  return [start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase(), start.toLocaleDateString([], { month: 'short', day: 'numeric' })];
+}
+
+/** Large hero for one game: team-colour bar, logos, names, records, big scores, centre status. */
+export function GameHero({ game, footer }: { game: ScoreboardGame; footer?: React.ReactNode }) {
+  const started = game.isLive || game.isFinal;
+  const [top, bottom] = shortStatus(game);
+  const side = (s: 'away' | 'home') => (
+    <div className={`flex items-center gap-3 md:gap-4 ${s === 'home' ? 'flex-row-reverse text-right' : ''}`}>
+      <span className="flex flex-col items-center gap-1"><TeamLogo team={game[s]} size={56} /><span className="text-xs text-muted tabular-nums">{game[s].record}</span></span>
+      <TeamLink abbrev={game[s].abbrev} className="hidden leading-tight sm:block">
+        <span className="block text-lg text-ink-2">{game[s].city || game[s].abbrev}</span>
+        <span className="block font-display text-2xl font-bold uppercase tracking-wide text-ink">{game[s].name}</span>
+      </TeamLink>
+    </div>
+  );
+  return (
+    <div className="overflow-hidden rounded-2xl border border-rule bg-paper-2">
+      <TeamColorBar away={game.away.abbrev} home={game.home.abbrev} />
+      <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
+        {side('away')}
+        <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.away.score ?? 0 : ''}</span>
+        <span className={`text-center font-display text-lg font-bold leading-tight md:text-xl ${game.isLive ? 'text-error' : ''}`}>{top}<span className="block text-base">{bottom}</span></span>
+        <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.home.score ?? 0 : ''}</span>
+        {side('home')}
+      </div>
+      {footer}
+    </div>
+  );
 }

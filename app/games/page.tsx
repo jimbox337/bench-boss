@@ -3,48 +3,58 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Clock3, RefreshCw, Tv } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { calculateFantasyPoints } from '@/lib/calculator';
 import { useData } from '@/lib/DataContext';
 import type { GameStarters } from '@/lib/goalieStarters';
 import type { ScoreboardGame } from '@/lib/nhlGameCenter';
-import { LineScore, StarterLine, StatusBadge, TeamLink, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
+import { SectionTitle, StarterLine, TeamColorBar, TeamLink, TeamLogo, pointsScoring, shortStatus } from '@/components/gamecenter/shared';
 
 type Scoreboard = { date: string; prevDate?: string; nextDate?: string; games: ScoreboardGame[]; updatedAt: string };
 
-function formatDay(date: string) {
-  return new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-}
+const shortDay = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+const formatDay = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 
-function GameCard({ game, starters, myPlayerTeams }: { game: ScoreboardGame; starters?: GameStarters; myPlayerTeams: Map<string, number> }) {
-  const mine = (myPlayerTeams.get(game.away.abbrev) || 0) + (myPlayerTeams.get(game.home.abbrev) || 0);
-  const scorers = (team: string) => game.goals.filter(goal => goal.team === team && goal.period !== 'SO');
+function GameCard({ game, starters, mine }: { game: ScoreboardGame; starters?: GameStarters; mine: number }) {
+  const started = game.isLive || game.isFinal;
+  const [top, bottom] = shortStatus(game);
+  const winner = game.isFinal ? ((game.away.score ?? 0) > (game.home.score ?? 0) ? 'away' : 'home') : null;
   return (
-    <article className="flex flex-col border-b border-r border-rule bg-paper-2 p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <StatusBadge game={game} />
-        {mine > 0 && <span className="rounded-full bg-selection px-2.5 py-0.5 text-xs font-semibold text-accent-2">{mine} of your players</span>}
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-rule bg-paper-2">
+      <TeamColorBar away={game.away.abbrev} home={game.home.abbrev} />
+      <div className="flex items-center justify-between px-4 pt-3 font-display text-sm font-bold tracking-wide">
+        <span className={game.isLive ? 'text-error' : 'text-ink-2'}>{top} {bottom}</span>
+        <span className="text-muted">{mine > 0 ? <span className="text-accent">{mine} of your players</span> : game.broadcasts.slice(0, 2).join(' · ').toUpperCase()}</span>
       </div>
-      <LineScore game={game} />
-      <div className="mt-3 grid gap-1">
-        {(['away', 'home'] as const).map(side => <StarterLine key={side} starter={starters?.[side].starter} />)}
+      <div className="space-y-2 px-4 py-3">
+        {(['away', 'home'] as const).map(side => {
+          const team = game[side];
+          return (
+            <div key={side} className={`flex items-center gap-3 ${winner && winner !== side ? 'opacity-55' : ''}`}>
+              <TeamLogo team={team} size={34} />
+              <TeamLink abbrev={team.abbrev} className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate font-semibold">{team.city ? `${team.city} ${team.name}` : team.name}</span>
+                <span className="text-xs text-muted tabular-nums">{team.record}</span>
+              </TeamLink>
+              <span className="font-display text-3xl font-bold tabular-nums">{started ? team.score ?? 0 : ''}</span>
+            </div>
+          );
+        })}
       </div>
-      {game.goals.length > 0 && (
-        <div className="mt-3 grid gap-1 border-t border-rule-2 pt-3 text-xs">
+      <div className="space-y-1 border-t border-rule-2 px-4 py-2.5">
+        {(['away', 'home'] as const).map(side => <div key={side} className="flex items-center gap-2"><TeamLogo team={game[side]} size={16} /><StarterLine starter={starters?.[side].starter} /></div>)}
+      </div>
+      {game.goals.filter(g => g.period !== 'SO').length > 0 && (
+        <div className="space-y-1 border-t border-rule-2 px-4 py-2.5 text-xs text-ink-2">
           {[game.away.abbrev, game.home.abbrev].map(team => {
-            const list = scorers(team);
-            return (
-              <p key={team} className="text-ink-2"><span className="font-semibold text-ink">{team}</span>{' '}
-                {list.length ? list.map(goal => `${goal.scorer}${goal.goalsToDate ? ` (${goal.goalsToDate})` : ''}${goal.strength === 'pp' ? ' PP' : goal.strength === 'sh' ? ' SH' : ''}`).join(', ') : 'No goals'}
-              </p>
-            );
+            const list = game.goals.filter(g => g.team === team && g.period !== 'SO');
+            return <p key={team}><span className="font-display text-sm font-bold text-ink">{team}</span> {list.length ? list.map(g => `${g.scorer}${g.goalsToDate ? ` (${g.goalsToDate})` : ''}${g.strength === 'pp' ? ' PP' : g.strength === 'sh' ? ' SH' : ''}`).join(', ') : 'No goals'}</p>;
           })}
         </div>
       )}
-      <div className="mt-auto flex items-center justify-between gap-2 pt-4 text-xs">
-        <span className="flex items-center gap-1 text-muted">{game.broadcasts.length > 0 && <><Tv className="h-3.5 w-3.5" aria-hidden />{game.broadcasts.slice(0, 2).join(', ')}</>}</span>
-        <Link href={`/games/${game.id}`} className="font-semibold text-accent hover:underline">{game.isLive || game.isFinal ? 'Box score' : 'Preview'} →</Link>
-      </div>
+      <Link href={`/games/${game.id}`} className="mt-auto flex items-center justify-between border-t border-rule px-4 py-3 text-sm font-semibold text-accent hover:bg-paper">
+        {started ? 'Box score and plays' : 'Game preview'}<ChevronRight className="h-4 w-4" />
+      </Link>
     </article>
   );
 }
@@ -58,8 +68,6 @@ function ScoreboardView() {
   const [error, setError] = useState('');
   const [starters, setStarters] = useState<Map<number, GameStarters>>(new Map());
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const anyLive = board?.games.some(game => game.isLive) ?? false;
 
   useEffect(() => {
     let active = true;
@@ -78,93 +86,86 @@ function ScoreboardView() {
     return () => { active = false; window.clearInterval(scoreTimer); window.clearInterval(goalieTimer); };
   }, [requestedDate, refreshKey]);
 
-  const teamsPlaying = useMemo(() => new Set(board?.games.flatMap(game => [game.home.abbrev, game.away.abbrev]) || []), [board]);
-  const myPlayerTeams = useMemo(() => {
+  const playing = useMemo(() => new Set(board?.games.flatMap(game => [game.home.abbrev, game.away.abbrev]) || []), [board]);
+  const mineByTeam = useMemo(() => {
     const counts = new Map<string, number>();
     for (const player of myTeam) counts.set(player.nhlTeam, (counts.get(player.nhlTeam) || 0) + 1);
     return counts;
   }, [myTeam]);
-  const myPlayersOnSlate = myTeam.filter(player => teamsPlaying.has(player.nhlTeam));
+  const myPlayers = myTeam.filter(player => playing.has(player.nhlTeam));
   const scoring = pointsScoring(leagueSettings);
-  const leaders = players
-    .filter(player => teamsPlaying.has(player.nhlTeam))
-    .map(player => {
-      const projection = projections.find(item => item.playerId === player.id);
-      const points = projection ? calculateFantasyPoints(projection, scoring.settings) / Math.max(projection.gamesPlayed, 1) : 0;
-      return { player, points };
-    })
-    .filter(row => row.points > 0)
-    .sort((a, b) => b.points - a.points)
-    .slice(0, 10);
+  const leaders = players.filter(p => playing.has(p.nhlTeam)).map(player => {
+    const projection = projections.find(item => item.playerId === player.id);
+    return { player, points: projection ? calculateFantasyPoints(projection, scoring.settings) / Math.max(projection.gamesPlayed, 1) : 0 };
+  }).filter(row => row.points > 0).sort((a, b) => b.points - a.points).slice(0, 10);
 
   const go = (date?: string) => router.push(date ? `/games?date=${date}` : '/games');
-  const live = board?.games.filter(game => game.isLive).length || 0;
-  const final = board?.games.filter(game => game.isFinal).length || 0;
+  const counts = { live: board?.games.filter(g => g.isLive).length || 0, final: board?.games.filter(g => g.isFinal).length || 0 };
 
   return (
-    <div className="bb-page space-y-6">
-      <header className="bb-page-header flex flex-wrap items-end justify-between gap-4">
-        <div><h1>Scoreboard</h1><p>Live NHL scores, starting goalies and the fantasy players in every game.</p></div>
-        <button onClick={() => setRefreshKey(key => key + 1)} className="bb-button-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"><RefreshCw className="h-4 w-4" /> Refresh</button>
+    <div className="bb-page space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl font-bold uppercase tracking-wide">Scores</h1>
+          <p className="mt-1 text-sm text-muted">{board ? `${board.games.length} games · ${counts.live} live · ${counts.final} final${myPlayers.length ? ` · ${myPlayers.length} of your players` : ''}` : 'Loading the NHL slate…'}</p>
+        </div>
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => go(board?.prevDate)} disabled={!board?.prevDate} aria-label="Previous day"><ChevronLeft className="h-5 w-5" /></button>
+          <span className="min-w-0 flex-1 whitespace-nowrap rounded-full border border-rule bg-paper-2 px-4 py-2.5 text-center font-display text-lg font-bold sm:min-w-56 sm:flex-none">{board ? <><span className="sm:hidden">{shortDay(board.date)}</span><span className="hidden sm:inline">{formatDay(board.date)}</span></> : '…'}</span>
+          <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => go(board?.nextDate)} disabled={!board?.nextDate} aria-label="Next day"><ChevronRight className="h-5 w-5" /></button>
+          {requestedDate && <button type="button" className="h-11 rounded-full border border-ink px-4 text-sm font-semibold hover:bg-ink hover:text-on-brand" onClick={() => go()}>Today</button>}
+          <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => setRefreshKey(k => k + 1)} aria-label="Refresh scores"><RefreshCw className="h-4 w-4" /></button>
+        </div>
       </header>
 
-      <div className="fantasy-card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <button className="bb-button-secondary inline-flex h-11 w-11 shrink-0 items-center justify-center" style={{ padding: 0 }} onClick={() => go(board?.prevDate)} disabled={!board?.prevDate} aria-label="Previous day"><ChevronLeft className="h-4 w-4" /></button>
-          <p className="min-w-52 text-center font-semibold">{board ? formatDay(board.date) : 'Loading…'}</p>
-          <button className="bb-button-secondary inline-flex h-11 w-11 shrink-0 items-center justify-center" style={{ padding: 0 }} onClick={() => go(board?.nextDate)} disabled={!board?.nextDate} aria-label="Next day"><ChevronRight className="h-4 w-4" /></button>
-          {requestedDate && <button className="ml-1 text-sm font-semibold text-accent hover:underline" onClick={() => go()}>Today</button>}
-        </div>
-        <p className="text-sm text-muted tabular-nums">{board?.games.length || 0} games · {live} live · {final} final{myPlayersOnSlate.length ? ` · ${myPlayersOnSlate.length} of your players` : ''}</p>
-      </div>
-
-      {error && <p className="fantasy-card p-5 text-sm text-error">{error}</p>}
+      {error && <p className="rounded-2xl border border-rule bg-paper-2 p-5 text-sm text-error">{error}</p>}
 
       <section aria-label="Games">
-        {!board ? <p className="fantasy-card p-8 text-sm text-muted">Loading the NHL slate…</p>
-          : board.games.length === 0 ? <p className="fantasy-card p-8 text-sm text-muted">No NHL games on this date.</p>
-          : <div className="grid overflow-hidden rounded-card border-l border-t border-rule bg-paper-2 md:grid-cols-2 xl:grid-cols-3">{board.games.map(game => <GameCard key={game.id} game={game} starters={starters.get(game.id)} myPlayerTeams={myPlayerTeams} />)}</div>}
+        {!board ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map(i => <div key={i} className="h-72 rounded-2xl bg-paper-3" />)}</div>
+          : board.games.length === 0 ? <p className="rounded-2xl border border-rule bg-paper-2 p-8 text-sm text-muted">No NHL games on this date.</p>
+          : <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{board.games.map(game => (
+            <GameCard key={game.id} game={game} starters={starters.get(game.id)} mine={(mineByTeam.get(game.away.abbrev) || 0) + (mineByTeam.get(game.home.abbrev) || 0)} />
+          ))}</div>}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="fantasy-card overflow-hidden">
-          <div className="border-b border-rule px-5 py-4"><h2 className="text-lg">Your players on this slate</h2><p className="mt-1 text-xs text-muted">From your roster{myTeam.length ? '' : ' — add players on My Team to see them here'}.</p></div>
-          {myPlayersOnSlate.length === 0 ? <p className="p-5 text-sm text-muted">None of your players are scheduled.</p> : (
-            <ul className="divide-y divide-rule">{myPlayersOnSlate.map(player => {
+      <div className="grid gap-8 lg:grid-cols-2">
+        <section>
+          <SectionTitle>Your players on this slate</SectionTitle>
+          {myPlayers.length === 0 ? <p className="text-sm text-muted">{myTeam.length ? 'None of your players are scheduled.' : 'Add players on My team to see them here.'}</p> : (
+            <ul className="divide-y divide-rule">{myPlayers.map(player => {
               const game = board?.games.find(g => g.home.abbrev === player.nhlTeam || g.away.abbrev === player.nhlTeam);
               const opponent = game ? (game.home.abbrev === player.nhlTeam ? `vs ${game.away.abbrev}` : `@ ${game.home.abbrev}`) : '';
               return (
-                <li key={player.id} className="flex items-center gap-3 px-5 py-3">
-                  <TeamLogo team={{ abbrev: player.nhlTeam }} size={24} />
-                  <span className="min-w-0 flex-1"><span className="block truncate font-medium">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · <TeamLink abbrev={player.nhlTeam}>{player.nhlTeam}</TeamLink> {opponent}</span></span>
-                  {game && <Link href={`/games/${game.id}`} className="text-xs font-semibold text-accent hover:underline">Game →</Link>}
+                <li key={player.id} className="flex items-center gap-3 py-3" style={{ boxShadow: 'inset 3px 0 0 var(--color-accent)' }}>
+                  <span className="pl-4"><TeamLogo team={{ abbrev: player.nhlTeam }} size={26} /></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam} {opponent}</span></span>
+                  {game && <Link href={`/games/${game.id}`} className="text-sm font-semibold text-accent hover:underline">Game</Link>}
                 </li>
               );
             })}</ul>
           )}
         </section>
-
-        <section className="fantasy-card overflow-hidden">
-          <div className="border-b border-rule px-5 py-4"><h2 className="text-lg">Top projected on this slate</h2><p className="mt-1 text-xs text-muted">Model estimate per game, {scoring.label}.</p></div>
-          {leaders.length === 0 ? <p className="p-5 text-sm text-muted">Projections are loading.</p> : (
+        <section>
+          <SectionTitle>Top projected</SectionTitle>
+          <p className="mb-2 text-xs text-muted">Model estimate per game, {scoring.label}.</p>
+          {leaders.length === 0 ? <p className="text-sm text-muted">Projections are loading.</p> : (
             <ol className="divide-y divide-rule">{leaders.map(({ player, points }, index) => (
-              <li key={player.id}>
-                <Link href={`/players?player=${player.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-paper-3">
-                  <span className="w-5 text-sm font-semibold text-muted">{index + 1}</span>
-                  <span className="min-w-0 flex-1"><span className="block truncate font-medium">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam}</span></span>
-                  <span className="text-right font-semibold tabular-nums">{points.toFixed(1)}<span className="block text-xs font-normal text-muted">pts/game</span></span>
-                </Link>
-              </li>
+              <li key={player.id}><Link href={`/players?player=${player.id}`} className="flex items-center gap-3 py-2.5 hover:text-accent">
+                <span className="w-6 font-display text-lg font-bold text-muted">{index + 1}</span>
+                <TeamLogo team={{ abbrev: player.nhlTeam }} size={24} />
+                <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{player.name}</span><span className="text-xs text-muted">{player.positions.join('/')} · {player.nhlTeam}</span></span>
+                <span className="font-display text-xl font-bold tabular-nums">{points.toFixed(1)}</span>
+              </Link></li>
             ))}</ol>
           )}
         </section>
       </div>
 
-      <p className="flex items-center gap-2 text-xs text-muted"><Clock3 className="h-4 w-4" /> Scores refresh every 30 seconds{anyLive ? ' (games live now)' : ''}. Goalies are confirmed from NHL game data once a game starts; before puck drop the likely starter comes from recent starts.</p>
+      <p className="text-xs text-muted">Scores refresh every 30 seconds. Goalies are confirmed from NHL game data once a game starts; before puck drop the likely starter comes from recent starts.</p>
     </div>
   );
 }
 
 export default function GamesPage() {
-  return <Suspense fallback={<div className="bb-page"><p className="fantasy-card p-8 text-sm text-muted">Loading the NHL slate…</p></div>}><ScoreboardView /></Suspense>;
+  return <Suspense fallback={<div className="bb-page"><p className="text-sm text-muted">Loading the NHL slate…</p></div>}><ScoreboardView /></Suspense>;
 }

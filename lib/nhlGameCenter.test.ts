@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LeagueSettings } from './calculator';
 import {
   attachRecords,
+  pickFeatured,
   normalizePlayByPlay,
   deriveLineScore,
   goalieFantasyPoints,
@@ -139,5 +140,23 @@ describe('normalizePlayByPlay', () => {
   });
   it('handles a missing feed', () => {
     expect(normalizePlayByPlay(null, {})).toEqual([]);
+  });
+});
+
+describe('pickFeatured', () => {
+  const make = (id: number, away: string, home: string, gameState: string, startTimeUTC = '2026-11-05T00:30:00Z') =>
+    normalizeScoreGame({ id, gameDate: '2026-11-04', startTimeUTC, gameState, awayTeam: { abbrev: away }, homeTeam: { abbrev: home } });
+  const games = [make(1, 'OTT', 'BUF', 'LIVE'), make(2, 'CHI', 'FLA', 'LIVE'), make(3, 'SJS', 'LAK', 'FUT', '2026-11-05T03:00:00Z'), make(4, 'NYR', 'STL', 'OFF')];
+
+  it('prefers a live game with your players, then any live game', () => {
+    expect(pickFeatured(games, new Set(['FLA']))).toMatchObject({ reason: 'Live with your players' });
+    expect(pickFeatured(games, new Set(['FLA']))?.game.id).toBe(2);
+    expect(pickFeatured(games, new Set())?.game.id).toBe(1);
+  });
+  it('falls back to the next game, then the latest final', () => {
+    const later = [make(3, 'SJS', 'LAK', 'FUT'), make(4, 'NYR', 'STL', 'OFF')];
+    expect(pickFeatured(later, new Set(['LAK']))).toMatchObject({ reason: 'Your players next' });
+    expect(pickFeatured([make(4, 'NYR', 'STL', 'OFF')], new Set())).toMatchObject({ reason: 'Final' });
+    expect(pickFeatured([], new Set())).toBeNull();
   });
 });

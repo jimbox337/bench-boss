@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { StandingRow } from '@/lib/nhlGameCenter';
-import { TeamLogo } from '@/components/gamecenter/shared';
+import { teamColor } from '@/lib/teamColors';
+import { SectionTitle, TeamLogo } from '@/components/gamecenter/shared';
 
 export default function NhlTeamsPage() {
   const [rows, setRows] = useState<StandingRow[] | null>(null);
@@ -26,30 +27,43 @@ export default function NhlTeamsPage() {
   }, [rows]);
 
   return (
-    <div className="bb-page space-y-6">
-      <header className="bb-page-header"><div><h1>NHL Teams</h1><p>Standings, rosters, schedules and fantasy outlook for every club.</p></div></header>
-      {error && <p className="fantasy-card p-5 text-sm text-error">{error}</p>}
-      {!rows && !error && <p className="fantasy-card p-8 text-sm text-muted">Loading standings…</p>}
-      <div className="grid gap-6 xl:grid-cols-2">
+    <div className="bb-page space-y-10">
+      <header>
+        <h1 className="font-display text-4xl font-bold uppercase tracking-wide">Teams</h1>
+        <p className="mt-1 text-sm text-muted">Standings, rosters, schedules and fantasy outlook for every club.</p>
+      </header>
+
+      {rows && (
+        <section aria-label="All teams">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 lg:grid-cols-16">
+            {[...rows].sort((a, b) => a.name.localeCompare(b.name)).map(team => (
+              <Link key={team.abbrev} href={`/nhl-teams/${team.abbrev}`} title={team.city ? `${team.city} ${team.name}` : team.name}
+                className="flex flex-col items-center gap-1 rounded-xl border border-rule bg-paper-2 py-2.5 hover:border-field-border" style={{ boxShadow: `inset 0 3px 0 ${teamColor(team.abbrev)}` }}>
+                <TeamLogo team={team} size={32} /><span className="font-display text-sm font-bold">{team.abbrev}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {error && <p className="rounded-2xl border border-rule bg-paper-2 p-5 text-sm text-error">{error}</p>}
+      {!rows && !error && <p className="text-sm text-muted">Loading standings…</p>}
+
+      <div className="grid gap-10 xl:grid-cols-2">
         {divisions.map(division => (
-          <section key={division.name} className="fantasy-card overflow-hidden">
-            <h2 className="border-b border-rule px-5 py-3 text-lg">{division.name} <span className="text-sm font-normal text-muted">· {division.conference}</span></h2>
-            <div className="overflow-x-auto">
-              <table className="bb-table w-full min-w-[560px] text-sm">
-                <thead><tr className="text-xs text-muted">
-                  <th className="px-4 py-2 text-left">Team</th>
-                  {['GP', 'W', 'L', 'OTL', 'PTS', 'GF', 'GA', 'DIFF', 'L10', 'STRK'].map(h => <th key={h} className="px-2 py-2 text-right">{h}</th>)}
-                </tr></thead>
+          <section key={division.name}>
+            <SectionTitle action={<span className="text-sm text-muted">{division.conference}</span>}>{division.name}</SectionTitle>
+            <div className="overflow-x-auto rounded-xl border border-rule">
+              <table className="bb-box w-full min-w-[600px]">
+                <thead><tr><th className="text-left">Team</th>{['GP', 'W', 'L', 'OTL', 'PTS', 'GF', 'GA', 'Diff', 'L10', 'Strk'].map(h => <th key={h}>{h}</th>)}</tr></thead>
                 <tbody>{division.list.map(team => (
-                  <tr key={team.abbrev} className="border-t border-rule-2 hover:bg-paper-3">
-                    <td className="px-4 py-2"><Link href={`/nhl-teams/${team.abbrev}`} className="flex items-center gap-2 font-medium hover:text-accent"><span className="w-4 text-xs text-muted">{team.divisionRank}</span><TeamLogo team={team} size={22} />{team.name}</Link></td>
-                    {[team.gp, team.w, team.l, team.otl].map((v, i) => <td key={i} className="px-2 py-2 text-right tabular-nums">{v}</td>)}
-                    <td className="px-2 py-2 text-right font-semibold tabular-nums">{team.pts}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{team.gf}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{team.ga}</td>
-                    <td className={`px-2 py-2 text-right tabular-nums ${team.diff > 0 ? 'text-success' : team.diff < 0 ? 'text-error' : ''}`}>{team.diff > 0 ? `+${team.diff}` : team.diff}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{team.l10}</td>
-                    <td className="px-2 py-2 text-right">{team.streak}</td>
+                  <tr key={team.abbrev}>
+                    <td className="text-left"><Link href={`/nhl-teams/${team.abbrev}`} className="flex items-center gap-2.5 font-semibold hover:text-accent">
+                      <span className="w-4 font-display text-muted">{team.divisionRank}</span><TeamLogo team={team} size={24} />{team.city ? `${team.city} ${team.name}` : team.name}</Link></td>
+                    {[team.gp, team.w, team.l, team.otl].map((v, i) => <td key={i}>{v}</td>)}
+                    <td className="font-bold">{team.pts}</td><td>{team.gf}</td><td>{team.ga}</td>
+                    <td className={team.diff > 0 ? 'text-success' : team.diff < 0 ? 'text-error' : ''}>{team.diff > 0 ? `+${team.diff}` : team.diff}</td>
+                    <td>{team.l10}</td><td>{team.streak}</td>
                   </tr>
                 ))}</tbody>
               </table>

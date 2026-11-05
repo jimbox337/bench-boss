@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { BarChart3, CheckCircle2, Crosshair, Repeat2, ShieldCheck, Shirt, Swords, Zap } from 'lucide-react';
 import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
+import FeaturedGame from '@/components/gamecenter/FeaturedGame';
 
 type NoTeamDashboardProps = {
   onAddTeam: () => void;
@@ -24,6 +25,7 @@ export default function NoTeamDashboard({ onAddTeam, onBrowsePlayers }: NoTeamDa
       <header className="bb-page-header">
         <div><h1>My dashboard</h1><p>Your fantasy hockey team and player research, in one place.</p></div>
       </header>
+      <FeaturedGame />
       <div className="bb-dashboard-layout grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
           <section className="bb-panel bb-dashboard-setup overflow-hidden" aria-labelledby="connect-team-title">

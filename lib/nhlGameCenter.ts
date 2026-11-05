@@ -157,6 +157,21 @@ export function normalizeScoreGame(raw: RawScoreGame): ScoreboardGame {
   };
 }
 
+/** Most relevant game right now: live with your players, any live, next to start, latest final. */
+export function pickFeatured(games: ScoreboardGame[], myTeams: Set<string>): { game: ScoreboardGame; reason: string } | null {
+  const mine = (g: ScoreboardGame) => myTeams.has(g.away.abbrev) || myTeams.has(g.home.abbrev);
+  const live = games.filter(g => g.isLive);
+  const upcoming = games.filter(g => !g.isLive && !g.isFinal).sort((a, b) => a.startTimeUTC.localeCompare(b.startTimeUTC));
+  const final = games.filter(g => g.isFinal);
+  const choice =
+    (live.find(mine) && { game: live.find(mine)!, reason: 'Live with your players' }) ||
+    (live[0] && { game: live[0], reason: 'Live now' }) ||
+    (upcoming.find(mine) && { game: upcoming.find(mine)!, reason: 'Your players next' }) ||
+    (upcoming[0] && { game: upcoming[0], reason: 'Next up' }) ||
+    (final.at(-1) && { game: final.at(-1)!, reason: 'Final' });
+  return choice || null;
+}
+
 // ------------------------------------------------------------------------------------
 // Box score + fantasy points
 // ------------------------------------------------------------------------------------
@@ -370,13 +385,13 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
 // ------------------------------------------------------------------------------------
 
 export type StandingRow = {
-  abbrev: string; name: string; logo?: string; conference: string; division: string; divisionRank: number;
+  abbrev: string; name: string; city?: string; logo?: string; conference: string; division: string; divisionRank: number;
   gp: number; w: number; l: number; otl: number; pts: number; pointPct: number; gf: number; ga: number; diff: number; l10: string; streak: string;
   homeRecord: string; roadRecord: string;
 };
 
 type RawStanding = {
-  teamAbbrev: Localized; teamCommonName?: Localized; teamName?: Localized; teamLogo?: string; conferenceName: string; divisionName: string; divisionSequence: number;
+  teamAbbrev: Localized; teamCommonName?: Localized; teamName?: Localized; placeName?: Localized; teamLogo?: string; conferenceName: string; divisionName: string; divisionSequence: number;
   gamesPlayed: number; wins: number; losses: number; otLosses: number; points: number; pointPctg: number; goalFor: number; goalAgainst: number; goalDifferential: number;
   l10Wins: number; l10Losses: number; l10OtLosses: number; streakCode?: string; streakCount?: number;
   homeWins?: number; homeLosses?: number; homeOtLosses?: number; roadWins?: number; roadLosses?: number; roadOtLosses?: number;
@@ -384,7 +399,7 @@ type RawStanding = {
 
 export function normalizeStandings(rows: RawStanding[]): StandingRow[] {
   return rows.map(row => ({
-    abbrev: text(row.teamAbbrev), name: text(row.teamCommonName) || text(row.teamName), logo: row.teamLogo,
+    abbrev: text(row.teamAbbrev), name: text(row.teamCommonName) || text(row.teamName), city: text(row.placeName) || undefined, logo: row.teamLogo,
     conference: row.conferenceName, division: row.divisionName, divisionRank: row.divisionSequence,
     gp: row.gamesPlayed, w: row.wins, l: row.losses, otl: row.otLosses, pts: row.points, pointPct: row.pointPctg,
     gf: row.goalFor, ga: row.goalAgainst, diff: row.goalDifferential,
@@ -455,12 +470,12 @@ export const isIsoDate = (value: string | null | undefined): value is string => 
 
 /** Attach "W-L-OTL" records from standings (one cached request) to each scoreboard team. */
 export function attachRecords(games: ScoreboardGame[], standings: StandingRow[]): ScoreboardGame[] {
-  const records = new Map(standings.map(row => [row.abbrev, `${row.w}-${row.l}-${row.otl}`]));
-  return games.map(game => ({
-    ...game,
-    away: { ...game.away, record: game.away.record || records.get(game.away.abbrev) },
-    home: { ...game.home, record: game.home.record || records.get(game.home.abbrev) },
-  }));
+  const rows = new Map(standings.map(row => [row.abbrev, row]));
+  const enrich = (team: TeamSide): TeamSide => {
+    const row = rows.get(team.abbrev);
+    return { ...team, record: team.record || (row ? `${row.w}-${row.l}-${row.otl}` : undefined), city: team.city || row?.city };
+  };
+  return games.map(game => ({ ...game, away: enrich(game.away), home: enrich(game.home) }));
 }
 
 export async function fetchScoreboard(date?: string) {
