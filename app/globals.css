@@ -148,3 +148,14 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; o
   .bb-dashboard-summary .text-3xl { font-size: 24px; }
   .bb-dashboard-summary p:first-child { min-height: 32px; }
 }
+
+/* Yahoo-style shared components (applies app-wide: tools, team setup, profile, admin) */
+@layer components {
+  .fantasy-card, .bb-panel, .bb-toolbar, .bb-empty, .bb-stat-strip { border-radius: 16px; }
+  .fantasy-button, .fantasy-button-gold, .bb-button { border-radius: 999px; padding-inline: 22px; font-weight: 600; }
+  .bb-button-secondary { border-radius: 999px; padding-inline: 22px; border: 1.5px solid var(--color-ink); background: transparent; color: var(--color-ink); font-weight: 600; }
+  .bb-button-secondary:hover { background: var(--color-ink); color: var(--color-on-brand); }
+  .bb-field { border-radius: 12px; }
+  .bb-stat-strip .text-4xl, .bb-stat-strip .text-3xl, .bb-dashboard-summary .text-3xl { font-family: var(--font-display); font-weight: 700; }
+  .bb-panel > .bb-dashboard-panel-heading, .fantasy-card > .bb-dashboard-panel-heading { border-bottom-color: var(--color-rule); }
+}

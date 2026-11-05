@@ -61,15 +61,13 @@ export default function ScoreStrip() {
                   <span className={game.isLive ? 'bb-card-live' : ''}>{cardStatus(game)}</span>
                   <span className="bb-card-network">{mine ? <span className="bb-card-mine">Your players</span> : game.broadcasts[0]?.toUpperCase()}</span>
                 </span>
-                <span className="bb-card-scores">
-                  {(['away', 'home'] as const).map(side => (
-                    <span key={side} className={`bb-card-side bb-card-${side}`} data-dim={winner && winner !== side ? true : undefined}>
-                      <TeamLogo team={game[side]} size={34} />
-                      {started ? <span className="bb-card-score">{game[side].score ?? 0}</span> : <span className="bb-card-record">{game[side].record}</span>}
-                    </span>
-                  ))}
-                </span>
-                <span className="bb-card-abbrevs"><span>{game.away.abbrev}</span><span>{game.home.abbrev}</span></span>
+                {(['away', 'home'] as const).map(side => (
+                  <span key={side} className="bb-card-row" data-dim={winner && winner !== side ? true : undefined}>
+                    <TeamLogo team={game[side]} size={18} />
+                    <span className="bb-card-abbrev">{game[side].abbrev}</span>
+                    {started ? <span className="bb-card-score">{game[side].score ?? 0}</span> : <span className="bb-card-record">{game[side].record}</span>}
+                  </span>
+                ))}
               </Link>
             );
           })}

@@ -13,6 +13,7 @@ import BenchBossLogo from './BenchBossLogo';
 import ScoreStrip from './shell/ScoreStrip';
 import AlertsMenu from './shell/AlertsMenu';
 import CommandSearch, { useSearchShortcut } from './shell/CommandSearch';
+import { platformLabel } from '@/lib/teamSetup';
 
 const TOOL_PATHS = ['/startsit', '/trades', '/waivers'];
 
@@ -116,7 +117,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         setHasTeam(teamData.success && team !== null);
         if (team) {
           setTeamName(team.name || 'My Team');
-          setTeamPlatform(team.platform || 'Custom');
+          setTeamPlatform(platformLabel(team.platform));
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -223,18 +224,18 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <ScoreStrip />
-
-        {showBanner && (
-          <div className="bb-connect" role="region" aria-label="Connect your league">
-            <span className="bb-connect-icon" aria-hidden><RefreshCw className="h-4 w-4" /></span>
-            <p><span className="font-semibold">Connect your ESPN league</span> to get projections and advice in your league’s scoring.</p>
-            <Link href="/teams/new" className="bb-connect-cta">Connect league</Link>
-            <button type="button" className="bb-connect-close" onClick={dismissBanner} aria-label="Dismiss"><X className="h-4 w-4" /></button>
-          </div>
-        )}
-
         <main className="bb-main fantasy-main">
+          <ScoreStrip />
+
+          {showBanner && (
+            <div className="bb-connect" role="region" aria-label="Connect your league">
+              <span className="bb-connect-icon" aria-hidden><RefreshCw className="h-4 w-4" /></span>
+              <p><span className="font-semibold">Connect your ESPN league</span> to get projections and advice in your league’s scoring.</p>
+              <Link href="/teams/new" className="bb-connect-cta">Connect league</Link>
+              <button type="button" className="bb-connect-close" onClick={dismissBanner} aria-label="Dismiss"><X className="h-4 w-4" /></button>
+            </div>
+          )}
+
           {inTools && (
             <nav className="bb-section-tabs" aria-label="Tools">
               {toolTabs.map(tab => (
