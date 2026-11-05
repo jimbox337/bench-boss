@@ -29,7 +29,7 @@ SKATER_FEATURES: tuple[str, ...] = tuple(
         "std_gp", "prev_gp", "home", "pos_C", "pos_W", "pos_D",
         "rest_days", "b2b", "team_games_next7", "availability_30d", "days_since_last_game",
         "team_gf_pg", "team_gf_l10", "team_sf_pg",
-        "opp_ga_pg", "opp_ga_l10", "opp_sa_pg",
+        "opp_ga_pg", "opp_ga_l10", "opp_sa_pg", "opp_sv_pct",
         # Deployment proxies (no public line-combination feed exists): share of the team's
         # power-play time and TOI rank among same-position teammates, from prior games.
         "l10_pp_share", "l5_toi_rank",
@@ -42,7 +42,7 @@ SKATER_FEATURES: tuple[str, ...] = tuple(
 # improves single games but adds a per-player bias that compounds over a fantasy week.
 RESIDUAL_FEATURES: tuple[str, ...] = (
     "home", "rest_days", "b2b", "team_games_next7", "days_since_last_game", "availability_30d",
-    "team_gf_pg", "team_gf_l10", "team_sf_pg", "opp_ga_pg", "opp_ga_l10", "opp_sa_pg",
+    "team_gf_pg", "team_gf_l10", "team_sf_pg", "opp_ga_pg", "opp_ga_l10", "opp_sa_pg", "opp_sv_pct",
     "std_gp", "pos_C", "pos_W", "pos_D",
     "std_toi", "l5_toi", "l10_toi", "std_ppToi", "l5_ppToi", "l10_ppToi",
     "l10_pp_share", "l5_toi_rank",
@@ -53,6 +53,8 @@ GOALIE_FEATURES: tuple[str, ...] = (
     "std_starts", "std_sv_pct", "std_ga_per_start", "std_win_rate", "prev_starts", "prev_sv_pct",
     "home", "rest_days", "b2b",
     "team_ga_pg", "team_sa_pg", "team_gf_pg", "opp_gf_pg", "opp_sf_pg", "opp_ga_pg",
+    # Rotation signals coaches use: back-to-back after starting, streaks, a rough last start.
+    "consecutive_starts", "b2b_started_prev", "pulled_last_start", "last_start_ga", "l5_start_sv_pct", "share_rank",
 )
 
 
@@ -118,6 +120,7 @@ def team_context(team_games: pd.DataFrame) -> pd.DataFrame:
         "gameId": teams["gameId"], "team": teams["team"], "season": teams["season"], "gameDate": teams["gameDate"],
         "team_gf_pg": std["gf"], "team_ga_pg": std["ga"], "team_sf_pg": std["sf"], "team_sa_pg": std["sa"],
         "team_gf_l10": l10["gf"], "team_ga_l10": l10["ga"],
+        "team_sv_pct": 1 - std["ga"] / std["sa"].where(std["sa"] > 0),
         "rest_days": rest.astype(float), "b2b": (rest == 1).astype(float),
         "team_games_next7": next7.astype(float), "team_games_30d": games_30d.astype(float),
     })
@@ -126,8 +129,8 @@ def team_context(team_games: pd.DataFrame) -> pd.DataFrame:
 def _opponent_view(context: pd.DataFrame) -> pd.DataFrame:
     return context.rename(columns={
         "team": "opp", "team_gf_pg": "opp_gf_pg", "team_ga_pg": "opp_ga_pg", "team_sf_pg": "opp_sf_pg",
-        "team_sa_pg": "opp_sa_pg", "team_ga_l10": "opp_ga_l10",
-    })[["gameId", "opp", "opp_gf_pg", "opp_ga_pg", "opp_sf_pg", "opp_sa_pg", "opp_ga_l10"]]
+        "team_sa_pg": "opp_sa_pg", "team_ga_l10": "opp_ga_l10", "team_sv_pct": "opp_sv_pct",
+    })[["gameId", "opp", "opp_gf_pg", "opp_ga_pg", "opp_sf_pg", "opp_sa_pg", "opp_ga_l10", "opp_sv_pct"]]
 
 
 def previous_season_id(season: str) -> str:
@@ -291,6 +294,7 @@ def goalie_candidates(goalies: pd.DataFrame, team_games: pd.DataFrame, lookback_
         team_apps = appearances[(appearances["team"] == team) & (appearances["season"] == season)]
         team_starts = starts[(starts["team"] == team) & (starts["season"] == season)]
         start_by_index = dict(zip(team_starts["teamGameIndex"], team_starts["playerId"]))
+        start_line = {int(r.teamGameIndex): r for r in team_starts.itertuples(index=False)}
         for game in team_rows.itertuples(index=False):
             k = game.teamGameIndex
             if k == 0:
@@ -303,15 +307,29 @@ def goalie_candidates(goalies: pd.DataFrame, team_games: pd.DataFrame, lookback_
                     starters = [start_by_index.get(i) for i in range(lo, k)]
                     shares[window] = sum(1 for s in starters if s == goalie_id) / (k - lo)
                 prior_starts = [i for i in range(0, k) if start_by_index.get(i) == goalie_id]
+                consecutive = 0
+                while k - 1 - consecutive >= 0 and start_by_index.get(k - 1 - consecutive) == goalie_id:
+                    consecutive += 1
+                last = start_line.get(prior_starts[-1]) if prior_starts else None
+                recent5 = [start_line[i] for i in prior_starts[-5:]]
+                sa5 = sum(r.shotsAgainst for r in recent5)
                 rows.append({
                     "gameId": game.gameId, "team": team, "season": season, "gameDate": game.gameDate,
                     "playerId": int(goalie_id), "teamGameIndex": k,
                     "share_l5": shares[5], "share_l10": shares[10], "share_l20": shares[20],
                     "started_prev_team_game": float(start_by_index.get(k - 1) == goalie_id),
                     "lastStartIndex": prior_starts[-1] if prior_starts else None,
+                    "consecutive_starts": float(consecutive),
+                    "pulled_last_start": float(last is not None and last.toi < 45),
+                    "last_start_ga": float(last.ga) if last is not None else float("nan"),
+                    "l5_start_sv_pct": float(sum(r.saves for r in recent5) / sa5) if sa5 > 0 else float("nan"),
                     "started": int(start_by_index.get(k) == goalie_id),
                 })
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    if not out.empty:
+        # 1 = the goalie with the most starts in the team's last 20 games (ties share rank 1).
+        out["share_rank"] = out.groupby(["gameId", "team"])["share_l20"].rank(ascending=False, method="min")
+    return out
 
 
 def goalie_features(goalies: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataFrame:
@@ -356,6 +374,7 @@ def goalie_features(goalies: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataF
     merged = merged.merge(opp_side, on=["gameId", "team"], how="left")
     merged = merged.merge(_opponent_view(context), on=["gameId", "opp"], how="left")
     merged["home"] = merged["home"].astype(float)
+    merged["b2b_started_prev"] = merged["b2b"] * merged["started_prev_team_game"]
 
     outcomes = goalies[["gameId", "playerId", "saves", "shotsAgainst", "ga", "win", "shutout"]]
     merged = merged.merge(outcomes, on=["gameId", "playerId"], how="left")
