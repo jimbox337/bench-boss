@@ -2,6 +2,10 @@ name: Daily predictions
 
 # Locks today's Bench Boss predictions before puck drop and scores yesterday's against the
 # final NHL results, building a public out-of-sample track record in ml/predictions/.
+#
+# The record lives on the `predictions` branch, not `main`: main requires the Vercel check,
+# and a commit pushed straight from a runner can never have passed it. The code runs from
+# main; ml/predictions is restored from the predictions branch first and committed back there.
 on:
   schedule:
     - cron: "0 15 * * *" # 15:00 UTC = 10:00 ET, before the earliest regular puck drop
@@ -41,6 +45,17 @@ jobs:
           key: nhl-data-${{ github.run_id }}
           restore-keys: nhl-data-
 
+      - name: Restore the track record from the predictions branch
+        run: |
+          if git ls-remote --exit-code --heads origin predictions >/dev/null; then
+            git fetch --depth=1 origin predictions
+            rm -rf ml/predictions
+            git checkout FETCH_HEAD -- ml/predictions
+            git reset -q
+          else
+            echo "No predictions branch yet; starting from main's ml/predictions"
+          fi
+
       - name: Lock today and score yesterday
         working-directory: ml
         run: .venv/bin/python -m benchboss_ml.daily --no-pbp
@@ -52,12 +67,21 @@ jobs:
           path: ml/data
           key: nhl-data-${{ github.run_id }}
 
-      - name: Commit predictions and scores
+      - name: Commit predictions and scores to the predictions branch
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ml/predictions
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          dest="$RUNNER_TEMP/predictions"
+          if git ls-remote --exit-code --heads origin predictions >/dev/null; then
+            git fetch --depth=1 origin predictions
+            git worktree add -B predictions "$dest" FETCH_HEAD
+          else
+            git worktree add -B predictions "$dest" HEAD
+          fi
+          mkdir -p "$dest/ml/predictions"
+          rsync -a --delete ml/predictions/ "$dest/ml/predictions/"
+          cd "$dest"
+          git add -A ml/predictions
           if git diff --cached --quiet; then echo "Nothing new to commit"; exit 0; fi
           git commit -m "Daily predictions $(TZ=America/New_York date +%F)"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin HEAD:predictions
