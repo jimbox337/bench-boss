@@ -36,22 +36,22 @@
         "baselineRmse": 0.4346130561195997
       },
       "assists": {
-        "actualMean": 0.2900763358778626,
+        "actualMean": 0.29770992366412213,
         "modelMean": 0.29283358778625956,
         "baselineMean": 0.2876648854961832,
-        "modelMae": 0.41274656488549616,
-        "baselineMae": 0.4088282442748092,
-        "modelRmse": 0.6392308271521949,
-        "baselineRmse": 0.6407830286823523
+        "modelMae": 0.41122595419847324,
+        "baselineMae": 0.40806488549618325,
+        "modelRmse": 0.6380403119667726,
+        "baselineRmse": 0.640187106296825
       },
       "shots": {
-        "actualMean": 1.5419847328244274,
+        "actualMean": 1.5267175572519085,
         "modelMean": 1.5811885496183207,
         "baselineMean": 1.5482656488549615,
-        "modelMae": 1.030451145038168,
-        "baselineMae": 1.0234885496183206,
-        "modelRmse": 1.2571341838112868,
-        "baselineRmse": 1.2555890503499856
+        "modelMae": 1.0190236641221373,
+        "baselineMae": 1.0115801526717556,
+        "modelRmse": 1.2520048430813822,
+        "baselineRmse": 1.2495501666935864
       },
       "ppPoints": {
         "actualMean": 0.12213740458015267,
@@ -66,33 +66,33 @@
         "actualMean": 1.1908396946564885,
         "modelMean": 1.224720610687023,
         "baselineMean": 1.238346564885496,
-        "modelMae": 0.9224091603053435,
-        "baselineMae": 0.9254717557251908,
-        "modelRmse": 1.2501718471797851,
-        "baselineRmse": 1.2500421410301115
+        "modelMae": 0.9109389312977099,
+        "baselineMae": 0.9141969465648854,
+        "modelRmse": 1.2408239807876498,
+        "baselineRmse": 1.240672993374382
       },
       "blocks": {
-        "actualMean": 0.8320610687022901,
+        "actualMean": 0.8244274809160306,
         "modelMean": 0.7595519083969465,
         "baselineMean": 0.7595519083969465,
-        "modelMae": 0.7073946564885496,
-        "baselineMae": 0.7073946564885496,
-        "modelRmse": 0.9157578724708657,
-        "baselineRmse": 0.9157578724708657
+        "modelMae": 0.7150282442748092,
+        "baselineMae": 0.7150282442748092,
+        "modelRmse": 0.9214087911354435,
+        "baselineRmse": 0.9214087911354435
       },
       "fp": {
-        "actualMean": 1.4068702290076336,
+        "actualMean": 1.4091603053435113,
         "modelMean": 1.451358778625954,
         "baselineMean": 1.4265038167938933,
-        "modelMae": 1.0173587786259541,
-        "baselineMae": 1.0054198473282443,
-        "modelRmse": 1.4256958499233103,
-        "baselineRmse": 1.409854050158417
+        "modelMae": 1.015145038167939,
+        "baselineMae": 1.0054045801526719,
+        "modelRmse": 1.4279097358518351,
+        "baselineRmse": 1.412632716186233
       }
     },
     "fpSpearman": {
-      "model": 0.28067360754255843,
-      "baseline": 0.2824554782302759
+      "model": 0.2792787453611577,
+      "baseline": 0.2804836446144462
     },
     "topPerformers": [
       {
@@ -225,7 +225,7 @@
         "usageCorrect": true,
         "probOnActualStarter": 0.723,
         "savesPred": 25.55,
-        "savesActual": 25.0,
+        "savesActual": 24.0,
         "gaPred": 2.93,
         "gaActual": 4.0,
         "winProb": 0.331,
@@ -273,7 +273,7 @@
         "usageCorrect": false,
         "probOnActualStarter": 0.401,
         "savesPred": 24.4,
-        "savesActual": 20.0,
+        "savesActual": 19.0,
         "gaPred": 2.86,
         "gaActual": 7.0,
         "winProb": 0.382,
@@ -350,22 +350,22 @@
         "baselineRmse": 0.4346130561195997
       },
       "assists": {
-        "actualMean": 0.2900763358778626,
+        "actualMean": 0.29770992366412213,
         "modelMean": 0.2892916030534351,
         "baselineMean": 0.2876648854961832,
-        "modelMae": 0.4177648854961832,
-        "baselineMae": 0.4088282442748092,
-        "modelRmse": 0.622595873851895,
-        "baselineRmse": 0.6407830286823523
+        "modelMae": 0.41863358778625953,
+        "baselineMae": 0.40806488549618325,
+        "modelRmse": 0.6232931288145899,
+        "baselineRmse": 0.640187106296825
       },
       "shots": {
-        "actualMean": 1.5419847328244274,
+        "actualMean": 1.5267175572519085,
         "modelMean": 1.5703167938931297,
         "baselineMean": 1.5482656488549615,
-        "modelMae": 1.0031946564885499,
-        "baselineMae": 1.0234885496183206,
-        "modelRmse": 1.2284564317911972,
-        "baselineRmse": 1.2555890503499856
+        "modelMae": 0.993093893129771,
+        "baselineMae": 1.0115801526717556,
+        "modelRmse": 1.2233878060096601,
+        "baselineRmse": 1.2495501666935864
       },
       "ppPoints": {
         "actualMean": 0.12213740458015267,
@@ -380,33 +380,33 @@
         "actualMean": 1.1908396946564885,
         "modelMean": 1.1962435114503815,
         "baselineMean": 1.238346564885496,
-        "modelMae": 0.9228908396946566,
-        "baselineMae": 0.9254717557251908,
-        "modelRmse": 1.2505081606175117,
-        "baselineRmse": 1.2500421410301115
+        "modelMae": 0.9098709923664122,
+        "baselineMae": 0.9141969465648854,
+        "modelRmse": 1.2417199240145325,
+        "baselineRmse": 1.240672993374382
       },
       "blocks": {
-        "actualMean": 0.8320610687022901,
+        "actualMean": 0.8244274809160306,
         "modelMean": 0.759430534351145,
         "baselineMean": 0.7595519083969465,
-        "modelMae": 0.7043251908396945,
-        "baselineMae": 0.7073946564885496,
-        "modelRmse": 0.8945772074002333,
-        "baselineRmse": 0.9157578724708657
+        "modelMae": 0.711958778625954,
+        "baselineMae": 0.7150282442748092,
+        "modelRmse": 0.8993498830049786,
+        "baselineRmse": 0.9214087911354435
       },
       "fp": {
-        "actualMean": 1.4068702290076336,
+        "actualMean": 1.4091603053435113,
         "modelMean": 1.4135343511450382,
         "baselineMean": 1.4265038167938933,
-        "modelMae": 0.9713969465648854,
-        "baselineMae": 1.0054198473282443,
-        "modelRmse": 1.3560481284665222,
-        "baselineRmse": 1.409854050158417
+        "modelMae": 0.9720229007633587,
+        "baselineMae": 1.0054045801526719,
+        "modelRmse": 1.3584862337647166,
+        "baselineRmse": 1.412632716186233
       }
     },
     "fpSpearman": {
-      "model": 0.2966419656885208,
-      "baseline": 0.2824554782302759
+      "model": 0.2960901608324799,
+      "baseline": 0.2804836446144462
     },
     "topPerformers": [
       {
@@ -539,7 +539,7 @@
         "usageCorrect": true,
         "probOnActualStarter": 0.72,
         "savesPred": 24.98,
-        "savesActual": 25.0,
+        "savesActual": 24.0,
         "gaPred": 2.8,
         "gaActual": 4.0,
         "winProb": 0.401,
@@ -587,7 +587,7 @@
         "usageCorrect": false,
         "probOnActualStarter": 0.434,
         "savesPred": 24.49,
-        "savesActual": 20.0,
+        "savesActual": 19.0,
         "gaPred": 2.76,
         "gaActual": 7.0,
         "winProb": 0.461,
