@@ -223,7 +223,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <ScoreStrip />
+        {pathname === '/' && <ScoreStrip />}
 
         {showBanner && (
           <div className="bb-connect" role="region" aria-label="Connect your league">
