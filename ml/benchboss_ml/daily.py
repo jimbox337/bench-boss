@@ -17,11 +17,13 @@ import argparse
 import datetime as dt
 import json
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
 
 from . import collect, collect_pbp, dataset, predict, score
+from .paths import PROCESSED_DIR, REPORTS_DIR
 from .predict import PREDICTIONS_DIR, fetch_schedule
 
 LOG_PATH = PREDICTIONS_DIR / "daily-log.jsonl"
@@ -66,15 +68,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--date", help="Local date to lock (default today)")
     parser.add_argument("--tag", default="daily")
     parser.add_argument("--skip-collect", action="store_true")
+    parser.add_argument("--no-pbp", action="store_true", help="Skip play-by-play shots (not used by the served model)")
     args = parser.parse_args(argv)
-    today = dt.date.fromisoformat(args.date) if args.date else dt.date.today()
+    # NHL game dates are local; use Eastern time so a UTC server picks the right day.
+    today = dt.date.fromisoformat(args.date) if args.date else dt.datetime.now(ZoneInfo("America/New_York")).date()
     yesterday = today - dt.timedelta(days=1)
     entry: dict = {"ranAt": dt.datetime.now(dt.timezone.utc).isoformat(), "date": today.isoformat()}
     if not args.skip_collect:
         season = current_season()
-        collect.collect([season])
+        seasons = [season]
+        if not (PROCESSED_DIR / "skater_games.parquet").exists():
+            # Fresh machine (e.g. a CI runner with an empty cache): collect every season the
+            # model was trained on. Incremental runs only touch the current season.
+            split = json.loads((REPORTS_DIR / "evaluation.json").read_text())["split"]
+            seasons = sorted(set(split["train"] + [split["validation"], split["test"], season]))
+            entry["bootstrap"] = seasons
+        collect.collect(seasons)
         dataset.build_all()
-        collect_pbp.main(["--seasons", season])
+        if not args.no_pbp:
+            collect_pbp.main(["--seasons", season])
         entry["collected"] = season
     entry["lock"] = lock_today(today.isoformat(), args.tag)
     entry["scoreYesterday"] = {"date": yesterday.isoformat(), **score_day(yesterday.isoformat())}
