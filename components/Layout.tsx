@@ -20,13 +20,15 @@ import {
   Swords,
   User,
   Zap,
+  Trophy,
 } from 'lucide-react';
 import BenchBossLogo from './BenchBossLogo';
 import { useData } from '@/lib/DataContext';
 
 const navItems = [
   { icon: BarChart3, name: 'Dashboard', path: '/' },
-  { icon: CalendarDays, name: 'Games', path: '/games' },
+  { icon: CalendarDays, name: 'Scoreboard', path: '/games' },
+  { icon: Trophy, name: 'NHL Teams', path: '/nhl-teams' },
   { icon: Shirt, name: 'My Team', path: '/myteam' },
   { icon: Zap, name: 'Lineup', path: '/lineup' },
   { icon: Swords, name: 'Start / Sit', path: '/startsit' },
@@ -225,7 +227,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <nav className="bb-nav flex-1 space-y-1 overflow-y-auto">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path;
+              const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(`${item.path}/`));
 
               return (
                 <Link
@@ -321,7 +323,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div ref={mobileNavRef} className="flex gap-1 overflow-x-auto">
           {visibleNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
+            const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(`${item.path}/`));
 
             return (
               <Link
