@@ -23,7 +23,7 @@ function GameCard({ game, starters, myPlayerTeams }: { game: ScoreboardGame; sta
     <article className="flex flex-col border-b border-r border-rule bg-paper-2 p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <StatusBadge game={game} />
-        {mine > 0 && <span className="rounded bg-selection px-2 py-0.5 text-xs font-semibold text-accent-2">{mine} of your players</span>}
+        {mine > 0 && <span className="rounded-full bg-selection px-2.5 py-0.5 text-xs font-semibold text-accent-2">{mine} of your players</span>}
       </div>
       <LineScore game={game} />
       <div className="mt-3 grid gap-1">

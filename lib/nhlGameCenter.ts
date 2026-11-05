@@ -4,6 +4,7 @@
  * can be unit tested; fetchers are thin and cached with Next's data cache.
  */
 import type { LeagueSettings } from './calculator';
+import { getStartingGoalies, type TeamStarter } from './goalieStarters';
 
 const NHL_WEB = 'https://api-web.nhle.com/v1';
 
@@ -198,6 +199,64 @@ export function goalieFantasyPoints(line: GoalieLine, settings: LeagueSettings):
 }
 
 // ------------------------------------------------------------------------------------
+// Play-by-play
+// ------------------------------------------------------------------------------------
+
+export type PlayKind = 'goal' | 'shot' | 'miss' | 'block' | 'hit' | 'penalty' | 'faceoff' | 'giveaway' | 'takeaway' | 'stoppage' | 'period';
+export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string };
+
+type RawPlay = {
+  eventId: number; sortOrder?: number; typeDescKey: string; timeInPeriod?: string;
+  periodDescriptor?: { number?: number; periodType?: string };
+  details?: Record<string, string | number | undefined>;
+};
+type RawRosterSpot = { teamId: number; playerId: number; firstName?: Localized; lastName?: Localized };
+
+const KIND: Record<string, PlayKind> = {
+  goal: 'goal', 'shot-on-goal': 'shot', 'missed-shot': 'miss', 'blocked-shot': 'block', hit: 'hit', penalty: 'penalty',
+  faceoff: 'faceoff', giveaway: 'giveaway', takeaway: 'takeaway', stoppage: 'stoppage', 'period-start': 'period', 'period-end': 'period',
+};
+const human = (value: unknown) => String(value || '').replace(/-/g, ' ');
+
+/** Turn the NHL play-by-play into readable events (oldest first). Unknown event types are skipped. */
+export function normalizePlayByPlay(payload: { plays?: RawPlay[]; rosterSpots?: RawRosterSpot[] } | null, teams: Record<number, string>): PlayEvent[] {
+  const names = new Map((payload?.rosterSpots || []).map(spot => [spot.playerId, `${text(spot.firstName).charAt(0)}. ${text(spot.lastName)}`.trim()]));
+  const who = (id: unknown) => (typeof id === 'number' ? names.get(id) || `#${id}` : 'Unknown');
+  const events: PlayEvent[] = [];
+  const plays = [...(payload?.plays || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  for (const play of plays) {
+    const kind = KIND[play.typeDescKey];
+    if (!kind) continue;
+    const d = play.details || {};
+    const period = periodLabel(play.periodDescriptor?.number, play.periodDescriptor?.periodType);
+    const team = typeof d.eventOwnerTeamId === 'number' ? teams[d.eventOwnerTeamId] : undefined;
+    const periodName = period === '1' ? '1st' : period === '2' ? '2nd' : period === '3' ? '3rd' : period;
+    let line = '';
+    let score: string | undefined;
+    switch (kind) {
+      case 'goal': {
+        const assists = [d.assist1PlayerId, d.assist2PlayerId].filter(id => typeof id === 'number').map(who);
+        line = `Goal: ${who(d.scoringPlayerId)}${d.scoringPlayerTotal ? ` (${d.scoringPlayerTotal})` : ''}${d.shotType ? `, ${human(d.shotType)}` : ''}. ${assists.length ? `Assists: ${assists.join(', ')}` : 'Unassisted'}`;
+        score = `${d.awayScore ?? 0}–${d.homeScore ?? 0}`;
+        break;
+      }
+      case 'shot': line = `${who(d.shootingPlayerId)} shot on goal${d.shotType ? ` (${human(d.shotType)})` : ''}, saved by ${who(d.goalieInNetId)}`; break;
+      case 'miss': line = `${who(d.shootingPlayerId)} missed${d.reason ? `: ${human(d.reason)}` : ''}`; break;
+      case 'block': line = `${who(d.blockingPlayerId)} blocked a shot by ${who(d.shootingPlayerId)}`; break;
+      case 'hit': line = `${who(d.hittingPlayerId)} hit ${who(d.hitteePlayerId)}`; break;
+      case 'penalty': line = `Penalty: ${typeof d.committedByPlayerId === 'number' ? who(d.committedByPlayerId) : 'bench'}, ${d.duration || 2} min for ${human(d.descKey)}${typeof d.drawnByPlayerId === 'number' ? `, drawn by ${who(d.drawnByPlayerId)}` : ''}`; break;
+      case 'faceoff': line = `${who(d.winningPlayerId)} won the faceoff against ${who(d.losingPlayerId)}`; break;
+      case 'giveaway': line = `Giveaway by ${who(d.playerId)}`; break;
+      case 'takeaway': line = `Takeaway by ${who(d.playerId)}`; break;
+      case 'stoppage': line = `Stoppage: ${human(d.reason) || 'play stopped'}`; break;
+      case 'period': line = play.typeDescKey === 'period-start' ? `Start of ${periodName}` : `End of ${periodName}`; break;
+    }
+    events.push({ id: play.eventId, period, time: play.timeInPeriod || '', kind, team, text: line, score });
+  }
+  return events;
+}
+
+// ------------------------------------------------------------------------------------
 // Game detail
 // ------------------------------------------------------------------------------------
 
@@ -213,6 +272,9 @@ export type GameDetail = {
   scratches: { away: string[]; home: string[] };
   coaches: { away?: string; home?: string };
   seasonSeries: { away: number; home: number };
+  records: { away?: { overall: string; split: string }; home?: { overall: string; split: string } };
+  plays: PlayEvent[];
+  starters?: { away: TeamStarter; home: TeamStarter };
   updatedAt: string;
 };
 
@@ -293,6 +355,8 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
     },
     coaches: { away: text(r.gameInfo?.awayTeam?.headCoach) || undefined, home: text(r.gameInfo?.homeTeam?.headCoach) || undefined },
     seasonSeries: { away: r.seasonSeriesWins?.awayTeamWins || 0, home: r.seasonSeriesWins?.homeTeamWins || 0 },
+    records: {},
+    plays: [],
     updatedAt: new Date().toISOString(),
   };
 }
@@ -304,12 +368,14 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
 export type StandingRow = {
   abbrev: string; name: string; logo?: string; conference: string; division: string; divisionRank: number;
   gp: number; w: number; l: number; otl: number; pts: number; pointPct: number; gf: number; ga: number; diff: number; l10: string; streak: string;
+  homeRecord: string; roadRecord: string;
 };
 
 type RawStanding = {
   teamAbbrev: Localized; teamCommonName?: Localized; teamName?: Localized; teamLogo?: string; conferenceName: string; divisionName: string; divisionSequence: number;
   gamesPlayed: number; wins: number; losses: number; otLosses: number; points: number; pointPctg: number; goalFor: number; goalAgainst: number; goalDifferential: number;
   l10Wins: number; l10Losses: number; l10OtLosses: number; streakCode?: string; streakCount?: number;
+  homeWins?: number; homeLosses?: number; homeOtLosses?: number; roadWins?: number; roadLosses?: number; roadOtLosses?: number;
 };
 
 export function normalizeStandings(rows: RawStanding[]): StandingRow[] {
@@ -319,6 +385,8 @@ export function normalizeStandings(rows: RawStanding[]): StandingRow[] {
     gp: row.gamesPlayed, w: row.wins, l: row.losses, otl: row.otLosses, pts: row.points, pointPct: row.pointPctg,
     gf: row.goalFor, ga: row.goalAgainst, diff: row.goalDifferential,
     l10: `${row.l10Wins}-${row.l10Losses}-${row.l10OtLosses}`, streak: row.streakCode ? `${row.streakCode}${row.streakCount || ''}` : '—',
+    homeRecord: `${row.homeWins ?? 0}-${row.homeLosses ?? 0}-${row.homeOtLosses ?? 0}`,
+    roadRecord: `${row.roadWins ?? 0}-${row.roadLosses ?? 0}-${row.roadOtLosses ?? 0}`,
   }));
 }
 
@@ -405,12 +473,37 @@ export async function fetchScoreboard(date?: string) {
 }
 
 export async function fetchGameDetail(gameId: number): Promise<GameDetail> {
-  const [landing, rail, box] = await Promise.all([
+  const [landing, rail, box, pbp, standings] = await Promise.all([
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/landing`, 15),
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/right-rail`, 15),
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/boxscore`, 15),
+    nhl<{ plays?: RawPlay[]; rosterSpots?: RawRosterSpot[] }>(`/gamecenter/${gameId}/play-by-play`, 15).catch(() => null),
+    fetchStandings().catch(() => [] as StandingRow[]),
   ]);
-  return buildGameDetail(landing, rail, box);
+  const detail = buildGameDetail(landing, rail, box);
+  const { game } = detail;
+  // The score feed reports intermissions and the clock consistently with the score strip.
+  if (game.isLive) {
+    const board = await fetchScoreboard(game.gameDate).catch(() => null);
+    const live = board?.games.find(g => g.id === game.id);
+    if (live) Object.assign(game, { state: live.state, isLive: live.isLive, isFinal: live.isFinal, period: live.period, periodType: live.periodType, clock: live.clock, inIntermission: live.inIntermission });
+  }
+  const teamIds: Record<number, string> = {};
+  if (game.away.id) teamIds[game.away.id] = game.away.abbrev;
+  if (game.home.id) teamIds[game.home.id] = game.home.abbrev;
+  detail.plays = normalizePlayByPlay(pbp, teamIds);
+  const row = (abbrev: string) => standings.find(s => s.abbrev === abbrev);
+  const away = row(game.away.abbrev);
+  const home = row(game.home.abbrev);
+  detail.records = {
+    away: away ? { overall: `${away.w}-${away.l}-${away.otl}`, split: `${away.roadRecord} away` } : undefined,
+    home: home ? { overall: `${home.w}-${home.l}-${home.otl}`, split: `${home.homeRecord} home` } : undefined,
+  };
+  try {
+    const [starters] = await getStartingGoalies([{ id: game.id, gameDate: game.gameDate, startTimeUTC: game.startTimeUTC, gameState: game.state, awayTeam: { abbrev: game.away.abbrev }, homeTeam: { abbrev: game.home.abbrev } }]);
+    detail.starters = { away: starters.away.starter, home: starters.home.starter };
+  } catch { /* Starters are optional on this page. */ }
+  return detail;
 }
 
 export async function fetchStandings(): Promise<StandingRow[]> {

@@ -46,7 +46,7 @@ export function periodName(number?: number, type?: string): string {
 export function StatusBadge({ game }: { game: ScoreboardGame }) {
   const tone = game.isLive ? 'bg-error text-on-brand' : game.isFinal ? 'bg-paper-3 text-ink-2' : 'bg-selection text-accent-2';
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-semibold ${tone}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone}`}>
       {game.isLive && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-on-brand motion-reduce:animate-none" aria-hidden />}
       {game.isLive ? 'LIVE · ' : ''}{gameStatusText(game)}
     </span>

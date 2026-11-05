@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LeagueSettings } from './calculator';
 import {
   attachRecords,
+  normalizePlayByPlay,
   deriveLineScore,
   goalieFantasyPoints,
   normalizeScoreGame,
@@ -104,9 +105,39 @@ describe('team schedule', () => {
 describe('attachRecords', () => {
   it('adds standings records to scoreboard teams', () => {
     const game = normalizeScoreGame({ id: 1, gameDate: '2026-11-04', startTimeUTC: '', gameState: 'FUT', awayTeam: { abbrev: 'OTT' }, homeTeam: { abbrev: 'BUF' } });
-    const row = { abbrev: 'OTT', name: 'Senators', conference: 'E', division: 'A', divisionRank: 1, gp: 16, w: 9, l: 6, otl: 1, pts: 19, pointPct: 0.6, gf: 1, ga: 1, diff: 0, l10: '', streak: '' };
+    const row = { abbrev: 'OTT', name: 'Senators', conference: 'E', division: 'A', divisionRank: 1, gp: 16, w: 9, l: 6, otl: 1, pts: 19, pointPct: 0.6, gf: 1, ga: 1, diff: 0, l10: '', streak: '', homeRecord: '4-2-0', roadRecord: '5-4-1' };
     const [result] = attachRecords([game], [row]);
     expect(result.away.record).toBe('9-6-1');
     expect(result.home.record).toBeUndefined();
+  });
+});
+
+describe('normalizePlayByPlay', () => {
+  const payload = {
+    rosterSpots: [
+      { teamId: 13, playerId: 1, firstName: { default: 'Sandis' }, lastName: { default: 'Vilmanis' } },
+      { teamId: 13, playerId: 2, firstName: { default: 'Sam' }, lastName: { default: 'Reinhart' } },
+      { teamId: 16, playerId: 3, firstName: { default: 'Spencer' }, lastName: { default: 'Knight' } },
+      { teamId: 16, playerId: 4, firstName: { default: 'Connor' }, lastName: { default: 'Bedard' } },
+    ],
+    plays: [
+      { eventId: 30, sortOrder: 9, typeDescKey: 'period-end', timeInPeriod: '20:00', periodDescriptor: { number: 1, periodType: 'REG' } },
+      { eventId: 172, sortOrder: 5, typeDescKey: 'goal', timeInPeriod: '04:43', periodDescriptor: { number: 1, periodType: 'REG' },
+        details: { eventOwnerTeamId: 13, scoringPlayerId: 1, scoringPlayerTotal: 2, assist1PlayerId: 2, shotType: 'wrist', goalieInNetId: 3, awayScore: 0, homeScore: 1 } },
+      { eventId: 275, sortOrder: 7, typeDescKey: 'penalty', timeInPeriod: '12:09', periodDescriptor: { number: 1, periodType: 'REG' },
+        details: { eventOwnerTeamId: 16, committedByPlayerId: 4, drawnByPlayerId: 2, descKey: 'tripping', duration: 2 } },
+      { eventId: 99, sortOrder: 6, typeDescKey: 'something-new', periodDescriptor: { number: 1 } },
+    ],
+  };
+  const events = normalizePlayByPlay(payload, { 13: 'FLA', 16: 'CHI' });
+
+  it('orders by sort order, resolves names and skips unknown events', () => {
+    expect(events.map(e => e.kind)).toEqual(['goal', 'penalty', 'period']);
+    expect(events[0]).toMatchObject({ team: 'FLA', score: '0–1', text: 'Goal: S. Vilmanis (2), wrist. Assists: S. Reinhart' });
+    expect(events[1].text).toBe('Penalty: C. Bedard, 2 min for tripping, drawn by S. Reinhart');
+    expect(events[2].text).toBe('End of 1st');
+  });
+  it('handles a missing feed', () => {
+    expect(normalizePlayByPlay(null, {})).toEqual([]);
   });
 });
