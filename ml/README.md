@@ -3,10 +3,11 @@
 An offline pipeline that collects free, public NHL game data, builds pre-game features,
 trains local LightGBM models, and compares them with the projection the app uses today.
 
-**Status: research only. Nothing here is wired into the Next.js app.** A model becomes
-a candidate for integration only after it passes the promotion gate (see below), and
-integration still needs a separate, explicit decision. The latest run did **not** pass:
-see [`reports/evaluation.md`](reports/evaluation.md).
+**Status: in the app (with fallback).** The latest model (`bench-boss-lgbm-20261105`) passed the
+promotion gate on the validation and the untouched test season, so its artifact ships in
+`lib/model/artifacts/` and the app serves its projections, labelled as model estimates. Any model
+error, timeout or an artifact that fails the gate falls back to the schedule-aware engine. See
+[`reports/evaluation.md`](reports/evaluation.md).
 
 ## Setup (project-local, never touches global Python)
 
@@ -80,16 +81,37 @@ On **both** validation and test, the combined weekly fantasy-point projection mu
 1. beat the production baseline on weekly MAE **and** RMSE, and
 2. not lose more than 0.005 in start/sit accuracy or top-50 precision.
 
-### What we learned (2026-11-04 run)
+### Results (`bench-boss-lgbm-20261105`, 12 seasons)
 
-- The direct models beat the baseline on every per-game metric, but lose on weekly fantasy points. They shrink each player toward similar players. That helps on single games, but it adds a per-player bias that repeats in every game of a week.
-- The residual approach fixes most of this: weekly MAE −0.7% on validation and test, −1.1% live. But it still loses top-50 precision, has a small negative bias (−0.13 to −0.18 FP/week), and is worse on test RMSE.
-- **Gate result: not eligible.** Weekly fantasy points are right-skewed, and shrinking high scorers can lower MAE without better decisions.
-- Goalie models clearly beat the simple usage baseline on start probability, saves, GA and wins. The shutout model is close to the league rate.
+| Weekly fantasy points, 2025-26 test | Production baseline | Bench Boss model |
+|---|---|---|
+| MAE | 1.604 | **1.579** (−1.5%) |
+| RMSE | 2.170 | **2.129** (−1.9%) |
+| Rank correlation | 0.704 | **0.712** |
+| Top-50 precision | 0.459 | **0.463** |
+| Start/sit accuracy | 0.759 | **0.762** |
+
+- **What helps:** empirical-Bayes shrinkage of player rates toward last season and ice time, plus small context multipliers (opponent, rest, usage) for shots, PP points and hits. The final projection is a 50/50 blend with the production baseline. That weight was chosen on validation start/sit accuracy and top-50 precision.
+- **Goalie starts:** the model picks the actual starter 73–76% of the time, versus 59–62% for recent usage. That's after adding the rotation features (back-to-back after starting, streaks, rough last start, workload rank).
+- **Expected goals:** the xG model is good on its own (test AUC 0.737 vs 0.695 for distance only). Its player features barely move weekly fantasy accuracy (test MAE 1.577 vs 1.579), and serving them would need per-game play-by-play, so xG stays offline.
+- **Availability:** P(dress) has validation log loss 0.209, versus 0.483 for recent play share. It weights each game in the app's weekly projection.
+- **First live night (2026-11-04, locked before puck drop):**
+  - Skater fantasy-point MAE: 0.972 for v2, versus 1.006 for the baseline.
+  - Starting goalies: 1 of 8 correct, before the rotation features existed.
+
+## Daily track record
+
+`python -m benchboss_ml.daily` collects the current season, locks today's games before puck drop, and scores yesterday's. Each run appends a line to `predictions/daily-log.jsonl`.
+
+It runs every day at 15:00 UTC (10:00 ET) on GitHub Actions (`.github/workflows/daily-predictions.yml`). The NHL dataset is cached between runs, and the first run collects every training season once.
+
+Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` `ignoreCommand`).
+
+`scripts/com.benchboss.daily.plist` is an optional local launchd job for the same thing.
 
 ## Limitations
 
-- Evaluation only covers games actually played; scratches and injuries (games-count risk) are not scored.
+- The weekly skater tables cover games actually played. Missed games are scored separately in the availability section.
 - There is no injury, line-combination or confirmed-starter data; the public endpoints don't provide it reliably.
 - Only four completed seasons are used, and 2022-23 has no previous-season features.
 - Intervals ignore covariance between stats.
