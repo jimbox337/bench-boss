@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
 import NoTeamDashboard from '@/components/NoTeamDashboard';
 import FeaturedGame from '@/components/gamecenter/FeaturedGame';
+import { PlayerLink } from '@/components/player/PlayerCardProvider';
 import {
   Activity,
   BarChart3,
@@ -359,7 +360,7 @@ export default function Dashboard() {
                   <tbody className="divide-y divide-rule">
                     {myTeam.slice(0, 10).map((player) => (
                       <tr key={player.id}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-ink">{player.name}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-ink"><PlayerLink id={player.id} className="bb-player-link">{player.name}</PlayerLink></td>
                         <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold tabular-nums text-accent">{player.seasonStats?.PTS || 0}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.nhlTeam}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.positions?.join('/') ?? ''}</td>

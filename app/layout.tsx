@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Saira } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/Layout";
 import { DataProvider } from "@/lib/DataContext";
 import { AuthProvider } from "@/lib/AuthContext";
+import { PlayerCardProvider } from "@/components/player/PlayerCardProvider";
 
-// One grotesque family: Archivo for text, and its wide cut (font-stretch) for headings and scores.
-const archivo = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-app" });
+// Saira: squared, jersey-number shapes. Normal width for text; its extended cut (font-stretch)
+// for headings and scores, like arena boards and broadcast score bugs.
+const saira = Saira({ subsets: ["latin"], axes: ["wdth"], style: ["normal", "italic"], variable: "--font-app" });
 
 export const viewport: Viewport = { themeColor: "#0d121b", colorScheme: "dark" };
 
@@ -21,11 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={archivo.variable}>
+    <html lang="en" className={`dark ${saira.variable}`}>
+      <body>
         <AuthProvider>
           <DataProvider>
-            <Layout>{children}</Layout>
+            <PlayerCardProvider>
+              <Layout>{children}</Layout>
+            </PlayerCardProvider>
           </DataProvider>
         </AuthProvider>
       </body>

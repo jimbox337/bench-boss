@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
-  BarChart3, CalendarDays, ChevronDown, Home, LifeBuoy, LogOut, Plus, RefreshCw, Search, ShieldCheck,
-  ClipboardList, Shirt, Trophy, User, Wrench, X, Zap,
+  BarChart3, CalendarDays, ChevronDown, Home, LifeBuoy, LogOut, Plus, RefreshCw, ShieldCheck,
+  Shirt, Trophy, User, Wrench, X, Zap,
 } from 'lucide-react';
 import { signOut, useSession } from '@/lib/AuthContext';
 import { useData } from '@/lib/DataContext';
 import BenchBossLogo from './BenchBossLogo';
 import ScoreStrip from './shell/ScoreStrip';
 import AlertsMenu from './shell/AlertsMenu';
-import CommandSearch, { useSearchShortcut } from './shell/CommandSearch';
+import SearchBar from './shell/CommandSearch';
 
 const TOOL_PATHS = ['/startsit', '/trades', '/waivers'];
 
@@ -63,13 +63,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [teamPlatform, setTeamPlatform] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const bannerDismissed = useSyncExternalStore(subscribeStorage, readBannerDismissed, () => true);
 
-  const openSearch = useCallback(() => setSearchOpen(true), []);
-  useSearchShortcut(openSearch);
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session;
@@ -174,14 +171,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <div className="bb-app-body">
         <header className="bb-bar">
           <Link href="/" className="bb-bar-logo" aria-label="Bench Boss home"><BenchBossLogo size={34} /></Link>
-          <Link href="/players" className="bb-coach" title="AI player outlooks built from verified NHL data">
-            <ClipboardList className="h-4 w-4" aria-hidden /><span>Coach</span>
-          </Link>
-          <button type="button" className="bb-search-trigger" onClick={openSearch} aria-label="Search players, teams and tools">
-            <span className="bb-search-trigger-text">Search players, teams and tools</span>
-            <kbd className="bb-kbd">⌘K</kbd>
-            <span className="bb-search-go" aria-hidden><Search className="h-[18px] w-[18px]" /></span>
-          </button>
+          <SearchBar />
           <div className="bb-bar-actions">
             {espnConfig && (
               <button type="button" onClick={handleSync} disabled={isSyncing} className="bb-sync" data-status={syncStatus}>
@@ -258,7 +248,6 @@ export default function Layout({ children }: { children: ReactNode }) {
         })}
       </nav>
 
-      {searchOpen && <CommandSearch onClose={() => setSearchOpen(false)} />}
     </div>
   );
 }
