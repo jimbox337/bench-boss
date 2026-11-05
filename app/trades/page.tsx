@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { Scale, X } from 'lucide-react';
-import { analyzeTrade, defaultLeagueSettings } from '@/lib/calculator';
+import { analyzeTrade } from '@/lib/calculator';
+import { pointsScoring } from '@/components/gamecenter/shared';
 import { useData } from '@/lib/DataContext';
 
 export default function TradeAnalyzer() {
-  const { players, projections, myTeam } = useData();
+  const { players, projections, myTeam, leagueSettings } = useData();
+  const scoring = pointsScoring(leagueSettings);
   const outgoingPlayers = myTeam.length ? myTeam : players;
   const [playersOut, setPlayersOut] = useState<string[]>([myTeam[2]?.id || '']);
   const [playersIn, setPlayersIn] = useState<string[]>([myTeam[0]?.id || '']);
@@ -19,7 +21,7 @@ export default function TradeAnalyzer() {
   const playersOutObjs = playersOut.map(id => players.find(p => p.id === id)!).filter(Boolean);
   const playersInObjs = playersIn.map(id => players.find(p => p.id === id)!).filter(Boolean);
 
-  const analysis = analyzeTrade(playersOutObjs, playersInObjs, projections, defaultLeagueSettings);
+  const analysis = analyzeTrade(playersOutObjs, playersInObjs, projections, scoring.settings);
 
   return (
     <>
