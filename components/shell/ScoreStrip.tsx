@@ -2,12 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useData } from '@/lib/DataContext';
 import type { ScoreboardGame } from '@/lib/nhlGameCenter';
-import { TeamLogo, gameStatusText } from '@/components/gamecenter/shared';
+import { teamColor } from '@/lib/teamColors';
+import { TeamLogo } from '@/components/gamecenter/shared';
 
-/** Live NHL score strip shown under the top bar on every page. */
+function cardStatus(game: ScoreboardGame): string {
+  const period = game.periodType === 'SO' ? 'SO' : game.periodType === 'OT' ? 'OT' : ['1ST', '2ND', '3RD'][(game.period || 1) - 1] || `P${game.period}`;
+  if (game.isLive) return game.inIntermission ? `END ${period}` : `${period} ${game.clock || ''}`.trim();
+  if (game.isFinal) return game.periodType && game.periodType !== 'REG' ? `FINAL/${game.periodType}` : 'FINAL';
+  return new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase();
+}
+
+/** Live NHL score cards shown under the top bar on every page. */
 export default function ScoreStrip() {
   const { myTeam } = useData();
   const [games, setGames] = useState<ScoreboardGame[] | null>(null);
@@ -25,46 +33,49 @@ export default function ScoreStrip() {
   }, [live]);
 
   const myTeams = useMemo(() => new Set(myTeam.map(player => player.nhlTeam)), [myTeam]);
-  const scroll = (direction: 1 | -1) => railRef.current?.scrollBy({ left: direction * 480, behavior: 'smooth' });
+  const scroll = (direction: 1) => railRef.current?.scrollBy({ left: direction * 520, behavior: 'smooth' });
 
   if (games && games.length === 0) return null;
 
   return (
     <div className="bb-strip" aria-label="Today's NHL scores">
-      <Link href="/games" className="bb-strip-label">
-        <span className="bb-strip-label-title">NHL</span>
-        <span className="bb-strip-label-link">All scores</span>
-      </Link>
-      <button type="button" className="bb-strip-arrow" onClick={() => scroll(-1)} aria-label="Scroll scores left"><ChevronLeft className="h-4 w-4" /></button>
-      <div ref={railRef} className="bb-strip-rail">
-        {!games && Array.from({ length: 5 }, (_, i) => <span key={i} className="bb-chip bb-chip-skeleton" aria-hidden />)}
-        {games?.map(game => {
-          const started = game.isLive || game.isFinal;
-          const mine = myTeams.has(game.away.abbrev) || myTeams.has(game.home.abbrev);
-          const label = `${game.away.abbrev} ${started ? game.away.score : ''} at ${game.home.abbrev} ${started ? game.home.score : ''}, ${gameStatusText(game)}${mine ? ', has your players' : ''}`;
-          return (
-            <Link key={game.id} href={`/games/${game.id}`} className="bb-chip" data-live={game.isLive || undefined} data-mine={mine || undefined} aria-label={label}>
-              <span className="bb-chip-meta">
-                <span className={game.isLive ? 'bb-chip-live' : ''}>{game.isLive && <span className="bb-live-dot" aria-hidden />}{gameStatusText(game)}</span>
-                <span className="bb-chip-network">{mine ? <span className="bb-chip-mine">Yours</span> : game.broadcasts[0]}</span>
-              </span>
-              {(['away', 'home'] as const).map(side => {
-                const team = game[side];
-                const other = game[side === 'away' ? 'home' : 'away'];
-                const winning = game.isFinal && (team.score ?? 0) > (other.score ?? 0);
-                return (
-                  <span key={side} className="bb-chip-team" data-winner={winning || undefined}>
-                    <TeamLogo team={team} size={18} />
-                    <span className="bb-chip-abbrev">{team.abbrev}</span>
-                    <span className="bb-chip-value">{started ? team.score ?? 0 : team.record || ''}</span>
-                  </span>
-                );
-              })}
-            </Link>
-          );
-        })}
+      <div className="bb-strip-head">
+        <span className="bb-strip-title">NHL scores</span>
+        <Link href="/games" className="bb-strip-all">All scores</Link>
       </div>
-      <button type="button" className="bb-strip-arrow" onClick={() => scroll(1)} aria-label="Scroll scores right"><ChevronRight className="h-4 w-4" /></button>
+      <div className="bb-strip-viewport">
+        <div ref={railRef} className="bb-strip-rail">
+          {!games && Array.from({ length: 6 }, (_, i) => <span key={i} className="bb-card bb-card-skeleton" aria-hidden />)}
+          {games?.map(game => {
+            const started = game.isLive || game.isFinal;
+            const mine = myTeams.has(game.away.abbrev) || myTeams.has(game.home.abbrev);
+            const label = `${game.away.abbrev} ${started ? game.away.score : ''} at ${game.home.abbrev} ${started ? game.home.score : ''}, ${cardStatus(game)}${mine ? ', has your players' : ''}`;
+            const winner = game.isFinal ? ((game.away.score ?? 0) > (game.home.score ?? 0) ? 'away' : 'home') : null;
+            return (
+              <Link key={game.id} href={`/games/${game.id}`} className="bb-card" aria-label={label}>
+                <span className="bb-card-bar" aria-hidden>
+                  <span style={{ background: teamColor(game.away.abbrev) }} />
+                  <span style={{ background: teamColor(game.home.abbrev) }} />
+                </span>
+                <span className="bb-card-meta">
+                  <span className={game.isLive ? 'bb-card-live' : ''}>{cardStatus(game)}</span>
+                  <span className="bb-card-network">{mine ? <span className="bb-card-mine">Your players</span> : game.broadcasts[0]?.toUpperCase()}</span>
+                </span>
+                <span className="bb-card-scores">
+                  {(['away', 'home'] as const).map(side => (
+                    <span key={side} className={`bb-card-side bb-card-${side}`} data-dim={winner && winner !== side ? true : undefined}>
+                      <TeamLogo team={game[side]} size={34} />
+                      {started ? <span className="bb-card-score">{game[side].score ?? 0}</span> : <span className="bb-card-record">{game[side].record}</span>}
+                    </span>
+                  ))}
+                </span>
+                <span className="bb-card-abbrevs"><span>{game.away.abbrev}</span><span>{game.home.abbrev}</span></span>
+              </Link>
+            );
+          })}
+        </div>
+        <button type="button" className="bb-strip-arrow bb-strip-arrow-right" onClick={() => scroll(1)} aria-label="Scroll scores right"><ChevronRight className="h-5 w-5" /></button>
+      </div>
     </div>
   );
 }

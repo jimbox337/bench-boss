@@ -178,9 +178,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             <ClipboardList className="h-4 w-4" aria-hidden /><span>Coach</span>
           </Link>
           <button type="button" className="bb-search-trigger" onClick={openSearch} aria-label="Search players, teams and tools">
-            <Search className="h-4 w-4" aria-hidden />
             <span className="bb-search-trigger-text">Search players, teams and tools</span>
             <kbd className="bb-kbd">⌘K</kbd>
+            <span className="bb-search-go" aria-hidden><Search className="h-[18px] w-[18px]" /></span>
           </button>
           <div className="bb-bar-actions">
             {espnConfig && (

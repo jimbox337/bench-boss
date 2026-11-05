@@ -3,164 +3,296 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, MapPin, Tv } from 'lucide-react';
 import { useData } from '@/lib/DataContext';
 import type { LeagueSettings } from '@/lib/calculator';
-import type { TeamStarter } from '@/lib/goalieStarters';
 import {
-  goalieFantasyPoints, skaterFantasyPoints, type GameDetail, type GoalieLine, type PlayEvent, type PlayKind, type SkaterLine,
+  goalieFantasyPoints, skaterFantasyPoints, type GameDetail, type GoalieLine, type PlayEvent, type SkaterLine, type TeamScheduleGame,
 } from '@/lib/nhlGameCenter';
-import { StarterLine, StatusBadge, TeamLink, TeamLogo, gameStatusText, pointsScoring } from '@/components/gamecenter/shared';
+import { teamColor } from '@/lib/teamColors';
+import { StarterLine, TeamLink, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
+import ShotChart from '@/components/gamecenter/ShotChart';
+
+const TABS = ['Game', 'Box score', 'Plays', 'Team stats'] as const;
+type Tab = (typeof TABS)[number];
+type Side = 'away' | 'home';
 
 const PERIOD_TEXT: Record<string, string> = { '1': '1st', '2': '2nd', '3': '3rd' };
 const periodText = (p: string) => PERIOD_TEXT[p] || p;
-
 const STAT_LABELS: Record<string, string> = {
   sog: 'Shots on goal', faceoffWinningPctg: 'Faceoff %', powerPlay: 'Power play', pim: 'Penalty minutes',
   hits: 'Hits', blockedShots: 'Blocked shots', giveaways: 'Giveaways', takeaways: 'Takeaways',
 };
 
-const FILTERS: { name: string; kinds: PlayKind[] | null }[] = [
-  { name: 'All plays', kinds: null },
-  { name: 'Goals and penalties', kinds: ['goal', 'penalty', 'period'] },
-  { name: 'Shots', kinds: ['goal', 'shot', 'miss', 'block'] },
-  { name: 'Hits', kinds: ['hit'] },
-];
-
-function formatStat(category: string, value: string | number) {
-  if (typeof value === 'number' && category.toLowerCase().includes('pctg')) return `${Math.round(value * 100)}%`;
-  return String(value);
+function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return <div className="mb-3 flex items-center justify-between gap-3 border-b border-rule pb-2"><h2 className="bb-section-title">{children}</h2>{action}</div>;
 }
 
-function StatBar({ label, away, home, awayValue, homeValue }: { label: string; away: string; home: string; awayValue: number; homeValue: number }) {
-  const total = awayValue + homeValue;
-  const awayShare = total > 0 ? (awayValue / total) * 100 : 50;
+function splitName(name: string): [string, string] {
+  const parts = name.trim().split(' ');
+  return parts.length > 1 ? [parts.slice(0, -1).join(' '), parts.at(-1)!] : ['', name];
+}
+
+/* ---------------------------------------------------------------- Plays */
+
+function PlayRow({ play }: { play: PlayEvent }) {
+  const teamPlay = !!play.team && play.kind !== 'stoppage' && play.kind !== 'period';
+  if (!teamPlay) return <li className="py-2 pl-5 text-sm text-ink-2">{play.text}</li>;
   return (
-    <div className="py-2">
-      <div className="mb-1 flex justify-between text-sm tabular-nums"><span className="font-semibold">{away}</span><span className="text-muted">{label}</span><span className="font-semibold">{home}</span></div>
-      <div className="flex h-2 gap-1 overflow-hidden" aria-hidden><span className="rounded-full bg-accent" style={{ width: `${awayShare}%` }} /><span className="flex-1 rounded-full bg-brand-navy" /></div>
-    </div>
+    <li className="flex gap-3 py-2" style={{ boxShadow: `inset 3px 0 0 ${teamColor(play.team)}` }}>
+      <span className="pl-4"><TeamLogo team={{ abbrev: play.team! }} size={26} /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-display text-base font-bold tabular-nums">{play.time}</span>
+        <span className={`block text-sm ${play.kind === 'goal' ? 'font-semibold text-ink' : 'text-ink-2'}`}>{play.text}</span>
+      </span>
+      {play.score && <span className="mr-2 self-center rounded-md bg-ink px-2 py-0.5 font-display text-sm font-bold text-on-brand tabular-nums">{play.score}</span>}
+    </li>
   );
 }
 
-function Panel({ title, children, action, className = '' }: { title: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
+function PlaysTab({ plays }: { plays: PlayEvent[] }) {
+  const [scoringOnly, setScoringOnly] = useState(false);
+  const [closed, setClosed] = useState<Record<string, boolean>>({});
+  const list = plays.filter(p => !scoringOnly || p.kind === 'goal' || p.kind === 'penalty');
+  const periods = [...new Set(list.map(p => p.period))].reverse();
   return (
-    <section className={`fantasy-card overflow-hidden ${className}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-3"><h2 className="text-base">{title}</h2>{action}</div>
-      {children}
+    <section>
+      <SectionTitle>Plays</SectionTitle>
+      <div className="mb-4 flex gap-2">
+        {[['All plays', false], ['Scoring and penalties', true]].map(([label, value]) => (
+          <button key={String(label)} type="button" onClick={() => setScoringOnly(value as boolean)} aria-pressed={scoringOnly === value}
+            className={`h-9 rounded-full border px-4 text-sm font-semibold ${scoringOnly === value ? 'border-accent bg-selection text-accent' : 'border-rule text-ink-2 hover:border-field-border'}`}>{label as string}</button>
+        ))}
+      </div>
+      {periods.length === 0 && <p className="text-sm text-muted">Plays appear after puck drop.</p>}
+      {periods.map(period => (
+        <div key={period} className="border-b border-rule">
+          <button type="button" onClick={() => setClosed(c => ({ ...c, [period]: !c[period] }))} aria-expanded={!closed[period]} className="flex w-full items-center gap-3 py-3">
+            <ChevronDown className={`h-5 w-5 transition-transform ${closed[period] ? '-rotate-90' : ''}`} aria-hidden />
+            <span className="bb-section-title">{period === 'SO' ? 'Shootout' : `${periodText(period)} period`}</span>
+          </button>
+          {!closed[period] && <ol className="pb-3">{list.filter(p => p.period === period).reverse().map(p => <PlayRow key={p.id} play={p} />)}</ol>}
+        </div>
+      ))}
     </section>
   );
 }
 
-/** Compact per-team box ("On the ice"): skaters by fantasy points, then goalies. */
-function TeamBox({ team, abbrev, skaters, goalies, settings, mine }: { team: string; abbrev: string; skaters: SkaterLine[]; goalies: GoalieLine[]; settings: LeagueSettings; mine: Set<string> }) {
-  const [all, setAll] = useState(false);
-  const rows = [...skaters].sort((a, b) => (skaterFantasyPoints(b, settings) ?? 0) - (skaterFantasyPoints(a, settings) ?? 0) || b.toi.localeCompare(a.toi));
-  const shown = all ? rows : rows.slice(0, 6);
-  const playedGoalies = goalies.filter(g => g.toi !== '00:00' || g.shotsAgainst > 0);
+/* ---------------------------------------------------------------- Box score */
+
+function BoxTable({ title, abbrev, rows, settings, mine }: { title: string; abbrev: string; rows: SkaterLine[]; settings: LeagueSettings; mine: Set<string> }) {
+  const sorted = [...rows].sort((a, b) => b.toi.localeCompare(a.toi, undefined, { numeric: true }));
   return (
-    <div className="border-b border-rule last:border-b-0">
-      <h3 className="flex items-center gap-2 px-4 pb-1 pt-3 text-sm font-semibold"><TeamLogo team={{ abbrev }} size={20} />{team}</h3>
-      <table className="w-full text-[13px] tabular-nums">
-        <thead><tr className="text-[11px] text-muted"><th className="px-4 py-1 text-left font-medium">Skater</th>{['G', 'A', 'SOG', 'FPTS'].map(h => <th key={h} className="px-1.5 py-1 text-right font-medium last:pr-4">{h}</th>)}</tr></thead>
-        <tbody>{shown.map(row => (
-          <tr key={row.playerId} className={`border-t border-rule-2 ${mine.has(String(row.playerId)) ? 'bg-selection' : ''}`}>
-            <td className="max-w-0 truncate px-4 py-1.5"><span className="font-medium">{row.name}</span> <span className="text-[11px] text-muted">{row.position}</span></td>
-            <td className="px-1.5 text-right">{row.goals}</td><td className="px-1.5 text-right">{row.assists}</td><td className="px-1.5 text-right">{row.sog}</td>
-            <td className="px-1.5 pr-4 text-right font-semibold">{skaterFantasyPoints(row, settings)?.toFixed(1)}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-      {rows.length > 6 && <button type="button" className="w-full px-4 py-2 text-left text-xs font-semibold text-accent hover:underline" onClick={() => setAll(v => !v)}>{all ? 'Show top 6' : `Show all ${rows.length} skaters`}</button>}
-      {playedGoalies.length > 0 && (
-        <table className="w-full text-[13px] tabular-nums">
-          <thead><tr className="text-[11px] text-muted"><th className="px-4 py-1 text-left font-medium">Goalie</th>{['SA', 'GA', 'SV%', 'FPTS'].map(h => <th key={h} className="px-1.5 py-1 text-right font-medium last:pr-4">{h}</th>)}</tr></thead>
-          <tbody>{playedGoalies.map(g => (
-            <tr key={g.playerId} className="border-t border-rule-2">
-              <td className="px-4 py-1.5 font-medium">{g.name}{g.decision ? <span className="ml-1 text-[11px] text-muted">{g.decision}</span> : null}</td>
-              <td className="px-1.5 text-right">{g.shotsAgainst}</td><td className="px-1.5 text-right">{g.goalsAgainst}</td>
-              <td className="px-1.5 text-right">{g.savePct !== undefined ? g.savePct.toFixed(3).replace(/^0/, '') : '–'}</td>
-              <td className="px-1.5 pr-4 text-right font-semibold">{goalieFantasyPoints(g, settings)?.toFixed(1)}</td>
+    <div className="mb-6">
+      <h3 className="mb-2 flex items-center gap-2 bb-section-title"><TeamLogo team={{ abbrev }} size={24} />{title}</h3>
+      <div className="overflow-x-auto rounded-xl border border-rule">
+        <table className="bb-box w-full min-w-[760px]">
+          <thead><tr><th className="text-left">Player</th>{['G', 'A', 'Pts', '+/-', 'PIM', 'TOI', 'SOG', 'Blk', 'Hits', 'PPP', 'FPTS'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+          <tbody>{sorted.map(row => (
+            <tr key={row.playerId} data-mine={mine.has(String(row.playerId)) || undefined}>
+              <td className="text-left"><span className="flex justify-between gap-3"><span className="font-medium">{row.name}</span><span className="text-muted">{row.position === 'L' ? 'LW' : row.position === 'R' ? 'RW' : row.position}</span></span></td>
+              {[row.goals, row.assists, row.points, row.plusMinus, row.pim, row.toi, row.sog, row.blocks, row.hits, row.ppPoints].map((v, i) => <td key={i}>{v}</td>)}
+              <td className="font-bold">{skaterFantasyPoints(row, settings)?.toFixed(1)}</td>
             </tr>
           ))}</tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }
 
-function PlayFeed({ plays, started }: { plays: PlayEvent[]; started: boolean }) {
-  const [filter, setFilter] = useState(0);
-  const [limit, setLimit] = useState(40);
-  const kinds = FILTERS[filter].kinds;
-  const visible = plays.filter(p => !kinds || kinds.includes(p.kind)).reverse();
-  const shown = visible.slice(0, limit);
+function GoalieTable({ abbrev, rows, settings }: { abbrev: string; rows: GoalieLine[]; settings: LeagueSettings }) {
   return (
-    <Panel title="Play-by-play" action={<span className="text-xs text-muted">{plays.length} events</span>}>
-      <div className="flex gap-1.5 overflow-x-auto border-b border-rule-2 px-4 py-2" role="group" aria-label="Filter plays">
-        {FILTERS.map((f, i) => (
-          <button key={f.name} type="button" onClick={() => { setFilter(i); setLimit(40); }} aria-pressed={filter === i}
-            className={`h-8 whitespace-nowrap rounded-full px-3.5 text-xs font-semibold ${filter === i ? 'bg-ink text-on-brand' : 'border border-rule text-ink-2 hover:border-field-border'}`}>{f.name}</button>
+    <div className="mb-6">
+      <h3 className="mb-2 flex items-center gap-2 bb-section-title"><TeamLogo team={{ abbrev }} size={24} />Goaltenders</h3>
+      <div className="overflow-x-auto rounded-xl border border-rule">
+        <table className="bb-box w-full min-w-[560px]">
+          <thead><tr><th className="text-left">Player</th>{['Dec', 'GA', 'SA', 'SV', 'SV%', 'TOI', 'FPTS'].map(h => <th key={h}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map(g => (
+            <tr key={g.playerId}>
+              <td className="text-left font-medium">{g.name}</td><td>{g.decision || '–'}</td><td>{g.goalsAgainst}</td><td>{g.shotsAgainst}</td><td>{g.saves}</td>
+              <td>{g.savePct !== undefined ? g.savePct.toFixed(3).replace(/^0/, '') : '–'}</td><td>{g.toi}</td><td className="font-bold">{goalieFantasyPoints(g, settings)?.toFixed(1)}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function BoxScoreTab({ detail, settings, label, mine }: { detail: GameDetail; settings: LeagueSettings; label: string; mine: Set<string> }) {
+  const [side, setSide] = useState<Side>('away');
+  const team = detail.game[side];
+  const skaters = detail.skaters.filter(r => r.team === team.abbrev);
+  return (
+    <section>
+      <SectionTitle>Player stats</SectionTitle>
+      <div className="mx-auto mb-6 flex max-w-xl rounded-full border border-rule bg-paper-3 p-1" role="tablist" aria-label="Team">
+        {(['away', 'home'] as const).map(s => (
+          <button key={s} type="button" role="tab" aria-selected={side === s} onClick={() => setSide(s)}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2 text-sm font-semibold ${side === s ? 'bg-paper-2 text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
+            <TeamLogo team={detail.game[s]} size={22} />{detail.game[s].name}
+          </button>
         ))}
       </div>
-      {!started ? <p className="p-4 text-sm text-muted">Play-by-play starts at puck drop.</p> : shown.length === 0 ? <p className="p-4 text-sm text-muted">No plays of this type yet.</p> : (
-        <ol>{shown.map((play, i) => {
-          const header = i === 0 || shown[i - 1].period !== play.period;
-          return (
-            <li key={play.id}>
-              {header && <p className="bg-paper-3 px-4 py-1.5 text-xs font-semibold text-ink-2">{play.period === 'SO' ? 'Shootout' : `${periodText(play.period)} period`}</p>}
-              <div className={`flex items-start gap-3 border-t border-rule-2 px-4 py-2 text-sm ${play.kind === 'goal' ? 'bg-selection' : ''}`}>
-                <span className="w-11 shrink-0 pt-px text-xs text-muted tabular-nums">{play.time}</span>
-                {play.team ? <TeamLogo team={{ abbrev: play.team }} size={18} /> : <span className="w-[18px] shrink-0" />}
-                <span className={`flex-1 ${play.kind === 'goal' || play.kind === 'penalty' ? 'font-semibold text-ink' : play.kind === 'period' ? 'font-semibold text-ink-2' : 'text-ink-2'}`}>{play.text}</span>
-                {play.score && <span className="shrink-0 rounded-md bg-ink px-2 py-0.5 font-display text-sm font-bold text-on-brand tabular-nums">{play.score}</span>}
-              </div>
-            </li>
-          );
-        })}</ol>
-      )}
-      {visible.length > limit && <button type="button" onClick={() => setLimit(l => l + 60)} className="w-full border-t border-rule-2 px-4 py-2.5 text-sm font-semibold text-accent hover:bg-paper">Show earlier plays</button>}
-    </Panel>
+      {skaters.length === 0 ? <p className="text-sm text-muted">Player stats appear after puck drop.</p> : <>
+        <BoxTable title="Forwards" abbrev={team.abbrev} rows={skaters.filter(r => r.position !== 'D')} settings={settings} mine={mine} />
+        <BoxTable title="Defense" abbrev={team.abbrev} rows={skaters.filter(r => r.position === 'D')} settings={settings} mine={mine} />
+        <GoalieTable abbrev={team.abbrev} rows={detail.goalies.filter(g => g.team === team.abbrev)} settings={settings} />
+        <p className="text-sm"><span className="font-bold">Scratches</span><br /><span className="text-ink-2">{detail.scratches[side].join(', ') || 'Not posted'}</span></p>
+      </>}
+      <p className="mt-4 text-xs text-muted">FPTS uses {label}. PPP from the scoring summary.</p>
+    </section>
   );
 }
 
-function FullBox({ rows, goalies, settings, mine }: { rows: SkaterLine[]; goalies: GoalieLine[]; settings: LeagueSettings; mine: Set<string> }) {
-  const sorted = [...rows].sort((a, b) => (skaterFantasyPoints(b, settings) ?? 0) - (skaterFantasyPoints(a, settings) ?? 0));
+/* ---------------------------------------------------------------- Game tab */
+
+function LeaderCard({ label, away, home, game }: { label: string; away: { name: string; value: string } | null; home: { name: string; value: string } | null; game: GameDetail['game'] }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="bb-table w-full min-w-[720px] text-sm tabular-nums">
-        <thead><tr className="text-xs text-muted">
-          <th className="sticky left-0 bg-paper-2 px-4 py-2 text-left">Skater</th>
-          {['FPTS', 'G', 'A', 'PTS', '+/-', 'SOG', 'HIT', 'BLK', 'PPP', 'PIM', 'TOI'].map(h => <th key={h} className="px-2 py-2 text-right">{h}</th>)}
-        </tr></thead>
-        <tbody>{sorted.map(row => (
-          <tr key={row.playerId} className={`border-t border-rule-2 ${mine.has(String(row.playerId)) ? 'bg-selection' : ''}`}>
-            <td className="sticky left-0 bg-inherit px-4 py-1.5"><span className="font-medium">{row.name}</span> <span className="text-xs text-muted">{row.position}</span></td>
-            <td className="px-2 text-right font-semibold">{skaterFantasyPoints(row, settings)?.toFixed(1)}</td>
-            {[row.goals, row.assists, row.points, row.plusMinus, row.sog, row.hits, row.blocks, row.ppPoints, row.pim].map((v, i) => <td key={i} className="px-2 text-right">{v}</td>)}
-            <td className="px-2 text-right text-muted">{row.toi}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-      <table className="bb-table w-full min-w-[560px] border-t border-rule text-sm tabular-nums">
-        <thead><tr className="text-xs text-muted"><th className="px-4 py-2 text-left">Goalie</th>{['FPTS', 'DEC', 'SA', 'SV', 'GA', 'SV%', 'TOI'].map(h => <th key={h} className="px-2 py-2 text-right">{h}</th>)}</tr></thead>
-        <tbody>{goalies.filter(g => g.toi !== '00:00' || g.shotsAgainst > 0).map(g => (
-          <tr key={g.playerId} className="border-t border-rule-2">
-            <td className="px-4 py-1.5 font-medium">{g.name}</td><td className="px-2 text-right font-semibold">{goalieFantasyPoints(g, settings)?.toFixed(1)}</td>
-            <td className="px-2 text-right">{g.decision || '–'}</td><td className="px-2 text-right">{g.shotsAgainst}</td><td className="px-2 text-right">{g.saves}</td><td className="px-2 text-right">{g.goalsAgainst}</td>
-            <td className="px-2 text-right">{g.savePct !== undefined ? g.savePct.toFixed(3).replace(/^0/, '') : '–'}</td><td className="px-2 text-right text-muted">{g.toi}</td>
-          </tr>
-        ))}</tbody>
-      </table>
+    <div className="relative grid grid-cols-2 overflow-hidden rounded-2xl text-white">
+      <span className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded bg-paper-2 px-2 py-0.5 font-display text-xs font-bold uppercase tracking-wide text-ink">{label}</span>
+      {(['away', 'home'] as const).map(side => {
+        const entry = side === 'away' ? away : home;
+        return (
+          <div key={side} className={`flex min-h-32 flex-col justify-end gap-1 p-4 ${side === 'home' ? 'items-end text-right' : ''}`} style={{ background: teamColor(game[side].abbrev) }}>
+            <span className="rounded-full bg-white/90 p-1"><TeamLogo team={game[side]} size={26} /></span>
+            <span className="font-display text-3xl font-bold leading-none tabular-nums">{entry?.value ?? '–'}</span>
+            <span className="font-display text-sm font-bold uppercase tracking-wide">{entry?.name ?? 'No data yet'}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
+
+function GameTab({ detail, settings, onAllPlays }: { detail: GameDetail; settings: LeagueSettings; onAllPlays: () => void }) {
+  const { game } = detail;
+  const started = game.isLive || game.isFinal;
+  const recent = detail.plays.filter(p => p.kind !== 'faceoff').slice(-6).reverse();
+  const goalieLeader = (side: Side) => {
+    const g = detail.goalies.filter(x => x.team === game[side].abbrev).sort((a, b) => b.saves - a.saves)[0];
+    return g && g.toi !== '00:00' ? { name: g.name, value: `${g.saves} SV` } : null;
+  };
+  const fantasyLeader = (side: Side) => {
+    const r = detail.skaters.filter(x => x.team === game[side].abbrev).sort((a, b) => (skaterFantasyPoints(b, settings) ?? 0) - (skaterFantasyPoints(a, settings) ?? 0))[0];
+    return r ? { name: r.name, value: `${skaterFantasyPoints(r, settings)?.toFixed(1)} FP` } : null;
+  };
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-6 2xl:grid-cols-2">
+        <section>
+          <SectionTitle>Shot chart</SectionTitle>
+          {started ? <ShotChart plays={detail.plays} away={game.away.abbrev} home={game.home.abbrev} /> : <p className="text-sm text-muted">Shots appear after puck drop.</p>}
+        </section>
+        <section>
+          <SectionTitle action={<button type="button" onClick={onAllPlays} className="flex items-center gap-1 text-sm font-semibold text-accent">View all <ChevronRight className="h-4 w-4" /></button>}>Recent plays</SectionTitle>
+          {recent.length === 0 ? <p className="text-sm text-muted">Plays appear after puck drop.</p> : <ol>{recent.map(p => <PlayRow key={p.id} play={p} />)}</ol>}
+        </section>
+      </div>
+
+      <section>
+        <SectionTitle>Score by period</SectionTitle>
+        <div className="overflow-x-auto rounded-xl border border-rule">
+          <table className="bb-box w-full">
+            <thead><tr><th className="text-left">Team</th>{game.lineScore.periods.map(p => <th key={p}>{p}</th>)}<th>T</th><th>SOG</th></tr></thead>
+            <tbody>{(['away', 'home'] as const).map(side => (
+              <tr key={side}>
+                <td className="text-left"><span className="flex items-center gap-2 font-semibold"><TeamLogo team={game[side]} size={22} />{game[side].name}</span></td>
+                {game.lineScore[side].map((v, i) => <td key={i}>{started ? v : '–'}</td>)}
+                <td className="font-bold">{started ? game[side].score ?? 0 : '–'}</td>
+                <td>{detail.shotsByPeriod.periods.length ? detail.shotsByPeriod[side].reduce((a, b) => a + b, 0) : game[side].sog ?? '–'}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <SectionTitle>Stat leaders</SectionTitle>
+        <div className="grid gap-4 md:grid-cols-2">
+          <LeaderCard label="Saves" away={goalieLeader('away')} home={goalieLeader('home')} game={game} />
+          <LeaderCard label="Fantasy points" away={fantasyLeader('away')} home={fantasyLeader('home')} game={game} />
+        </div>
+      </section>
+
+      <section>
+        <SectionTitle>Scoring summary</SectionTitle>
+        {detail.scoring.length === 0 ? <p className="text-sm text-muted">{started ? 'No goals yet.' : 'The game has not started.'}</p> : (
+          <ol>{detail.scoring.map((goal, i) => (
+            <li key={i} className="flex gap-3 py-2" style={{ boxShadow: `inset 3px 0 0 ${teamColor(goal.team)}` }}>
+              <span className="pl-4"><TeamLogo team={{ abbrev: goal.team }} size={26} /></span>
+              <span className="flex-1">
+                <span className="block font-display text-base font-bold">{goal.period === 'SO' ? 'Shootout' : `${periodText(goal.period)} · ${goal.time}`}{goal.strength !== 'ev' && <span className="ml-2 rounded bg-paper-3 px-1.5 text-xs uppercase">{goal.strength}</span>}</span>
+                <span className="block text-sm"><span className="font-semibold">{goal.scorer}</span>{goal.goalsToDate ? ` (${goal.goalsToDate})` : ''} · <span className="text-ink-2">{goal.assists.length ? goal.assists.map(a => a.name).join(', ') : 'Unassisted'}</span></span>
+              </span>
+              <span className="mr-2 self-center rounded-md bg-ink px-2 py-0.5 font-display text-sm font-bold text-on-brand tabular-nums">{goal.awayScore}–{goal.homeScore}</span>
+            </li>
+          ))}</ol>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function TeamStatsTab({ detail }: { detail: GameDetail }) {
+  const { game } = detail;
+  const rows = detail.teamStats.filter(s => STAT_LABELS[s.category]);
+  const num = (v: string | number) => (typeof v === 'number' ? v : Number(String(v).split('/')[0]) || 0);
+  const fmt = (c: string, v: string | number) => (typeof v === 'number' && c.toLowerCase().includes('pctg') ? `${Math.round(v * 100)}%` : String(v));
+  return (
+    <section className="max-w-2xl">
+      <SectionTitle>Team stats</SectionTitle>
+      {rows.length === 0 ? <p className="text-sm text-muted">Team stats appear after puck drop.</p> : rows.map(s => {
+        const a = num(s.away), h = num(s.home), share = a + h ? (a / (a + h)) * 100 : 50;
+        return (
+          <div key={s.category} className="py-2.5">
+            <div className="mb-1.5 flex justify-between text-sm"><span className="font-display text-lg font-bold tabular-nums">{fmt(s.category, s.away)}</span><span className="text-muted">{STAT_LABELS[s.category]}</span><span className="font-display text-lg font-bold tabular-nums">{fmt(s.category, s.home)}</span></div>
+            <div className="flex h-2 gap-1" aria-hidden><span className="rounded-full" style={{ width: `${share}%`, background: teamColor(game.away.abbrev) }} /><span className="flex-1 rounded-full" style={{ background: teamColor(game.home.abbrev) }} /></div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- Right column */
+
+function ScheduleList({ abbrev, games }: { abbrev: string; games: TeamScheduleGame[] }) {
+  return (
+    <section>
+      <SectionTitle action={<Link href={`/nhl-teams/${abbrev}`} aria-label={`${abbrev} schedule`}><ChevronRight className="h-5 w-5" /></Link>}>
+        <span className="flex items-center gap-2"><TeamLogo team={{ abbrev }} size={24} />Schedule</span>
+      </SectionTitle>
+      {games.length === 0 ? <p className="text-sm text-muted">No upcoming games.</p> : (
+        <ul className="divide-y divide-rule">{games.map(g => {
+          const awayTeam = g.home ? g.opponent : abbrev, homeTeam = g.home ? abbrev : g.opponent;
+          return (
+            <li key={g.id}><Link href={`/games/${g.id}`} className="grid grid-cols-[1fr_auto] gap-3 py-3 hover:text-accent">
+              <span className="space-y-1.5 font-display text-base font-bold">
+                <span className="flex items-center gap-2"><TeamLogo team={{ abbrev: awayTeam }} size={22} />{awayTeam}</span>
+                <span className="flex items-center gap-2"><TeamLogo team={{ abbrev: homeTeam }} size={22} />{homeTeam}</span>
+              </span>
+              <span className="border-l border-rule pl-3 text-right text-xs leading-relaxed text-muted">
+                {new Date(g.startTimeUTC).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}<br />
+                {new Date(g.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            </Link></li>
+          );
+        })}</ul>
+      )}
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- Page */
 
 export default function GamePage() {
   const { id } = useParams<{ id: string }>();
   const { myTeam, leagueSettings } = useData();
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState<Tab>('Game');
   const live = detail?.game.isLive ?? false;
 
   useEffect(() => {
@@ -182,141 +314,95 @@ export default function GamePage() {
 
   const { game } = detail;
   const started = game.isLive || game.isFinal;
-  const shots = detail.shotsByPeriod.periods.length
-    ? { away: detail.shotsByPeriod.away.reduce((a, b) => a + b, 0), home: detail.shotsByPeriod.home.reduce((a, b) => a + b, 0) }
-    : { away: game.away.sog ?? 0, home: game.home.sog ?? 0 };
+  const periodShort = game.periodType === 'SO' ? 'SO' : game.periodType === 'OT' ? 'OT' : ['1ST', '2ND', '3RD'][(game.period || 1) - 1];
+  const status: [string, string] = game.isLive
+    ? (game.inIntermission ? [`END ${periodShort}`, 'Intermission'] : [periodShort, game.clock || ''])
+    : game.isFinal ? ['FINAL', game.periodType && game.periodType !== 'REG' ? game.periodType : '']
+    : [new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase(), new Date(game.startTimeUTC).toLocaleDateString([], { month: 'short', day: 'numeric' })];
   const myRows = [
-    ...detail.skaters.filter(r => mine.has(String(r.playerId))).map(r => ({ id: r.playerId, name: r.name, team: r.team, line: `${r.goals}G ${r.assists}A ${r.sog} SOG ${r.hits} HIT ${r.blocks} BLK`, fpts: skaterFantasyPoints(r, scoring.settings) ?? 0 })),
+    ...detail.skaters.filter(r => mine.has(String(r.playerId))).map(r => ({ id: r.playerId, name: r.name, team: r.team, line: `${r.goals}G ${r.assists}A ${r.sog} SOG`, fpts: skaterFantasyPoints(r, scoring.settings) ?? 0 })),
     ...detail.goalies.filter(g => mine.has(String(g.playerId)) && g.toi !== '00:00').map(g => ({ id: g.playerId, name: g.name, team: g.team, line: `${g.saves} SV ${g.goalsAgainst} GA`, fpts: goalieFantasyPoints(g, scoring.settings) ?? 0 })),
   ].sort((a, b) => b.fpts - a.fpts);
-  const starterFor = (side: 'away' | 'home'): TeamStarter | undefined => detail.starters?.[side];
 
-  const teamBlock = (side: 'away' | 'home') => {
-    const team = game[side];
+  const heroTeam = (side: Side) => {
+    const [fallbackCity, fallbackNick] = splitName(game[side].name);
+    const city = game[side].city || fallbackCity;
+    const nick = game[side].city ? game[side].name : fallbackNick;
     const record = detail.records[side];
     return (
-      <div className={`flex min-w-0 flex-col items-center gap-2 text-center md:gap-4 ${side === 'home' ? 'md:flex-row-reverse md:text-right' : 'md:flex-row md:text-left'}`}>
-        <TeamLogo team={team} size={64} />
-        <div className="min-w-0 max-w-full">
-          <TeamLink abbrev={team.abbrev} className="block truncate font-display text-base font-bold uppercase tracking-wide md:text-2xl"><span className="md:hidden">{team.abbrev}</span><span className="hidden md:inline">{team.name}</span></TeamLink>
-          <p className="text-xs text-muted">{record ? <>{record.overall}<span className="hidden sm:inline">, {record.split}</span></> : side === 'away' ? 'Away' : 'Home'}</p>
-        </div>
+      <div className={`flex items-center gap-3 md:gap-4 ${side === 'home' ? 'flex-row-reverse text-right' : ''}`}>
+        <span className="flex flex-col items-center gap-1">
+          <TeamLogo team={game[side]} size={56} />
+          <span className="text-xs text-muted tabular-nums">{record?.overall}</span>
+        </span>
+        <TeamLink abbrev={game[side].abbrev} className="hidden leading-tight sm:block">
+          <span className="block text-lg text-ink-2">{city || game[side].abbrev}</span>
+          <span className="block font-display text-2xl font-bold uppercase tracking-wide text-ink">{nick}</span>
+        </TeamLink>
       </div>
     );
   };
 
   return (
-    <div className="bb-page space-y-5">
-      <Link href={`/games?date=${game.gameDate}`} className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> Scores</Link>
+    <div className="bb-page">
+      <Link href={`/games?date=${game.gameDate}`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> Scores</Link>
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0">
+          <header className="overflow-hidden rounded-2xl border border-rule bg-paper-2">
+            <div className="flex h-1.5 gap-1" aria-hidden><span className="flex-1" style={{ background: teamColor(game.away.abbrev) }} /><span className="flex-1" style={{ background: teamColor(game.home.abbrev) }} /></div>
+            <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
+              {heroTeam('away')}
+              <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.away.score ?? 0 : ''}</span>
+              <span className={`text-center font-display text-lg font-bold leading-tight md:text-xl ${game.isLive ? 'text-error' : ''}`}>{status[0]}<span className="block text-base">{status[1]}</span></span>
+              <span className="font-display text-5xl font-bold tabular-nums md:text-6xl">{started ? game.home.score ?? 0 : ''}</span>
+              {heroTeam('home')}
+            </div>
+            {game.broadcasts.length > 0 && <p className="pb-4 text-center text-sm text-muted">{game.broadcasts.join(' · ')}</p>}
+          </header>
 
-      <header className="fantasy-card px-5 py-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto_auto_minmax(0,1fr)]">
-          {teamBlock('away')}
-          <p className="hidden font-display text-6xl font-bold tabular-nums md:block" aria-label={`${game.away.abbrev} ${game.away.score ?? 0}`}>{started ? game.away.score ?? 0 : ''}</p>
-          <div className="min-w-0 text-center md:min-w-[190px]">
-            <p className={`mb-2 text-sm font-semibold ${game.isLive ? 'text-error' : 'text-ink'}`}>{gameStatusText(game)}</p>
-            <p className="mb-2 font-display text-4xl font-bold tabular-nums md:hidden">{started ? `${game.away.score ?? 0} – ${game.home.score ?? 0}` : 'vs'}</p>
-            <table className="mx-auto font-display text-[15px] tabular-nums" aria-label="Score by period">
-              <thead><tr className="text-muted"><th className="pr-3 text-left font-medium" />{game.lineScore.periods.map(p => <th key={p} className="w-7 font-medium">{p}</th>)}<th className="w-7 font-semibold text-ink">T</th><th className="w-9 font-medium">SOG</th></tr></thead>
-              <tbody>{(['away', 'home'] as const).map(side => (
-                <tr key={side} className="border-t border-rule-2"><td className="pr-3 text-left font-semibold">{game[side].abbrev}</td>
-                  {game.lineScore[side].map((v, i) => <td key={i} className="py-0.5">{started ? v : '–'}</td>)}
-                  <td className="font-bold">{started ? game[side].score ?? 0 : '–'}</td><td className="text-muted">{started ? shots[side] : '–'}</td></tr>
-              ))}</tbody>
-            </table>
-            {game.broadcasts.length > 0 && <p className="mt-2 text-xs text-muted">{game.broadcasts.join(' · ')}</p>}
+          <nav className="mt-6 flex gap-2 overflow-x-auto border-b border-rule" role="tablist" aria-label="Game sections">
+            {TABS.map(name => (
+              <button key={name} type="button" role="tab" aria-selected={tab === name} onClick={() => setTab(name)}
+                className={`-mb-px min-h-12 whitespace-nowrap border-b-[3px] px-4 text-lg font-semibold ${tab === name ? 'border-accent text-ink' : 'border-transparent text-muted hover:text-ink'}`}>{name}</button>
+            ))}
+          </nav>
+
+          <div className="pt-6">
+            {tab === 'Game' && <GameTab detail={detail} settings={scoring.settings} onAllPlays={() => setTab('Plays')} />}
+            {tab === 'Box score' && <BoxScoreTab detail={detail} settings={scoring.settings} label={scoring.label} mine={mine} />}
+            {tab === 'Plays' && <PlaysTab plays={detail.plays} />}
+            {tab === 'Team stats' && <TeamStatsTab detail={detail} />}
           </div>
-          <p className="hidden font-display text-6xl font-bold tabular-nums md:block" aria-label={`${game.home.abbrev} ${game.home.score ?? 0}`}>{started ? game.home.score ?? 0 : ''}</p>
-          {teamBlock('home')}
-        </div>
-      </header>
-
-      <div className="grid items-start gap-5 xl:grid-cols-[340px_minmax(0,1fr)_300px]">
-        <Panel title="On the ice" action={<span className="text-xs text-muted">FPTS: {scoring.label}</span>} className="order-2 xl:order-none">
-          {(['away', 'home'] as const).map(side => (
-            <TeamBox key={side} team={game[side].name} abbrev={game[side].abbrev} skaters={detail.skaters.filter(r => r.team === game[side].abbrev)}
-              goalies={detail.goalies.filter(g => g.team === game[side].abbrev)} settings={scoring.settings} mine={mine} />
-          ))}
-          {detail.skaters.length === 0 && <p className="p-4 text-sm text-muted">Lineups appear at puck drop.</p>}
-        </Panel>
-
-        <div className="order-1 space-y-5 xl:order-none">
-          <PlayFeed plays={detail.plays} started={started} />
-          <Panel title="Scoring summary">
-            {detail.scoring.length === 0 ? <p className="p-4 text-sm text-muted">{started ? 'No goals yet.' : 'The game has not started.'}</p> : (
-              <ol className="divide-y divide-rule-2">{detail.scoring.map((goal, i) => (
-                <li key={i} className="flex items-start gap-3 px-4 py-2.5 text-sm">
-                  <span className="w-20 shrink-0 text-xs text-muted tabular-nums">{goal.period === 'SO' ? 'Shootout' : `${periodText(goal.period)} ${goal.time}`}</span>
-                  <TeamLogo team={{ abbrev: goal.team }} size={20} />
-                  <span className="flex-1"><span className="font-semibold">{goal.scorer}</span>{goal.goalsToDate ? ` (${goal.goalsToDate})` : ''}{goal.strength !== 'ev' && <span className="ml-1.5 rounded-md bg-paper-3 px-1.5 text-[11px] font-bold uppercase">{goal.strength}</span>}
-                    <span className="block text-xs text-muted">{goal.assists.length ? `Assists: ${goal.assists.map(a => a.name).join(', ')}` : 'Unassisted'}</span></span>
-                  <span className="text-xs font-semibold tabular-nums">{goal.awayScore}–{goal.homeScore}</span>
-                </li>
-              ))}</ol>
-            )}
-          </Panel>
-          {detail.teamStats.length > 0 && (
-            <Panel title="Team stats" action={<span className="flex items-center gap-3 text-xs font-semibold"><span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" />{game.away.abbrev}</span><span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-brand-navy" />{game.home.abbrev}</span></span>}>
-              <div className="px-4 py-2">{detail.teamStats.filter(s => STAT_LABELS[s.category]).map(s => {
-                const num = (v: string | number) => typeof v === 'number' ? v : Number(String(v).split('/')[0]) || 0;
-                return <StatBar key={s.category} label={STAT_LABELS[s.category]} away={formatStat(s.category, s.away)} home={formatStat(s.category, s.home)} awayValue={num(s.away)} homeValue={num(s.home)} />;
-              })}</div>
-            </Panel>
-          )}
         </div>
 
-        <aside className="order-3 space-y-5 xl:order-none">
-          <Panel title="Your players">
-            {myRows.length === 0 ? <p className="p-4 text-sm text-muted">{myTeam.length ? 'None of your players are in this game.' : 'Add players to your team to track them here.'}</p> : (
-              <ul className="divide-y divide-rule-2">{myRows.map(row => (
-                <li key={row.id} className="flex items-center gap-3 px-4 py-2.5"><TeamLogo team={{ abbrev: row.team }} size={20} />
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{row.name}</span><span className="text-xs text-muted">{row.line}</span></span>
-                  <span className="font-semibold tabular-nums">{row.fpts.toFixed(1)}</span></li>
+        <aside className="space-y-8">
+          <section>
+            <SectionTitle>Game details</SectionTitle>
+            <ul className="space-y-3 text-[15px]">
+              <li className="flex items-center gap-3"><Clock className="h-5 w-5 text-ink-2" aria-hidden />{new Date(game.startTimeUTC).toLocaleString([], { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</li>
+              {game.broadcasts.length > 0 && <li className="flex items-center gap-3"><Tv className="h-5 w-5 text-ink-2" aria-hidden />{game.broadcasts.join(', ')}</li>}
+              {game.venue && <li className="flex items-center gap-3"><MapPin className="h-5 w-5 text-ink-2" aria-hidden />{game.venue}</li>}
+            </ul>
+          </section>
+          <section>
+            <SectionTitle>Starting goalies</SectionTitle>
+            <ul className="space-y-2">{(['away', 'home'] as const).map(side => (
+              <li key={side} className="flex items-center gap-3"><TeamLogo team={game[side]} size={22} /><StarterLine starter={detail.starters?.[side]} /></li>
+            ))}</ul>
+          </section>
+          <section>
+            <SectionTitle>Your players</SectionTitle>
+            {myRows.length === 0 ? <p className="text-sm text-muted">{myTeam.length ? 'None of your players are in this game.' : 'Add players to your team to follow them here.'}</p> : (
+              <ul className="divide-y divide-rule">{myRows.map(row => (
+                <li key={row.id} className="flex items-center gap-3 py-2"><TeamLogo team={{ abbrev: row.team }} size={22} />
+                  <span className="min-w-0 flex-1"><span className="block truncate font-medium">{row.name}</span><span className="text-xs text-muted">{row.line}</span></span>
+                  <span className="font-display text-lg font-bold tabular-nums">{row.fpts.toFixed(1)}</span></li>
               ))}</ul>
             )}
-          </Panel>
-          <Panel title="Starting goalies">
-            <ul className="divide-y divide-rule-2">{(['away', 'home'] as const).map(side => (
-              <li key={side} className="flex items-center gap-3 px-4 py-2.5"><TeamLogo team={game[side]} size={20} /><StarterLine starter={starterFor(side)} /></li>
-            ))}</ul>
-          </Panel>
-          <Panel title="Three stars">
-            {detail.threeStars.length === 0 ? <p className="p-4 text-sm text-muted">Announced after the game.</p> : (
-              <ol className="divide-y divide-rule-2">{detail.threeStars.map(star => (
-                <li key={star.star} className="flex items-center gap-2 px-4 py-2.5 text-sm"><Star className="h-4 w-4 text-accent" aria-hidden /><span className="font-semibold">{star.name}</span><span className="text-muted">{star.team} · {star.line}</span></li>
-              ))}</ol>
-            )}
-          </Panel>
-          <Panel title="Season series">
-            <div className="flex items-center justify-between px-4 py-3 text-sm">
-              <span className="flex items-center gap-2 font-semibold"><TeamLogo team={game.away} size={22} />{game.away.abbrev} {detail.seasonSeries.away}</span>
-              <span className="text-xs text-muted">wins</span>
-              <span className="flex items-center gap-2 font-semibold">{detail.seasonSeries.home} {game.home.abbrev}<TeamLogo team={game.home} size={22} /></span>
-            </div>
-          </Panel>
-          <Panel title="Game info">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 px-4 py-3 text-sm">
-              {game.venue && <><dt className="text-muted">Arena</dt><dd>{game.venue}</dd></>}
-              {detail.coaches.away && <><dt className="text-muted">Coaches</dt><dd>{detail.coaches.away} / {detail.coaches.home}</dd></>}
-              <dt className="text-muted">Scratches</dt>
-              <dd>{detail.scratches.away.length || detail.scratches.home.length
-                ? (['away', 'home'] as const).filter(side => detail.scratches[side].length).map(side => <span key={side} className="block"><span className="font-semibold">{game[side].abbrev}:</span> {detail.scratches[side].join(', ')}</span>)
-                : 'Not posted yet'}</dd>
-            </dl>
-          </Panel>
+          </section>
+          {(['home', 'away'] as const).map(side => <ScheduleList key={side} abbrev={game[side].abbrev} games={detail.schedules?.[side] || []} />)}
         </aside>
       </div>
-
-      {detail.skaters.length > 0 && (
-        <section className="space-y-5" aria-label="Full box score">
-          <h2 className="text-lg">Full box score</h2>
-          {(['away', 'home'] as const).map(side => (
-            <Panel key={side} title={game[side].name} action={<StatusBadge game={game} />}>
-              <FullBox rows={detail.skaters.filter(r => r.team === game[side].abbrev)} goalies={detail.goalies.filter(g => g.team === game[side].abbrev)} settings={scoring.settings} mine={mine} />
-            </Panel>
-          ))}
-        </section>
-      )}
     </div>
   );
 }

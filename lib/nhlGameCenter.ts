@@ -17,6 +17,7 @@ export type TeamSide = {
   id?: number;
   abbrev: string;
   name: string;
+  city?: string;
   logo?: string;
   score?: number;
   sog?: number;
@@ -113,7 +114,7 @@ export function normalizeGoal(raw: RawGoal, periodOverride?: { number?: number; 
 type RawTeam = { id?: number; abbrev: string; score?: number; sog?: number; logo?: string; name?: Localized; commonName?: Localized; placeName?: Localized; record?: string };
 
 function normalizeTeam(raw: RawTeam): TeamSide {
-  return { id: raw.id, abbrev: raw.abbrev, name: text(raw.commonName) || text(raw.name) || raw.abbrev, logo: raw.logo, score: raw.score, sog: raw.sog, record: raw.record };
+  return { id: raw.id, abbrev: raw.abbrev, name: text(raw.commonName) || text(raw.name) || raw.abbrev, city: text(raw.placeName) || undefined, logo: raw.logo, score: raw.score, sog: raw.sog, record: raw.record };
 }
 
 export type RawScoreGame = {
@@ -203,7 +204,7 @@ export function goalieFantasyPoints(line: GoalieLine, settings: LeagueSettings):
 // ------------------------------------------------------------------------------------
 
 export type PlayKind = 'goal' | 'shot' | 'miss' | 'block' | 'hit' | 'penalty' | 'faceoff' | 'giveaway' | 'takeaway' | 'stoppage' | 'period';
-export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string };
+export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string; x?: number; y?: number };
 
 type RawPlay = {
   eventId: number; sortOrder?: number; typeDescKey: string; timeInPeriod?: string;
@@ -251,7 +252,9 @@ export function normalizePlayByPlay(payload: { plays?: RawPlay[]; rosterSpots?: 
       case 'stoppage': line = `Stoppage: ${human(d.reason) || 'play stopped'}`; break;
       case 'period': line = play.typeDescKey === 'period-start' ? `Start of ${periodName}` : `End of ${periodName}`; break;
     }
-    events.push({ id: play.eventId, period, time: play.timeInPeriod || '', kind, team, text: line, score });
+    const x = typeof d.xCoord === 'number' ? d.xCoord : undefined;
+    const y = typeof d.yCoord === 'number' ? d.yCoord : undefined;
+    events.push({ id: play.eventId, period, time: play.timeInPeriod || '', kind, team, text: line, score, x, y });
   }
   return events;
 }
@@ -275,6 +278,7 @@ export type GameDetail = {
   records: { away?: { overall: string; split: string }; home?: { overall: string; split: string } };
   plays: PlayEvent[];
   starters?: { away: TeamStarter; home: TeamStarter };
+  schedules?: { away: TeamScheduleGame[]; home: TeamScheduleGame[] };
   updatedAt: string;
 };
 
@@ -499,6 +503,12 @@ export async function fetchGameDetail(gameId: number): Promise<GameDetail> {
     away: away ? { overall: `${away.w}-${away.l}-${away.otl}`, split: `${away.roadRecord} away` } : undefined,
     home: home ? { overall: `${home.w}-${home.l}-${home.otl}`, split: `${home.homeRecord} home` } : undefined,
   };
+  const nextGames = async (abbrev: string) => {
+    const payload = await nhl<{ games?: RawClubGame[] }>(`/club-schedule-season/${abbrev}/now`, 900).catch(() => ({ games: [] as RawClubGame[] }));
+    return normalizeTeamSchedule(payload.games || [], abbrev).filter(g => g.date > game.gameDate).slice(0, 3);
+  };
+  const [awayNext, homeNext] = await Promise.all([nextGames(game.away.abbrev), nextGames(game.home.abbrev)]);
+  detail.schedules = { away: awayNext, home: homeNext };
   try {
     const [starters] = await getStartingGoalies([{ id: game.id, gameDate: game.gameDate, startTimeUTC: game.startTimeUTC, gameState: game.state, awayTeam: { abbrev: game.away.abbrev }, homeTeam: { abbrev: game.home.abbrev } }]);
     detail.starters = { away: starters.away.starter, home: starters.home.starter };
