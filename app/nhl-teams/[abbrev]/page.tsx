@@ -57,12 +57,12 @@ export default function TeamPage() {
     return { skater, perGame, next7, mine: mine.has(String(skater.playerId)) };
   }).sort((a, b) => (b.perGame ?? -1) - (a.perGame ?? -1));
 
-  if (error) return <div className="space-y-4"><Link href="/nhl-teams" className="text-sm font-semibold text-accent">← NHL Teams</Link><p className="fantasy-card p-6 text-sm text-error">{error}</p></div>;
-  if (!data) return <p className="fantasy-card p-8 text-sm text-muted">Loading team…</p>;
+  if (error) return <div className="bb-page space-y-4"><Link href="/nhl-teams" className="text-sm font-semibold text-accent">← NHL Teams</Link><p className="fantasy-card p-6 text-sm text-error">{error}</p></div>;
+  if (!data) return <div className="bb-page"><p className="fantasy-card p-8 text-sm text-muted">Loading team…</p></div>;
   const s = data.standing;
 
   return (
-    <div className="space-y-6">
+    <div className="bb-page space-y-6">
       <Link href="/nhl-teams" className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> NHL Teams</Link>
 
       <header className="fantasy-card flex flex-wrap items-center gap-5 p-5">

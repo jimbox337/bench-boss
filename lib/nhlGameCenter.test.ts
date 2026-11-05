@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LeagueSettings } from './calculator';
 import {
+  attachRecords,
   deriveLineScore,
   goalieFantasyPoints,
   normalizeScoreGame,
@@ -97,5 +98,15 @@ describe('team schedule', () => {
     const volume = scheduleVolume(schedule, '2026-11-04');
     expect(volume).toMatchObject({ games: 2, home: 1, away: 1, backToBacks: 1 });
     expect(scheduleVolume(schedule, '2026-11-05').games).toBe(2); // Nov 5 and Nov 11
+  });
+});
+
+describe('attachRecords', () => {
+  it('adds standings records to scoreboard teams', () => {
+    const game = normalizeScoreGame({ id: 1, gameDate: '2026-11-04', startTimeUTC: '', gameState: 'FUT', awayTeam: { abbrev: 'OTT' }, homeTeam: { abbrev: 'BUF' } });
+    const row = { abbrev: 'OTT', name: 'Senators', conference: 'E', division: 'A', divisionRank: 1, gp: 16, w: 9, l: 6, otl: 1, pts: 19, pointPct: 0.6, gf: 1, ga: 1, diff: 0, l10: '', streak: '' };
+    const [result] = attachRecords([game], [row]);
+    expect(result.away.record).toBe('9-6-1');
+    expect(result.home.record).toBeUndefined();
   });
 });

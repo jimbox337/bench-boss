@@ -8,6 +8,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css" layer(base);
+@import "./shell.css" layer(components);
 
 :root {
   --background: var(--color-paper);

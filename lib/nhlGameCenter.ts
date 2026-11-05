@@ -381,13 +381,26 @@ async function nhl<T>(path: string, revalidate: number): Promise<T> {
 
 export const isIsoDate = (value: string | null | undefined): value is string => !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
 
+/** Attach "W-L-OTL" records from standings (one cached request) to each scoreboard team. */
+export function attachRecords(games: ScoreboardGame[], standings: StandingRow[]): ScoreboardGame[] {
+  const records = new Map(standings.map(row => [row.abbrev, `${row.w}-${row.l}-${row.otl}`]));
+  return games.map(game => ({
+    ...game,
+    away: { ...game.away, record: game.away.record || records.get(game.away.abbrev) },
+    home: { ...game.home, record: game.home.record || records.get(game.home.abbrev) },
+  }));
+}
+
 export async function fetchScoreboard(date?: string) {
-  const payload = await nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${isIsoDate(date) ? date : 'now'}`, 20);
+  const [payload, standings] = await Promise.all([
+    nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${isIsoDate(date) ? date : 'now'}`, 20),
+    fetchStandings().catch(() => [] as StandingRow[]),
+  ]);
   return {
     date: payload.currentDate || date || '',
     prevDate: payload.prevDate,
     nextDate: payload.nextDate,
-    games: (payload.games || []).map(normalizeScoreGame),
+    games: attachRecords((payload.games || []).map(normalizeScoreGame), standings),
   };
 }
 

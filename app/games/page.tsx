@@ -20,7 +20,7 @@ function GameCard({ game, starters, myPlayerTeams }: { game: ScoreboardGame; sta
   const mine = (myPlayerTeams.get(game.away.abbrev) || 0) + (myPlayerTeams.get(game.home.abbrev) || 0);
   const scorers = (team: string) => game.goals.filter(goal => goal.team === team && goal.period !== 'SO');
   return (
-    <article className="flex flex-col bg-paper-2 p-4">
+    <article className="flex flex-col border-b border-r border-rule bg-paper-2 p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <StatusBadge game={game} />
         {mine > 0 && <span className="rounded bg-selection px-2 py-0.5 text-xs font-semibold text-accent-2">{mine} of your players</span>}
@@ -102,7 +102,7 @@ function ScoreboardView() {
   const final = board?.games.filter(game => game.isFinal).length || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="bb-page space-y-6">
       <header className="bb-page-header flex flex-wrap items-end justify-between gap-4">
         <div><h1>Scoreboard</h1><p>Live NHL scores, starting goalies and the fantasy players in every game.</p></div>
         <button onClick={() => setRefreshKey(key => key + 1)} className="bb-button-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"><RefreshCw className="h-4 w-4" /> Refresh</button>
@@ -123,7 +123,7 @@ function ScoreboardView() {
       <section aria-label="Games">
         {!board ? <p className="fantasy-card p-8 text-sm text-muted">Loading the NHL slate…</p>
           : board.games.length === 0 ? <p className="fantasy-card p-8 text-sm text-muted">No NHL games on this date.</p>
-          : <div className="grid gap-px overflow-hidden rounded-card border border-rule bg-rule md:grid-cols-2 xl:grid-cols-3">{board.games.map(game => <GameCard key={game.id} game={game} starters={starters.get(game.id)} myPlayerTeams={myPlayerTeams} />)}</div>}
+          : <div className="grid overflow-hidden rounded-card border-l border-t border-rule bg-paper-2 md:grid-cols-2 xl:grid-cols-3">{board.games.map(game => <GameCard key={game.id} game={game} starters={starters.get(game.id)} myPlayerTeams={myPlayerTeams} />)}</div>}
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -166,5 +166,5 @@ function ScoreboardView() {
 }
 
 export default function GamesPage() {
-  return <Suspense fallback={<p className="fantasy-card p-8 text-sm text-muted">Loading the NHL slate…</p>}><ScoreboardView /></Suspense>;
+  return <Suspense fallback={<div className="bb-page"><p className="fantasy-card p-8 text-sm text-muted">Loading the NHL slate…</p></div>}><ScoreboardView /></Suspense>;
 }

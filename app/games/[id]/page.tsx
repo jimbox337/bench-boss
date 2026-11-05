@@ -101,8 +101,8 @@ export default function GamePage() {
   const scoring = pointsScoring(leagueSettings);
   const mine = useMemo(() => new Set(myTeam.map(player => player.id)), [myTeam]);
 
-  if (error && !detail) return <div className="space-y-4"><Link href="/games" className="text-sm font-semibold text-accent">← Scoreboard</Link><p className="fantasy-card p-6 text-sm text-error">{error}</p></div>;
-  if (!detail) return <p className="fantasy-card p-8 text-sm text-muted">Loading game…</p>;
+  if (error && !detail) return <div className="bb-page space-y-4"><Link href="/games" className="text-sm font-semibold text-accent">← Scoreboard</Link><p className="fantasy-card p-6 text-sm text-error">{error}</p></div>;
+  if (!detail) return <div className="bb-page"><p className="fantasy-card p-8 text-sm text-muted">Loading game…</p></div>;
 
   const { game } = detail;
   const started = game.isLive || game.isFinal;
@@ -117,7 +117,7 @@ export default function GamePage() {
   const myRows = fantasyRows.filter(row => mine.has(String(row.id)));
 
   return (
-    <div className="space-y-5">
+    <div className="bb-page space-y-5">
       <Link href={`/games?date=${game.gameDate}`} className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> Scoreboard</Link>
 
       <header className="fantasy-card p-5">

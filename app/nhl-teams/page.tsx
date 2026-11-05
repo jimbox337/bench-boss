@@ -26,7 +26,7 @@ export default function NhlTeamsPage() {
   }, [rows]);
 
   return (
-    <div className="space-y-6">
+    <div className="bb-page space-y-6">
       <header className="bb-page-header"><div><h1>NHL Teams</h1><p>Standings, rosters, schedules and fantasy outlook for every club.</p></div></header>
       {error && <p className="fantasy-card p-5 text-sm text-error">{error}</p>}
       {!rows && !error && <p className="fantasy-card p-8 text-sm text-muted">Loading standings…</p>}
