@@ -17,7 +17,7 @@
   /* Dark rink-at-night palette: blue-tinted charcoal, cool off-white ink, ice-blue accent. */
   --color-error: oklch(68% 0.19 25);
   --color-goal-red: oklch(60% 0.21 25);
-  --color-led: oklch(86% 0.15 78);
+  --color-star: oklch(86% 0.15 78);
   --color-success: oklch(74% 0.15 155);
   --color-paper: oklch(15.5% 0.014 258);
   --color-paper-2: oklch(19.5% 0.016 258);
