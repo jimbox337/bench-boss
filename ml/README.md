@@ -105,6 +105,8 @@ On **both** validation and test, the combined weekly fantasy-point projection mu
 
 It runs every day at 15:00 UTC (10:00 ET) on GitHub Actions (`.github/workflows/daily-predictions.yml`). The NHL dataset is cached between runs, and the first run collects every training season once.
 
+The running record is committed to the **`predictions` branch**, not `main`. `main` requires the Vercel check before anything lands, and a commit pushed straight from a CI runner can't have passed it. The `ml/predictions` folder on `main` is a snapshot from before the switch. To read the latest record, look at that branch (`git fetch origin predictions && git show origin/predictions:ml/predictions/daily-log.jsonl`).
+
 Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` `ignoreCommand`).
 
 `scripts/com.benchboss.daily.plist` is an optional local launchd job for the same thing.
