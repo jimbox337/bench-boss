@@ -28,19 +28,46 @@ export async function GET() {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const [users, authUsers] = await Promise.all([
-    prisma.user.findMany({
-      select: userSelect,
-      orderBy: { createdAt: 'desc' },
-    }),
-    createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 }),
-  ]);
-  if (authUsers.error) throw authUsers.error;
-  const authEmails = new Set(authUsers.data.users.map(user => user.email?.toLowerCase()).filter(Boolean));
+  const users = await prisma.user.findMany({
+    select: userSelect,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Supabase Auth is optional for this listing: without the admin key (e.g. local dev) the
+  // database rows are still returned, with authAvailable=false so the console can say so.
+  let authUsers: Awaited<ReturnType<ReturnType<typeof createAdminClient>['auth']['admin']['listUsers']>>['data']['users'] | null = null;
+  let authError: string | null = null;
+  try {
+    const result = await createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (result.error) throw result.error;
+    authUsers = result.data.users;
+  } catch (caught) {
+    authError = caught instanceof Error ? caught.message : 'Supabase Auth is unavailable';
+  }
+
+  // Only non-secret auth facts are exposed: the Supabase uid, sign-in providers and timestamps.
+  const authByEmail = new Map(
+    (authUsers ?? [])
+      .filter(user => user.email)
+      .map(user => [user.email!.toLowerCase(), {
+        authId: user.id,
+        lastSignInAt: user.last_sign_in_at ?? null,
+        emailConfirmedAt: user.email_confirmed_at ?? null,
+        providers: Array.isArray(user.app_metadata?.providers)
+          ? (user.app_metadata.providers as unknown[]).filter((value): value is string => typeof value === 'string')
+          : user.app_metadata?.provider ? [String(user.app_metadata.provider)] : [],
+      }]),
+  );
 
   return NextResponse.json({
-    users: users.map(user => ({ ...user, authLinked: authEmails.has(user.email.toLowerCase()) })),
+    users: users.map(user => {
+      const auth = authByEmail.get(user.email.toLowerCase());
+      // When Auth can't be read, don't claim accounts are legacy.
+      return { ...user, authLinked: authUsers ? Boolean(auth) : true, auth: auth ?? null };
+    }),
     currentUserId: admin.id,
+    authAvailable: Boolean(authUsers),
+    authError,
   });
 }
 
