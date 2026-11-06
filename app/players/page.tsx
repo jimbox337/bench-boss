@@ -1,249 +1,272 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight, Search, Star } from 'lucide-react';
 import { useData } from '@/lib/DataContext';
+import { calculateFantasyPoints, type GoalieStats, type Player, type Projection, type SkaterStats } from '@/lib/calculator';
 import { usePlayerCard } from '@/components/player/PlayerCardProvider';
+import { pointsScoring } from '@/components/gamecenter/shared';
+import './players.css';
+
+const PAGE_SIZE = 25;
+const POSITIONS = [
+  ['skaters', 'All skaters'],
+  ['C', 'C'],
+  ['LW', 'LW'],
+  ['RW', 'RW'],
+  ['D', 'D'],
+  ['G', 'G'],
+] as const;
+type PositionTab = (typeof POSITIONS)[number][0];
+type StatView = 'season' | 'per_game' | 'next_7';
+type Status = 'all' | 'available' | 'mine' | 'injured';
+
+type SkaterKey = 'GP' | keyof Pick<SkaterStats, 'G' | 'A' | 'PTS' | 'plusMinus' | 'PPP' | 'SOG' | 'HIT' | 'BLK'>;
+type GoalieKey = 'GP' | keyof Pick<GoalieStats, 'W' | 'GA' | 'SV' | 'SV_PCT' | 'GAA' | 'SO'>;
+const SKATER_COLS: [SkaterKey, string, string][] = [
+  ['GP', 'GP', 'Games played'], ['G', 'G', 'Goals'], ['A', 'A', 'Assists'], ['PTS', 'P', 'Points'], ['plusMinus', '+/-', 'Plus/minus'],
+  ['PPP', 'PPP', 'Power-play points'], ['SOG', 'SOG', 'Shots on goal'], ['HIT', 'HIT', 'Hits'], ['BLK', 'BLK', 'Blocked shots'],
+];
+const GOALIE_COLS: [GoalieKey, string, string][] = [
+  ['GP', 'GP', 'Games'], ['W', 'W', 'Wins'], ['GA', 'GA', 'Goals against'], ['SV', 'SV', 'Saves'],
+  ['SV_PCT', 'SV%', 'Save percentage'], ['GAA', 'GAA', 'Goals-against average'], ['SO', 'SO', 'Shutouts'],
+];
+
+type Row = {
+  player: Player;
+  stats: Partial<Record<string, number>> | null;
+  fpts: number | null;
+  rank: number | null;
+  mine: boolean;
+};
+
+const INJURY_SHORT: Record<string, string> = { 'Day-to-Day': 'DTD', Questionable: 'Q', IR: 'IR', Out: 'O' };
+
+function perGame(stats: SkaterStats, games: number): SkaterStats {
+  const g = Math.max(1, games);
+  return { G: stats.G / g, A: stats.A / g, PTS: stats.PTS / g, plusMinus: stats.plusMinus / g, PPP: stats.PPP / g, SOG: stats.SOG / g, HIT: stats.HIT / g, BLK: stats.BLK / g, PIM: stats.PIM / g };
+}
+
+function formatStat(key: string, value: number | undefined, view: StatView): string {
+  if (value === undefined || !Number.isFinite(value)) return '–';
+  if (key === 'SV_PCT') return value.toFixed(3).replace(/^0/, '');
+  if (key === 'GAA') return value.toFixed(2);
+  if (key === 'GP') return String(Math.round(value));
+  if (view === 'season') return String(Math.round(value));
+  return value.toFixed(view === 'per_game' ? 2 : 1);
+}
+
+function SortHeader({ k, label, title, className, sort, onSort }: {
+  k: string; label: string; title?: string; className?: string;
+  sort: { key: string; dir: 'desc' | 'asc' }; onSort: (key: string) => void;
+}) {
+  const active = sort.key === k;
+  return (
+    <th scope="col" aria-sort={active ? (sort.dir === 'desc' ? 'descending' : 'ascending') : 'none'} className={className}>
+      <button type="button" onClick={() => onSort(k)} title={title} className={active ? 'is-sorted' : undefined}>
+        {label}{active && <span aria-hidden="true">{sort.dir === 'desc' ? '▼' : '▲'}</span>}
+      </button>
+    </th>
+  );
+}
 
 export default function PlayerExplorer() {
-  const { players, myTeam } = useData();
-  const [search, setSearch] = useState('');
-  const [position, setPosition] = useState('all');
-  const [sortBy, setSortBy] = useState('proj_pts');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const { players, projections, myTeam, leagueSettings, isLoading } = useData();
   const { openPlayer } = usePlayerCard();
+  const scoring = useMemo(() => pointsScoring(leagueSettings), [leagueSettings]);
 
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
-    } else {
-      setSortBy(column);
-      setSortDirection('desc');
-    }
-  };
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState<PositionTab>('skaters');
+  const [status, setStatus] = useState<Status>('all');
+  const [view, setView] = useState<StatView>('season');
+  const [sort, setSort] = useState<{ key: string; dir: 'desc' | 'asc' }>({ key: 'fpts', dir: 'desc' });
+  const [page, setPage] = useState(0);
 
-  const filteredPlayers = players
-    .filter(p => {
-      const matchesSearch = p.name?.toLowerCase().includes(search.toLowerCase()) ?? false;
-      const matchesPosition = position === 'all' || (p.positions?.includes(position) ?? false);
-      return matchesSearch && matchesPosition;
-    })
-    .map(p => {
-      const isMyPlayer = myTeam.some(mp => mp.id === p.id);
-      return { player: p, isMyPlayer };
-    })
-    .sort((a, b) => {
-      let result = 0;
+  const goalies = tab === 'G';
+  // Season goalie stats are not loaded, so the goalie tab uses projections.
+  const effectiveView: StatView = goalies ? 'next_7' : view;
 
-      if (sortBy === 'proj_pts') result = (b.player.seasonStats?.PTS || 0) - (a.player.seasonStats?.PTS || 0);
-      else if (sortBy === 'proj_g') result = (b.player.seasonStats?.G || 0) - (a.player.seasonStats?.G || 0);
-      else if (sortBy === 'proj_a') result = (b.player.seasonStats?.A || 0) - (a.player.seasonStats?.A || 0);
-      else if (sortBy === 'proj_ppp') result = (b.player.seasonStats?.PPP || 0) - (a.player.seasonStats?.PPP || 0);
-      else if (sortBy === 'proj_sog') result = (b.player.seasonStats?.SOG || 0) - (a.player.seasonStats?.SOG || 0);
-      else if (sortBy === 'proj_hit') result = (b.player.seasonStats?.HIT || 0) - (a.player.seasonStats?.HIT || 0);
-      else if (sortBy === 'proj_blk') result = (b.player.seasonStats?.BLK || 0) - (a.player.seasonStats?.BLK || 0);
-      else if (sortBy === 'name') result = a.player.name.localeCompare(b.player.name);
-      else if (sortBy === 'team') result = a.player.nhlTeam.localeCompare(b.player.nhlTeam);
-      else if (sortBy === 'gp') result = (b.player.gamesPlayed || 0) - (a.player.gamesPlayed || 0);
+  const projectionById = useMemo(
+    () => new Map(projections.filter((p) => p.timeframe === 'next_7').map((p) => [p.playerId, p])),
+    [projections],
+  );
+  const myIds = useMemo(() => new Set(myTeam.map((p) => p.id)), [myTeam]);
 
-      return sortDirection === 'desc' ? result : -result;
+  // Stats, fantasy points and an overall rank for every player in the group, before filters.
+  const groupRows = useMemo<Row[]>(() => {
+    const rows = players
+      .filter((p) => (goalies ? p.isGoalie : !p.isGoalie))
+      .map((player): Row => {
+        let stats: Row['stats'] = null;
+        let projection: Projection | null = null;
+        if (effectiveView === 'next_7') {
+          const p = projectionById.get(player.id);
+          if (p) {
+            projection = p;
+            stats = { GP: p.gamesPlayed, ...(goalies ? p.goalieStats : p.skaterStats) };
+          }
+        } else if (player.seasonStats) {
+          const base = effectiveView === 'per_game' ? perGame(player.seasonStats, player.gamesPlayed ?? 0) : player.seasonStats;
+          stats = { GP: player.gamesPlayed ?? 0, ...base };
+          projection = { playerId: player.id, timeframe: 'per_game', gamesPlayed: player.gamesPlayed ?? 0, skaterStats: base };
+        }
+        let fpts: number | null = null;
+        if (projection) {
+          try { fpts = calculateFantasyPoints(projection, scoring.settings); } catch { fpts = null; }
+        }
+        return { player, stats, fpts, rank: null, mine: myIds.has(player.id) };
+      });
+    rows
+      .filter((r) => r.fpts !== null)
+      .sort((a, b) => (b.fpts ?? 0) - (a.fpts ?? 0))
+      .forEach((r, i) => { r.rank = i + 1; });
+    return rows;
+  }, [players, goalies, effectiveView, projectionById, scoring.settings, myIds]);
+
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = groupRows.filter(({ player, mine }) => {
+      if (q && !player.name.toLowerCase().includes(q) && !player.nhlTeam.toLowerCase().includes(q)) return false;
+      if (!goalies && tab !== 'skaters' && !player.positions?.includes(tab)) return false;
+      if (status === 'mine' && !mine) return false;
+      if (status === 'available' && mine) return false;
+      if (status === 'injured' && (!player.injuryStatus || player.injuryStatus === 'Healthy')) return false;
+      return true;
     });
+    const value = (r: Row): number | string | null => {
+      if (sort.key === 'name') return r.player.name;
+      if (sort.key === 'fpts' || sort.key === 'rank') return r.fpts;
+      return r.stats?.[sort.key] ?? null;
+    };
+    // "Best first" is the default (desc) direction for every column.
+    const lowerIsBetter = sort.key === 'GA' || sort.key === 'GAA' || sort.key === 'rank';
+    return filtered.sort((a, b) => {
+      const va = value(a);
+      const vb = value(b);
+      if (va === null && vb === null) return a.player.name.localeCompare(b.player.name);
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      let result = typeof va === 'string' ? va.localeCompare(vb as string) : (vb as number) - va;
+      if (lowerIsBetter && sort.key !== 'rank') result = -result;
+      return (sort.dir === 'desc' ? result : -result) || a.player.name.localeCompare(b.player.name);
+    });
+  }, [groupRows, search, tab, goalies, status, sort]);
+
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const current = Math.min(page, pages - 1);
+  const visible = rows.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
+  const columns = goalies ? GOALIE_COLS : SKATER_COLS;
+  const first = rows.length ? current * PAGE_SIZE + 1 : 0;
+  const last = Math.min(rows.length, (current + 1) * PAGE_SIZE);
+
+  const onSort = (key: string) => { setPage(0); setSort((s) => (s.key === key ? { key, dir: s.dir === 'desc' ? 'asc' : 'desc' } : { key, dir: 'desc' })); };
+
+  const pager = (
+    <div className="pl-pager">
+      <span className="pl-count">{first}–{last} of {rows.length}</span>
+      <div className="pl-pager-buttons">
+        <button type="button" onClick={() => setPage(current - 1)} disabled={current === 0}><ChevronLeft size={15} aria-hidden="true" /> Prev {PAGE_SIZE}</button>
+        <button type="button" onClick={() => setPage(current + 1)} disabled={current >= pages - 1}>Next {PAGE_SIZE} <ChevronRight size={15} aria-hidden="true" /></button>
+      </div>
+    </div>
+  );
 
   return (
-    <>
-    <div className="bb-page">
-      <header className="bb-page-header"><div><h1>Player Explorer</h1><p>Explore the NHL player pool. Compare season stats and find your next roster move.</p></div></header>
+    <div className="bb-page pl-page">
+      <header className="bb-page-header"><div><h1>Players</h1><p>Search the NHL player pool, compare stats and fantasy points, and find your next add.</p></div></header>
 
-      {/* Search & Filters */}
-      <div className="bb-toolbar mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_180px] gap-4">
-          <div className="min-w-0">
-            <label htmlFor="player-search" className="block text-sm font-medium text-ink-2 mb-2">Search player</label>
-            <input
-              id="player-search"
-              type="text"
-              placeholder="Search by name..."
-              className="bb-field w-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+      <section className="bb-panel pl-filters" aria-label="Player filters">
+        <div className="pl-filter-row">
+          <div className="pl-tabs" role="tablist" aria-label="Position">
+            {POSITIONS.map(([value, label]) => (
+              <button key={value} type="button" role="tab" aria-selected={tab === value} className={tab === value ? 'is-active' : undefined} onClick={() => { setTab(value); setPage(0); }}>{label}</button>
+            ))}
           </div>
-          <div>
-            <label htmlFor="player-position" className="block text-sm font-medium text-ink-2 mb-2">Position</label>
-            <select id="player-position"
-              className="bb-field w-full"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-            >
-              <option value="all">All Positions</option>
-              <option value="C">C</option>
-              <option value="LW">LW</option>
-              <option value="RW">RW</option>
-              <option value="D">D</option>
-              <option value="G">G</option>
+          <label className="pl-search">
+            <span className="sr-only">Search players</span>
+            <input type="search" placeholder="Search player or team" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} />
+            <Search size={16} aria-hidden="true" />
+          </label>
+        </div>
+        <div className="pl-filter-row pl-filter-row-2">
+          <label className="pl-select">
+            <span>Status</span>
+            <select value={status} onChange={(e) => { setStatus(e.target.value as Status); setPage(0); }}>
+              <option value="all">All players</option>
+              <option value="available">Not on my team</option>
+              <option value="mine">My team</option>
+              <option value="injured">Injured</option>
             </select>
-          </div>
+          </label>
+          <label className="pl-select">
+            <span>Stats</span>
+            <select value={effectiveView} onChange={(e) => { setView(e.target.value as StatView); setPage(0); }}>
+              {!goalies && <option value="season">Season (total)</option>}
+              {!goalies && <option value="per_game">Season (per game)</option>}
+              <option value="next_7">Projected (next 7 days)</option>
+            </select>
+          </label>
+          <p className="pl-scoring">Fan Pts use {scoring.label}.{goalies && ' Goalies show model projections.'}</p>
         </div>
-        <div className="mt-4 text-sm text-muted">
-          Showing {filteredPlayers.length} players
-        </div>
-      </div>
+      </section>
 
-      {/* Player Table */}
-      <div className="bb-panel overflow-hidden">
-        <p className="border-b border-rule px-4 py-3 text-xs text-muted md:hidden">Swipe across the table for all stats.</p>
-        <div className="overflow-x-auto">
-          <table className="bb-table w-full">
-            <thead className="bg-paper-3 border-b border-rule">
-              <tr>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'name' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('name'); } }}
-                  onClick={() => handleSort('name')}
-                >
-                  Player {sortBy === 'name' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_pts' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_pts'); } }}
-                  onClick={() => handleSort('proj_pts')}
-                >
-                  PTS {sortBy === 'proj_pts' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-left text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'team' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('team'); } }}
-                  onClick={() => handleSort('team')}
-                >
-                  Team {sortBy === 'team' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-ink-2">Pos</th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'gp' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('gp'); } }}
-                  onClick={() => handleSort('gp')}
-                >
-                  GP {sortBy === 'gp' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_g' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_g'); } }}
-                  onClick={() => handleSort('proj_g')}
-                >
-                  G {sortBy === 'proj_g' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_a' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_a'); } }}
-                  onClick={() => handleSort('proj_a')}
-                >
-                  A {sortBy === 'proj_a' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_ppp' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_ppp'); } }}
-                  onClick={() => handleSort('proj_ppp')}
-                >
-                  PPP {sortBy === 'proj_ppp' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_sog' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_sog'); } }}
-                  onClick={() => handleSort('proj_sog')}
-                >
-                  SOG {sortBy === 'proj_sog' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_hit' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_hit'); } }}
-                  onClick={() => handleSort('proj_hit')}
-                >
-                  HIT {sortBy === 'proj_hit' && (sortDirection === 'desc' ? '↓' : '↑')}
-                </th>
-                <th
-                  className="px-4 py-3 text-right text-xs font-medium text-ink-2 cursor-pointer hover:text-accent-2 transition-colors"
-                  tabIndex={0}
-                  aria-sort={sortBy === 'proj_blk' ? (sortDirection === 'desc' ? 'descending' : 'ascending') : 'none'}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('proj_blk'); } }}
-                  onClick={() => handleSort('proj_blk')}
-                >
-                  BLK {sortBy === 'proj_blk' && (sortDirection === 'desc' ? '↓' : '↑')}
+      <section className="bb-panel pl-results" aria-label="Players">
+        {pager}
+        <div className="pl-table-wrap">
+          <table className="pl-table">
+            <thead>
+              <tr className="pl-group-row">
+                <th scope="colgroup" className="pl-sticky pl-left">{goalies ? 'Goalies' : 'Skaters'}</th>
+                <th scope="colgroup" colSpan={2} className="pl-group">Fantasy</th>
+                <th scope="colgroup" colSpan={columns.length} className="pl-group">
+                  {effectiveView === 'season' ? 'Season stats' : effectiveView === 'per_game' ? 'Per game' : 'Projected, next 7 days'}
                 </th>
               </tr>
+              <tr>
+                <SortHeader k="name" label="Player" className="pl-sticky pl-left" sort={sort} onSort={onSort} />
+                <SortHeader k="rank" label="Rank" title="Rank by fantasy points in this view" sort={sort} onSort={onSort} />
+                <SortHeader k="fpts" label="Fan Pts" title="Fantasy points" className="pl-fpts" sort={sort} onSort={onSort} />
+                {columns.map(([key, label, title]) => (
+                  <SortHeader key={key} k={key} label={label} title={title} className={key === 'GP' ? 'pl-divider' : undefined} sort={sort} onSort={onSort} />
+                ))}
+              </tr>
             </thead>
-            <tbody className="divide-y divide-rule">
-              {filteredPlayers.map(({ player, isMyPlayer }) => (
-                <tr
-                  key={player.id}
-                  className={`hover:bg-paper-3 transition-colors cursor-pointer ${isMyPlayer ? 'bg-paper-3' : ''}`}
-                  tabIndex={0}
-                  aria-label={`View ${player.name}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(player.id); } }}
-                  onClick={() => openPlayer(player.id)}
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {player.headshotUrl ? (
-                        <img
-                          src={player.headshotUrl}
-                          alt={player.name}
-                          className="h-10 w-10 bg-paper-3 object-cover mr-3"
-                          onError={(e) => {
-                            // Fallback to initials if image fails to load
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <div className={`h-10 w-10  bg-paper-3 flex items-center justify-center text-ink-2 font-medium mr-3 ${player.headshotUrl ? 'hidden' : ''}`}>
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-ink">{player.name}</div>
-                        {isMyPlayer && (
-                          <span className="inline-block px-2 py-0.5 bg-success/10 text-success text-xs font-medium mt-0.5">
-                            My team
+            <tbody>
+              {visible.map(({ player, stats, fpts, rank, mine }) => {
+                const injury = player.injuryStatus && player.injuryStatus !== 'Healthy' ? INJURY_SHORT[player.injuryStatus] ?? player.injuryStatus : null;
+                return (
+                  <tr key={player.id} className={mine ? 'is-mine' : undefined}>
+                    <th scope="row" className="pl-sticky pl-left">
+                      <div className="pl-player">
+                        <span className="pl-headshot">
+                          {player.headshotUrl
+                            ? <img src={player.headshotUrl} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }} />
+                            : player.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="pl-name-line">
+                            <a href={`/players?player=${player.id}`} className="pl-name" onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); openPlayer(player.id); }}>{player.name}</a>
+                            {injury && <span className="pl-injury" title={player.injuryStatus}>{injury}</span>}
+                            {mine && <Star size={12} className="pl-mine" aria-label="On my team" />}
                           </span>
-                        )}
+                          <span className="pl-meta">{player.nhlTeam} - {player.positions?.join(',') || (player.isGoalie ? 'G' : '')}</span>
+                        </span>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-accent-2">{player.seasonStats?.PTS || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.nhlTeam}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">{player.positions?.join('/') ?? ''}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.gamesPlayed || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.G || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.A || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.PPP || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.SOG || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.HIT || '-'}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-ink-2">{player.seasonStats?.BLK || '-'}</td>
-                </tr>
-              ))}
+                    </th>
+                    <td className="pl-rank">{rank ?? '–'}</td>
+                    <td className="pl-fpts">{fpts === null ? '–' : fpts.toFixed(1)}</td>
+                    {columns.map(([key]) => <td key={key} className={key === 'GP' ? 'pl-divider' : undefined}>{formatStat(key, stats?.[key], effectiveView)}</td>)}
+                  </tr>
+                );
+              })}
+              {visible.length === 0 && (
+                <tr><td colSpan={3 + columns.length} className="pl-empty">{isLoading ? 'Loading players…' : 'No players match these filters.'}</td></tr>
+              )}
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Player Detail Modal */}
+        {pager}
+      </section>
     </div>
-    </>
   );
 }

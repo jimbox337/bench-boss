@@ -10,11 +10,12 @@ import type { GameStarters } from '@/lib/goalieStarters';
 import type { ScoreboardGame } from '@/lib/nhlGameCenter';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
 import { SectionTitle, StarterLine, TeamColorBar, TeamLink, TeamLogo, pointsScoring, shortStatus } from '@/components/gamecenter/shared';
+import { calendarDay } from '@/lib/time';
 
 type Scoreboard = { date: string; prevDate?: string; nextDate?: string; games: ScoreboardGame[]; updatedAt: string };
 
-const shortDay = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-const formatDay = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+const shortDay = (date: string) => calendarDay(date, { weekday: 'short', month: 'short', day: 'numeric' });
+const formatDay = (date: string) => calendarDay(date, { weekday: 'long', month: 'long', day: 'numeric' });
 
 function GameCard({ game, starters, mine }: { game: ScoreboardGame; starters?: GameStarters; mine: number }) {
   const started = game.isLive || game.isFinal;

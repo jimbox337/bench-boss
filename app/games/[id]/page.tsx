@@ -14,6 +14,7 @@ import { SectionTitle, StarterLine, TeamLink, TeamLogo, pointsScoring } from '@/
 import ShotChart from '@/components/gamecenter/ShotChart';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
 import LiveIceGamecast from '@/components/gamecenter/LiveIceGamecast';
+import { formatPacific, pacificTime } from '@/lib/time';
 
 const TABS = ['Game', 'Box score', 'Plays', 'Team stats'] as const;
 type Tab = (typeof TABS)[number];
@@ -293,8 +294,8 @@ function ScheduleList({ abbrev, games }: { abbrev: string; games: TeamScheduleGa
                 <span className="flex items-center gap-2"><TeamLogo team={{ abbrev: homeTeam }} size={22} />{homeTeam}</span>
               </span>
               <span className="border-l border-rule pl-3 text-right text-xs leading-relaxed text-muted">
-                {new Date(g.startTimeUTC).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}<br />
-                {new Date(g.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                {formatPacific(g.startTimeUTC, { weekday: 'short', month: 'short', day: 'numeric' })}<br />
+                {pacificTime(g.startTimeUTC)}
               </span>
             </Link></li>
           );
@@ -337,7 +338,7 @@ export default function GamePage() {
   const status: [string, string] = game.isLive
     ? (game.inIntermission ? [`END ${periodShort}`, 'Intermission'] : [periodShort, game.clock || ''])
     : game.isFinal ? ['FINAL', game.periodType && game.periodType !== 'REG' ? game.periodType : '']
-    : [new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase(), new Date(game.startTimeUTC).toLocaleDateString([], { month: 'short', day: 'numeric' })];
+    : [pacificTime(game.startTimeUTC).toUpperCase(), formatPacific(game.startTimeUTC, { month: 'short', day: 'numeric' })];
   const myRows = [
     ...detail.skaters.filter(r => mine.has(String(r.playerId))).map(r => ({ id: r.playerId, name: r.name, team: r.team, line: `${r.goals}G ${r.assists}A ${r.sog} SOG`, fpts: skaterFantasyPoints(r, scoring.settings) ?? 0 })),
     ...detail.goalies.filter(g => mine.has(String(g.playerId)) && g.toi !== '00:00').map(g => ({ id: g.playerId, name: g.name, team: g.team, line: `${g.saves} SV ${g.goalsAgainst} GA`, fpts: goalieFantasyPoints(g, scoring.settings) ?? 0 })),
@@ -397,7 +398,7 @@ export default function GamePage() {
           <section>
             <SectionTitle>Game details</SectionTitle>
             <ul className="space-y-3 text-[15px]">
-              <li className="flex items-center gap-3"><Clock className="h-5 w-5 text-ink-2" aria-hidden />{new Date(game.startTimeUTC).toLocaleString([], { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</li>
+              <li className="flex items-center gap-3"><Clock className="h-5 w-5 text-ink-2" aria-hidden />{formatPacific(game.startTimeUTC, { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })} PT</li>
               {game.broadcasts.length > 0 && <li className="flex items-center gap-3"><Tv className="h-5 w-5 text-ink-2" aria-hidden />{game.broadcasts.join(', ')}</li>}
               {game.venue && <li className="flex items-center gap-3"><MapPin className="h-5 w-5 text-ink-2" aria-hidden />{game.venue}</li>}
             </ul>
