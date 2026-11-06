@@ -1,14 +1,14 @@
-# 🤖 AI Player Analysis Feature
+# Player Insights
 
 ## Overview
 
-The AI Player Analysis feature provides comprehensive, AI-powered insights for every player in your fantasy hockey roster. Powered by **Groq's free tier** using the `openai/gpt-oss-120b` model (default in `lib/aiModel.ts`, overridable with the server-side `GROQ_MODEL` variable), this feature analyzes player statistics, trends, and context to deliver actionable recommendations at **absolutely no cost**!
+Player Insights provides comprehensive, data-driven context for every player in your fantasy hockey roster. The outlook service uses Groq's free tier with the configured model in `lib/outlookModel.ts` and combines verified player statistics, trends, and context into actionable recommendations.
 
 ## What It Does
 
 When you click on any player in your "My Team" roster, you get:
 
-### 1. **AI-Generated Outlook**
+### 1. **Generated Outlook**
 - **Summary**: 2-3 sentence overview of the player's season and current form
 - **Fantasy Value**: Must-Start, Start, Flex, Bench, or Drop rating
 - **Trend**: Hot 🔥, Cold 🥶, or Steady ➡️ performance indicator
@@ -40,8 +40,8 @@ When you click on any player in your "My Team" roster, you get:
    - Click on any player row in your roster table
    - The player detail modal will open
 
-3. **View AI Analysis**
-   - AI analysis generates automatically
+3. **View Player Insights**
+   - Player insights generate automatically
    - Loading spinner shows while processing (~2-3 seconds)
    - View comprehensive outlook once loaded
 
@@ -57,7 +57,7 @@ When you click on any player in your "My Team" roster, you get:
 The feature uses the **FREE** Groq API:
 
 ```typescript
-Model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b'  // lib/aiModel.ts
+Model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b'  // lib/outlookModel.ts
 Max Tokens: 1500
 Temperature: 0.25  // player outlook route
 Provider: Groq (ultra-fast inference)
@@ -76,13 +76,13 @@ Provider: Groq (ultra-fast inference)
 1. **`components/PlayerDetailModal.tsx`**
    - Beautiful modal UI component
    - Handles loading, error, and success states
-   - Displays stats grid and AI analysis
+   - Displays stats grid and player insights
    - Color-coded indicators for trends, value, and risk
 
 2. **`app/api/player-outlook/route.ts`**
-   - Next.js API route for AI processing
+   - Next.js API route for outlook generation
    - POST endpoint accepting player data
-   - Calls Anthropic Claude API
+   - Calls the configured outlook provider
    - Returns structured outlook JSON
 
 3. **`lib/calculator.ts`**
@@ -132,11 +132,11 @@ npm run dev
 
 1. Navigate to http://localhost:3000/myteam
 2. Click on any player
-3. Watch the AI generate insights!
+3. Watch the outlook service generate insights!
 
 ## Example Analysis
 
-Here's what the AI might generate for a top-tier player:
+Here's what the outlook service might generate for a top-tier player:
 
 ```json
 {
@@ -193,15 +193,15 @@ Here's what the AI might generate for a top-tier player:
 - [ ] Cache outlooks in database to reduce API costs
 - [ ] Scheduled updates (e.g., daily refresh at 3 AM)
 - [ ] Integrate actual injury data from NHL API
-- [ ] Add player comparison mode (side-by-side AI analysis)
+- [ ] Add player comparison mode (side-by-side insights)
 - [ ] Extend to all pages (Players Explorer, Dashboard, etc.)
 - [ ] Add "Refresh Outlook" button for manual updates
 - [ ] Export outlook as PDF/image for sharing
 
 ### Advanced Ideas
-- [ ] Trade recommendation engine using AI
-- [ ] Waiver wire rankings with AI explanations
-- [ ] Lineup optimizer with AI reasoning
+- [ ] Trade recommendation engine
+- [ ] Waiver wire rankings with evidence-based explanations
+- [ ] Lineup optimizer with evidence-based reasoning
 - [ ] Custom analysis prompts (user can ask specific questions)
 - [ ] Multi-player batch analysis
 
@@ -235,13 +235,13 @@ Here's what the AI might generate for a top-tier player:
 2. Refresh the page
 3. Clear browser cache
 
-### AI analysis seems wrong
+### Player insight seems wrong
 
 **Cause**: Limited or outdated player data
 
 **Solution**:
 1. Verify player has season stats populated
-2. Remember AI bases analysis on provided data
+2. Remember the outlook service bases its analysis on provided data
 3. Early-season players may have less context
 
 ## Support
@@ -254,4 +254,4 @@ For issues or questions:
 
 ---
 
-**Built with Claude Code** 🤖
+**Built by the Bench Boss team**

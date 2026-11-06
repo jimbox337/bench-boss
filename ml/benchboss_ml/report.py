@@ -25,7 +25,7 @@ def _delta(model: float, base: float, lower_is_better: bool = True) -> str:
 
 
 # Display names for report keys (keys stay stable so older evaluation.json files still render).
-LABELS = {"neuralOnly": "benchBossAiOnly", "lightgbmNeuralEnsemble": "lightgbmPlusBenchBossAi"}
+LABELS = {"neuralOnly": "benchBossNeuralOnly", "lightgbmNeuralEnsemble": "lightgbmPlusBenchBossNeural"}
 
 
 def render_markdown(report: dict[str, Any]) -> str:
@@ -72,8 +72,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "- **shrunkBaselineOnly** — the production blend with empirical-Bayes shrinkage toward last season and a TOI-based prior (k tuned on validation).",
         "- **residualOnShrunkOnly** — LightGBM context/usage multipliers on top of the shrunk baseline.",
         "- **benchBossSelected** — the served LightGBM projection: per-stat NNLS stack of baselines and boosters, blended with the production baseline.",
-        "- **benchBossAiOnly** — BenchBoss AI alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).",
-        "- **lightgbmPlusBenchBossAi** — the same stack with BenchBoss AI as one more component; validation picks its weight.",
+        "- **benchBossNeuralOnly** — Bench Boss Neural alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).",
+        "- **lightgbmPlusBenchBossNeural** — the same stack with Bench Boss Neural as one more component; validation picks its weight.",
         "",
         "## Weekly fantasy points (default Bench Boss scoring; games actually played)",
         "",
@@ -134,9 +134,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     nn = skater.get("neural")
     if nn:
         mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
-        lines += ["", "## BenchBoss AI (neural network)", "",
+        lines += ["", "## Bench Boss Neural (neural network)", "",
                   f"Gate basis: {'week-start backtest' if nn.get('gateBasis') == 'weekStart' else 'per-game backtest'}. Best epoch {nn['bestEpoch']} (early stopping on validation); ensemble model weight {nn['modelWeight']} vs the production baseline. "
-                  f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_AI=1`.", "",
+                  f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_NEURAL=1`.", "",
                   f"Rule: {nn['rule']}", "",
                   "| Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |", "|---|---|---|---|---|---|---|---|"]
         for name, g in nn["gate"].items():
@@ -149,8 +149,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             for split_name, result in nn["daily"].items():
                 for label, m in result.items():
                     lines.append(f"| {split_name} | {LABELS.get(label, label)} | {_f(m['poissonDevianceSum'], 4)} | {_f(m['fpMae'], 4)} | {_f(m['fpSpearman'])} |")
-        lines += ["", "Stack weights with BenchBoss AI as a component (validation NNLS):", ""]
-        lines += [f"- {t}: " + ", ".join(f"{'BenchBoss AI' if n == 'neural' else n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
+        lines += ["", "Stack weights with Bench Boss Neural as a component (validation NNLS):", ""]
+        lines += [f"- {t}: " + ", ".join(f"{'Bench Boss Neural' if n == 'neural' else n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
 
     xg = report.get("xg") or {}
     if xg.get("available"):

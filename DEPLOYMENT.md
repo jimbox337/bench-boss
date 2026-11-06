@@ -106,7 +106,7 @@ In Vercel project settings:
 4. Sign in and verify:
    - Dashboard loads
    - Players load from NHL API
-   - AI player analysis works (click any player on My Team)
+   - Player insights work (click any player on My Team)
    - All navigation works
 
 ### Create Demo User (Optional)
@@ -149,7 +149,7 @@ Or use the Vercel SQL editor in the dashboard.
 - `NEXTAUTH_URL` must match your deployment URL exactly
 - Include `https://` in the URL
 
-### AI Analysis Not Working
+### Player Insights Not Working
 
 **Solution**: Check `GROQ_API_KEY` is set and valid:
 1. Verify the key in Vercel environment variables

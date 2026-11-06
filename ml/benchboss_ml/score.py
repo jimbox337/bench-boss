@@ -65,7 +65,7 @@ def score(date: str, tag: str, skaters: pd.DataFrame, goalies: pd.DataFrame, fin
     rank = dressed[["fp", "model_fp", "base_fp"]].rank()
     out["fpSpearman"] = {"model": float(rank["fp"].corr(rank["model_fp"])), "baseline": float(rank["fp"].corr(rank["base_fp"]))}
     if "nn_fp" in dressed:
-        # Shadow BenchBoss AI ensemble (never shown in the app): same error metrics, for live tracking.
+        # Shadow Bench Boss Neural ensemble (never shown in the app): same error metrics, for live tracking.
         y = dressed["fp"].to_numpy(float)
         nn = dressed["nn_fp"].to_numpy(float)
         out["neuralShadow"] = {"fpMae": float(np.mean(np.abs(y - nn))), "fpRmse": float(math.sqrt(np.mean((y - nn) ** 2))),
@@ -116,7 +116,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{stat:10} {m['actualMean']:7.3f} {m['modelMean']:7.3f} {m['baselineMean']:7.3f} | {m['modelMae']:9.3f} {m['baselineMae']:9.3f} | {m['modelRmse']:10.3f} {m['baselineRmse']:9.3f}")
         print("FP rank correlation:", {k: round(v, 3) for k, v in r["fpSpearman"].items()})
         if "neuralShadow" in r:
-            print("BenchBoss AI shadow:", {k: round(v, 3) for k, v in r["neuralShadow"].items()})
+            print("Bench Boss Neural shadow:", {k: round(v, 3) for k, v in r["neuralShadow"].items()})
         print("Not dressed:", r["notDressed"])
         print("Top performers:", r["topPerformers"])
         for g in r["goalies"]:

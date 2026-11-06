@@ -3289,7 +3289,7 @@
         }
       },
       "promoted": false,
-      "rule": "The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight."
+      "rule": "The LightGBM + Bench Boss Neural ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give Bench Boss Neural a non-zero weight."
     },
     "fitBasis": "weekStart",
     "promotion": {
