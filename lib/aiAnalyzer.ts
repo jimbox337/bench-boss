@@ -36,6 +36,14 @@ export interface HotPlayer {
   recommendation: string;
 }
 
+/** One player entry in the model's JSON reply; names are matched back to real players. */
+type AIItem = { playerName: string; position: string; reason: string; priority: 'high' | 'medium' | 'low'; trend: HotPlayer['trend']; recentStats: string; recommendation: string };
+
+/** Drops entries whose name did not match a known player, so AI output can't add players. */
+function withPlayer<T extends { player: Player | undefined }>(items: T[]): (T & { player: Player })[] {
+  return items.filter((item): item is T & { player: Player } => Boolean(item.player));
+}
+
 /**
  * Analyze lineup and provide AI-powered suggestions
  */
@@ -87,11 +95,11 @@ Format as JSON:
       const result = JSON.parse(jsonMatch[0]);
 
       // Map player names to actual Player objects
-      const optimizedLineup = result.optimizedLineup.map((item: any) => ({
+      const optimizedLineup = withPlayer((result.optimizedLineup as AIItem[]).map(item => ({
         position: item.position,
         player: roster.find(p => p.name === item.playerName) || availablePlayers.find(p => p.name === item.playerName),
         reason: item.reason
-      })).filter((item: any) => item.player);
+      })));
 
       return {
         suggestions: result.suggestions,
@@ -159,16 +167,16 @@ Format as JSON:
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
 
-      const topTargets = result.topTargets.map((item: any) => ({
+      const topTargets = withPlayer((result.topTargets as AIItem[]).map(item => ({
         player: availablePlayers.find(p => p.name === item.playerName),
         reason: item.reason,
         priority: item.priority
-      })).filter((item: any) => item.player);
+      })));
 
-      const dropCandidates = result.dropCandidates.map((item: any) => ({
+      const dropCandidates = withPlayer((result.dropCandidates as AIItem[]).map(item => ({
         player: myTeam.find(p => p.name === item.playerName),
         reason: item.reason
-      })).filter((item: any) => item.player);
+      })));
 
       return {
         topTargets,
@@ -226,12 +234,12 @@ Format as JSON array:
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
 
-      return result.map((item: any) => ({
+      return withPlayer((result as AIItem[]).map(item => ({
         player: players.find(p => p.name === item.playerName),
         trend: item.trend,
         recentStats: item.recentStats,
         recommendation: item.recommendation
-      })).filter((item: any) => item.player);
+      })));
     }
 
     throw new Error('Failed to parse AI response');

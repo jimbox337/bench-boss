@@ -29,13 +29,20 @@ export async function combineProjections(players: Player[], sources: ProjectionS
   return [...merged, ...model.filter(p => !known.has(p.playerId))];
 }
 
-let cache: { at: number; key: string; value: Projection[] } | null = null;
+const cache = new Map<string, { at: number; value: Projection[] }>();
 const CACHE_MS = 30 * 60 * 1000;
+const CACHE_ENTRIES = 16;
+
+/** Identifies a player set by id, team and goalie flag, independent of order. */
+export function projectionCacheKey(players: Player[]): string {
+  return players.map(p => `${p.id}:${p.nhlTeam}:${p.isGoalie ? 'G' : 'S'}`).sort().join(',');
+}
 
 /** Server-side model projections from the committed artifact (if it passed the promotion gate). */
 export async function modelProjections(players: Player[]): Promise<Projection[]> {
-  const key = `${players.length}`;
-  if (cache && cache.key === key && Date.now() - cache.at < CACHE_MS) return cache.value;
+  const key = projectionCacheKey(players);
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
   const [{ default: artifact }, { loadRuntimeData }, { projectAll }, { getCurrentNHLSeason }] = await Promise.all([
     import('./artifacts/bench-boss-model.json'),
     import('./runtimeData'),
@@ -47,6 +54,9 @@ export async function modelProjections(players: Player[]): Promise<Projection[]>
   const data = await loadRuntimeData(await getCurrentNHLSeason());
   const value = projectAll(players, typed, data);
   if (value.length === 0) throw new Error('Model produced no projections');
-  cache = { at: Date.now(), key, value };
+  cache.delete(key);
+  cache.set(key, { at: Date.now(), value });
+  // Map keeps insertion order, so the first key is the least recently stored.
+  while (cache.size > CACHE_ENTRIES) cache.delete(cache.keys().next().value as string);
   return value;
 }

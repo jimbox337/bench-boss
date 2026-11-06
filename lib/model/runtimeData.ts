@@ -3,7 +3,7 @@
  * per player. Current-season totals come from season aggregates; recent windows (last 5/10/20
  * games, deployment, availability) from game-level rows of the last ~50 days.
  */
-import type { FeatureInputs, Position, SeasonTotals, SkaterGameRow, TeamGameRow, TeamTotals, ScheduledGame } from './features';
+import type { FeatureInputs, GoalieGameRow, GoalieSeasonTotals, Position, SeasonTotals, SkaterGameRow, TeamGameRow, TeamTotals, ScheduledGame } from './features';
 
 const STATS = 'https://api.nhle.com/stats/rest/en';
 const WEB = 'https://api-web.nhle.com/v1';
@@ -56,6 +56,53 @@ function totalsFrom(summary: Row[], realtime: Row[], toi: Row[]): Map<number, Se
   return out;
 }
 
+/** 60-day date ranges from September 1 of the season's first year through yesterday. */
+function seasonRanges(season: string, today: Date): [string, string][] {
+  const out: [string, string][] = [];
+  const yesterday = iso(new Date(today.getTime() - 86_400_000));
+  for (let start = new Date(`${season.slice(0, 4)}-09-01T12:00:00Z`); iso(start) <= yesterday; start = new Date(start.getTime() + 60 * 86_400_000)) {
+    const end = iso(new Date(start.getTime() + 59 * 86_400_000));
+    out.push([iso(start), end < yesterday ? end : yesterday]);
+  }
+  return out;
+}
+
+/**
+ * Every current-season goalie appearance (goalie features need the whole season: starts,
+ * season-to-date save % and the team's starter sequence), plus previous-season totals.
+ * The previous-season aggregate includes relief appearances; training uses starts only, a
+ * small difference for prev_sv_pct.
+ */
+async function loadGoalies(season: string, prevSeason: string, now: Date): Promise<{ goalieRows: GoalieGameRow[]; prevGoalieTotals: Map<number, GoalieSeasonTotals>; names: Map<number, string> }> {
+  const ranges = seasonRanges(season, now);
+  const [prev, ...chunks] = await Promise.all([
+    report('goalie/summary', `seasonId=${prevSeason} and gameTypeId=2`, 86_400, false),
+    ...ranges.map(([a, b]) => report('goalie/summary', `seasonId=${season} and gameTypeId=2 and gameDate>="${a}" and gameDate<="${b}"`, 1800, true)),
+  ]);
+  const names = new Map<number, string>();
+  const seen = new Set<string>();
+  const goalieRows: GoalieGameRow[] = [];
+  for (const r of chunks.flat()) {
+    const key = `${r.gameId}:${r.playerId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    names.set(r.playerId as number, String(r.goalieFullName || ''));
+    goalieRows.push({
+      gameId: r.gameId as number, date: String(r.gameDate), playerId: r.playerId as number,
+      team: String(r.teamAbbrev), opp: String(r.opponentTeamAbbrev), home: r.homeRoad === 'H' ? 1 : 0,
+      started: Math.min(num(r.gamesStarted), 1), win: Math.min(num(r.wins), 1),
+      saves: num(r.saves), shotsAgainst: num(r.shotsAgainst), ga: num(r.goalsAgainst), toi: num(r.timeOnIce) / 60,
+    });
+  }
+  const prevGoalieTotals = new Map<number, GoalieSeasonTotals>();
+  for (const r of prev) {
+    const id = r.playerId as number;
+    const t = prevGoalieTotals.get(id) ?? { starts: 0, saves: 0, shotsAgainst: 0 };
+    prevGoalieTotals.set(id, { starts: t.starts + num(r.gamesStarted), saves: t.saves + num(r.saves), shotsAgainst: t.shotsAgainst + num(r.shotsAgainst) });
+  }
+  return { goalieRows, prevGoalieTotals, names };
+}
+
 export type RuntimeData = FeatureInputs & { season: string; today: string; names: Map<number, string> };
 
 export async function loadRuntimeData(season: string, now = new Date()): Promise<RuntimeData> {
@@ -64,6 +111,11 @@ export async function loadRuntimeData(season: string, now = new Date()): Promise
   const wins = windows(now);
   const winExp = ([a, b]: [string, string]) => `seasonId=${season} and gameTypeId=2 and gameDate>="${a}" and gameDate<="${b}"`;
 
+  // Goalie data is optional: if it fails, skater projections still load and goalies get none.
+  const goaliesPromise = loadGoalies(season, prevSeason, now).catch(error => {
+    console.warn('Goalie model data unavailable:', error);
+    return { goalieRows: [] as GoalieGameRow[], prevGoalieTotals: new Map<number, GoalieSeasonTotals>(), names: new Map<number, string>() };
+  });
   const [curSum, curRt, curToi, prevSum, prevRt, prevToi, teamAgg, ...rest] = await Promise.all([
     report('skater/summary', seasonExp(season), 1800, false),
     report('skater/realtime', seasonExp(season), 1800, false),
@@ -136,8 +188,11 @@ export async function loadRuntimeData(season: string, now = new Date()): Promise
     schedule.push({ gameId: g.id, date: day.date, home: g.homeTeam.abbrev, away: g.awayTeam.abbrev });
   }
 
+  const goalies = await goaliesPromise;
+  goalies.names.forEach((name, id) => names.set(id, name));
   return {
     season, today: nhlToday(now), names, skaterRows, teamRows, schedule, teamTotals,
+    goalieRows: goalies.goalieRows, prevGoalieTotals: goalies.prevGoalieTotals,
     seasonTotals: totalsFrom(curSum, curRt, curToi),
     prevSeasonTotals: totalsFrom(prevSum, prevRt, prevToi),
   };

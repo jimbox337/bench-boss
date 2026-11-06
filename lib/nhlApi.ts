@@ -42,8 +42,15 @@ async function fetchPlayerStats(playerId: number, retries = 3) {
   return null;
 }
 
+type RawRosterPlayer = { id: number; firstName: { default: string }; lastName: { default: string }; positionCode?: string };
+type RawRoster = { forwards?: RawRosterPlayer[]; defensemen?: RawRosterPlayer[]; goalies?: RawRosterPlayer[] };
+type RawSeasonStats = {
+  gamesPlayed?: number; goals?: number; assists?: number; points?: number; plusMinus?: number;
+  powerPlayGoals?: number; powerPlayPoints?: number; shots?: number; hits?: number; blockedShots?: number; pim?: number;
+};
+
 // Fetch roster for a specific team with retry logic
-async function fetchTeamRoster(teamAbbrev: string, retries = 3): Promise<any> {
+async function fetchTeamRoster(teamAbbrev: string, retries = 3): Promise<RawRoster | null> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       await delay(200); // 200ms delay between team requests
@@ -171,26 +178,8 @@ export async function fetchNHLRoster(): Promise<Player[]> {
   return allPlayers;
 }
 
-// Extract current season stats from player data
-function extractSeasonStats(playerData: any): SkaterStats | undefined {
-  const currentSeasonStats = playerData?.featuredStats?.regularSeason?.season;
-  if (!currentSeasonStats) return undefined;
-
-  return {
-    G: currentSeasonStats.goals || 0,
-    A: currentSeasonStats.assists || 0,
-    PTS: currentSeasonStats.points || 0,
-    plusMinus: currentSeasonStats.plusMinus || 0,
-    PPP: currentSeasonStats.powerPlayGoals + currentSeasonStats.powerPlayPoints || 0,
-    SOG: currentSeasonStats.shots || 0,
-    HIT: currentSeasonStats.hits || 0,
-    BLK: currentSeasonStats.blockedShots || 0,
-    PIM: currentSeasonStats.pim || 0,
-  };
-}
-
 // Calculate per-game averages from season stats
-function calculatePerGameStats(seasonStats: any): SkaterStats | null {
+function calculatePerGameStats(seasonStats: RawSeasonStats | null | undefined): SkaterStats | null {
   if (!seasonStats || !seasonStats.gamesPlayed) {
     return null;
   }
@@ -223,7 +212,7 @@ async function getUpcomingGames(teamAbbrev: string, days: number = 7): Promise<n
     const today = new Date();
     const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
     
-    const upcomingGames = schedule.games.filter((game: any) => {
+    const upcomingGames = schedule.games.filter((game: { gameDate: string }) => {
       const gameDate = new Date(game.gameDate);
       return gameDate >= today && gameDate <= futureDate;
     }).length;

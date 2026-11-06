@@ -17,7 +17,7 @@ import pandas as pd
 
 from .availability import AVAILABILITY_FEATURES, availability_rows
 from .dataset import load_processed
-from .features import RATE_STATS_FOR_EXPORT, SKATER_FEATURES, skater_features
+from .features import GOALIE_FEATURES, RATE_STATS_FOR_EXPORT, SKATER_FEATURES, goalie_features, skater_features
 from .paths import ML_ROOT
 
 FIXTURE = ML_ROOT.parent / "lib" / "model" / "__fixtures__" / "parity.json"
@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--date")
     args = parser.parse_args(argv)
     t = load_processed()
-    skaters, teams = t["skater_games"], t["team_games"]
+    skaters, teams, goalies = t["skater_games"], t["team_games"], t["goalie_games"]
     season = sorted(skaters["season"].unique())[-1]
     prev_season = f"{int(season[:4]) - 1}{season[:4]}"
     cur = skaters[skaters["season"] == season]
@@ -56,6 +56,13 @@ def main(argv: list[str] | None = None) -> int:
     # Every game an involved team plays in the window, described from the home side.
     schedule = teams[teams["gameId"].isin(set(upcoming["gameId"])) & (teams["home"] == 1)][["gameId", "gameDate", "team", "opp"]]
 
+    gfeats = goalie_features(goalies, teams)
+    gtarget = gfeats[(gfeats["gameDate"] == day) & gfeats["team"].isin(involved)]
+    goalie_ids = set(gtarget["playerId"])
+    cur_goalies = goalies[(goalies["season"] == season) & (goalies["gameDate"] < day)]
+    goalie_rows = cur_goalies[cur_goalies["team"].isin(involved) | cur_goalies["playerId"].isin(goalie_ids)]
+    prev_starts = goalies[(goalies["season"] == prev_season) & (goalies["started"] == 1) & goalies["playerId"].isin(goalie_ids)]
+
     def totals(frame: pd.DataFrame) -> dict[str, dict]:
         out = {}
         for pid, g in frame.groupby("playerId"):
@@ -75,13 +82,20 @@ def main(argv: list[str] | None = None) -> int:
         "schedule": [{"gameId": int(r.gameId), "date": r.gameDate.strftime("%Y-%m-%d"), "home": r.team, "away": r.opp} for r in schedule.itertuples()],
         "expectedSkaters": [{"playerId": int(r.playerId), "team": r.team, "opp": r.opp, "home": int(r.home), "position": r.position,
                              "features": {f: clean(getattr(r, f)) for f in SKATER_FEATURES}} for r in target.itertuples()],
+        "goalieRows": [{"gameId": int(r.gameId), "date": r.gameDate.strftime("%Y-%m-%d"), "playerId": int(r.playerId), "team": r.team, "opp": r.opp,
+                        "home": int(r.home), "started": int(r.started), "win": int(r.win), "saves": float(r.saves), "shotsAgainst": float(r.shotsAgainst),
+                        "ga": float(r.ga), "toi": float(r.toi)} for r in goalie_rows.itertuples()],
+        "prevGoalieTotals": {str(int(pid)): {"starts": int(len(g)), "saves": float(g["saves"].sum()), "shotsAgainst": float(g["shotsAgainst"].sum())}
+                             for pid, g in prev_starts.groupby("playerId")},
+        "expectedGoalies": [{"playerId": int(r.playerId), "team": r.team, "opp": r.opp, "home": int(r.home),
+                             "features": {f: clean(getattr(r, f)) for f in GOALIE_FEATURES}} for r in gtarget.itertuples()],
         "expectedAvailability": [{"playerId": int(r.playerId), "team": r.team, "home": int(r.home), "position": r.position,
                                   "features": {f: clean(getattr(r, f)) for f in AVAILABILITY_FEATURES}} for r in avail.itertuples()],
     }
     FIXTURE.parent.mkdir(parents=True, exist_ok=True)
     FIXTURE.write_text(json.dumps(payload, separators=(",", ":")))
     print(f"Wrote {FIXTURE} ({FIXTURE.stat().st_size / 1024:.0f} KB): {len(payload['expectedSkaters'])} skaters, "
-          f"{len(payload['expectedAvailability'])} availability rows, {len(payload['skaterRows'])} input rows, date {date}")
+          f"{len(payload['expectedAvailability'])} availability rows, {len(payload['expectedGoalies'])} goalie candidates, {len(payload['skaterRows'])} input rows, date {date}")
     return 0
 
 

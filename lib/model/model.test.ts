@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { calculateFantasyRange, defaultLeagueSettings, type Player, type Projection } from '../calculator';
 import { productionBaseline, shrunkBaseline } from './baselines';
 import { predict } from './gbdt';
-import { combineProjections } from './index';
-import { perGameStat, SKATER_TARGETS, type ModelArtifact } from './project';
+import { combineProjections, projectionCacheKey } from './index';
+import { buildIndexes } from './features';
+import { goalieProjection, perGameStat, projectTeamGoalies, SKATER_TARGETS, type ModelArtifact } from './project';
+import type { RuntimeData } from './runtimeData';
 
 const artifact: ModelArtifact & { goalie?: { targets: Record<string, { booster?: { parity?: { x: (number | null)[]; y: number }[] } & ModelArtifact['skater']['targets']['goals']['booster'] }> } } =
   JSON.parse(readFileSync(join(__dirname, 'artifacts', 'bench-boss-model.json'), 'utf8'));
@@ -81,6 +83,58 @@ describe('fallback to the schedule-aware baseline', () => {
     const slow = () => new Promise<Projection[]>(resolve => setTimeout(() => resolve([]), 1000));
     const result = await combineProjections(players, { model: slow, baseline, timeoutMs: 20 });
     expect(result.every(p => p.source === 'baseline')).toBe(true);
+  });
+});
+
+describe('goalie projections with the shipped artifact', () => {
+  const fx = JSON.parse(readFileSync(join(__dirname, '__fixtures__', 'parity.json'), 'utf8'));
+  const toMap = <T,>(o: Record<string, T>) => new Map(Object.entries(o).map(([k, v]) => [Number(k), v]));
+  const data: RuntimeData = {
+    season: fx.season, today: fx.date, names: new Map(), skaterRows: fx.skaterRows, teamRows: fx.teamRows,
+    seasonTotals: toMap(fx.seasonTotals), prevSeasonTotals: toMap(fx.prevSeasonTotals), teamTotals: new Map(Object.entries(fx.teamTotals)),
+    schedule: fx.schedule, goalieRows: fx.goalieRows, prevGoalieTotals: toMap(fx.prevGoalieTotals),
+  };
+  const index = buildIndexes(data);
+  const teams = [...new Set<string>(fx.expectedGoalies.map((r: { team: string }) => r.team))];
+
+  it('start probabilities sum to 1 for every team game', () => {
+    for (const team of teams) {
+      const byGame = new Map<number, number>();
+      for (const games of projectTeamGoalies(team, artifact, data, index).values()) for (const g of games) byGame.set(g.gameId, (byGame.get(g.gameId) || 0) + g.startProb);
+      expect(byGame.size, team).toBeGreaterThan(0);
+      for (const total of byGame.values()) expect(total).toBeCloseTo(1, 6);
+    }
+  });
+
+  it('weekly totals are plausible', () => {
+    for (const team of teams) {
+      for (const [id, games] of projectTeamGoalies(team, artifact, data, index)) {
+        const p = goalieProjection({ id: String(id), name: '', nhlTeam: team, positions: ['G'], isGoalie: true }, games, artifact)!;
+        const s = p.goalieStats!;
+        expect(p.gamesPlayed).toBeLessThanOrEqual(games.length + 1e-9);
+        expect(s.W).toBeLessThanOrEqual(p.gamesPlayed + 1e-9);
+        if (p.gamesPlayed > 0.5) {
+          expect(s.SV / p.gamesPlayed).toBeGreaterThan(15);
+          expect(s.SV / p.gamesPlayed).toBeLessThan(40);
+          expect(s.SV_PCT).toBeGreaterThan(0.85);
+          expect(s.SV_PCT).toBeLessThan(0.95);
+        }
+        expect(p.source).toBe('model');
+      }
+    }
+  });
+});
+
+describe('projection cache key', () => {
+  const a = { id: '1', name: 'A', nhlTeam: 'BUF', positions: ['C'], isGoalie: false } as Player;
+  const b = { id: '2', name: 'B', nhlTeam: 'OTT', positions: ['D'], isGoalie: false } as Player;
+  const c = { id: '3', name: 'C', nhlTeam: 'OTT', positions: ['D'], isGoalie: false } as Player;
+  it('differs for different rosters of the same size', () => {
+    expect(projectionCacheKey([a, b])).not.toBe(projectionCacheKey([a, c]));
+  });
+  it('ignores order and changes when a player is traded', () => {
+    expect(projectionCacheKey([a, b])).toBe(projectionCacheKey([b, a]));
+    expect(projectionCacheKey([a, b])).not.toBe(projectionCacheKey([a, { ...b, nhlTeam: 'TOR' }]));
   });
 });
 

@@ -3,6 +3,25 @@ import { NextResponse } from 'next/server';
 
 const NHL_WEB_API = 'https://api-web.nhle.com/v1';
 
+/** The fields we read from an NHL game-log row (skater or goalie). */
+type RawGameLog = {
+  gameDate: string;
+  opponentAbbrev: string;
+  homeRoadFlag: string;
+  goals?: number;
+  assists?: number;
+  plusMinus?: number;
+  powerPlayPoints?: number;
+  shots?: number;
+  hits?: number;
+  blockedShots?: number;
+  penaltyMinutes?: number;
+  toi?: string;
+  wins?: number;
+  savePctg?: number;
+  goalsAgainst?: number;
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const playerId = searchParams.get('playerId');
@@ -18,11 +37,11 @@ export async function GET(request: Request) {
       fetch(`${NHL_WEB_API}/player/${playerId}/landing`),
     ]);
 
-    const gameLogs: any[] = [];
+    const gameLogs: Record<string, unknown>[] = [];
     if (gameLogRes.ok) {
       const data = await gameLogRes.json();
-      const raw = data.gameLog || [];
-      raw.slice(0, 15).forEach((g: any) => {
+      const raw: RawGameLog[] = data.gameLog || [];
+      raw.slice(0, 15).forEach(g => {
         gameLogs.push({
           gameDate: g.gameDate,
           opponentAbbrev: g.opponentAbbrev,
@@ -44,7 +63,7 @@ export async function GET(request: Request) {
       });
     }
 
-    let injury: { status: string | null; description: string | null } = {
+    const injury: { status: string | null; description: string | null } = {
       status: null,
       description: null,
     };

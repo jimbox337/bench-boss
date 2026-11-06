@@ -17,6 +17,13 @@ export type TeamGameRow = { gameId: number; date: string; team: string; opp: str
 export type SeasonTotals = { gp: number } & Record<RateStat, number>;
 export type TeamTotals = { gp: number; gf: number; ga: number; sf: number; sa: number };
 export type ScheduledGame = { gameId: number; date: string; home: string; away: string };
+/** One goalie appearance; `toi` in minutes, `started`/`win` 0 or 1. */
+export type GoalieGameRow = {
+  gameId: number; date: string; playerId: number; team: string; opp: string; home: number;
+  started: number; win: number; saves: number; shotsAgainst: number; ga: number; toi: number;
+};
+/** Previous-season totals over starts only. */
+export type GoalieSeasonTotals = { starts: number; saves: number; shotsAgainst: number };
 
 export type FeatureInputs = {
   /** Current-season game rows for every skater (at least the last ~50 days). */
@@ -29,6 +36,9 @@ export type FeatureInputs = {
   teamTotals: Map<string, TeamTotals>;
   /** Scheduled games from the target date for at least 7 days (and the target game itself). */
   schedule: ScheduledGame[];
+  /** Every current-season goalie appearance before the target date (needed for goalie features). */
+  goalieRows?: GoalieGameRow[];
+  prevGoalieTotals?: Map<number, GoalieSeasonTotals>;
 };
 
 const DAY = 86_400_000;
@@ -158,4 +168,79 @@ export function availabilityFeatures(playerId: number, position: Position, team:
     b2b: ctx.b2b,
     home,
   };
+}
+
+const GOALIE_LOOKBACK = 20;
+
+/**
+ * Starting-goalie candidates and features (features.py goalie_candidates / goalie_features)
+ * for `team`'s game vs `opp` on `date`: every goalie who appeared for the team in its
+ * previous 20 games this season. `startedPrev` overrides "started the team's previous game"
+ * with a probability when that game is itself still in the future.
+ */
+export function goalieFeatures(
+  team: string, opp: string, home: number, date: string, inputs: FeatureInputs, index: Indexes, startedPrev?: Map<number, number>,
+): { playerId: number; features: Record<string, number> }[] {
+  const rows = (inputs.goalieRows || []).filter(r => r.date < date);
+  const order = (a: GoalieGameRow, b: GoalieGameRow) => a.date.localeCompare(b.date) || a.gameId - b.gameId;
+  const teamApps = rows.filter(r => r.team === team).sort(order);
+  const gameIds: number[] = [];
+  for (const r of teamApps) if (gameIds.at(-1) !== r.gameId && !gameIds.includes(r.gameId)) gameIds.push(r.gameId);
+  const k = gameIds.length;
+  if (k === 0) return [];
+  const gameIndex = new Map(gameIds.map((id, i) => [id, i]));
+  const starterAt: (number | undefined)[] = new Array(k).fill(undefined);
+  const startLine = new Map<number, GoalieGameRow>();
+  for (const r of teamApps) if (r.started) { starterAt[gameIndex.get(r.gameId)!] = r.playerId; startLine.set(gameIndex.get(r.gameId)!, r); }
+  const recent = [...new Set(teamApps.filter(r => gameIndex.get(r.gameId)! >= k - GOALIE_LOOKBACK).map(r => r.playerId))];
+
+  const own = teamContext(team, date, inputs, index);
+  const other = teamContext(opp, date, inputs, index);
+  const d = dayNumber(date);
+  const out = recent.map(playerId => {
+    const share = (w: number) => {
+      const lo = Math.max(0, k - w);
+      let n = 0;
+      for (let i = lo; i < k; i++) if (starterAt[i] === playerId) n++;
+      return n / (k - lo);
+    };
+    const priorStarts: number[] = [];
+    for (let i = 0; i < k; i++) if (starterAt[i] === playerId) priorStarts.push(i);
+    let consecutive = 0;
+    while (k - 1 - consecutive >= 0 && starterAt[k - 1 - consecutive] === playerId) consecutive++;
+    const last = priorStarts.length ? startLine.get(priorStarts.at(-1)!) : undefined;
+    const recent5 = priorStarts.slice(-5).map(i => startLine.get(i)!);
+    const sa5 = recent5.reduce((a, r) => a + r.shotsAgainst, 0);
+
+    // Season-to-date over this goalie's starts for any team.
+    const starts = rows.filter(r => r.playerId === playerId && r.started);
+    const sum = (f: (r: GoalieGameRow) => number) => starts.reduce((a, r) => a + f(r), 0);
+    const lastStartDate = starts.map(r => r.date).sort().at(-1);
+    const prev = inputs.prevGoalieTotals?.get(playerId);
+    const startedPrevGame = startedPrev?.get(playerId) ?? (starterAt[k - 1] === playerId ? 1 : 0);
+
+    const f: Record<string, number> = {
+      share_l5: share(5), share_l10: share(10), share_l20: share(20),
+      started_prev_team_game: startedPrevGame,
+      days_since_last_start: lastStartDate ? Math.min(d - dayNumber(lastStartDate), GAP_CAP) : NaN,
+      std_starts: starts.length,
+      std_sv_pct: starts.length ? sum(r => r.saves) / sum(r => r.shotsAgainst) : NaN,
+      std_ga_per_start: starts.length ? sum(r => r.ga) / starts.length : NaN,
+      std_win_rate: starts.length ? sum(r => r.win) / starts.length : NaN,
+      prev_starts: prev?.starts ?? 0,
+      prev_sv_pct: prev && prev.starts > 0 ? prev.saves / prev.shotsAgainst : NaN,
+      home, rest_days: own.rest, b2b: own.b2b,
+      team_ga_pg: own.ga_pg, team_sa_pg: own.sa_pg, team_gf_pg: own.gf_pg,
+      opp_gf_pg: other.gf_pg, opp_sf_pg: other.sf_pg, opp_ga_pg: other.ga_pg,
+      consecutive_starts: consecutive,
+      b2b_started_prev: own.b2b * startedPrevGame,
+      pulled_last_start: last !== undefined && last.toi < 45 ? 1 : 0,
+      last_start_ga: last ? last.ga : NaN,
+      l5_start_sv_pct: sa5 > 0 ? recent5.reduce((a, r) => a + r.saves, 0) / sa5 : NaN,
+    };
+    return { playerId, features: f };
+  });
+  // 1 = most starts in the team's last 20 games; ties share the rank.
+  for (const c of out) c.features.share_rank = 1 + out.filter(o => o.features.share_l20 > c.features.share_l20).length;
+  return out;
 }

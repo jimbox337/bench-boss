@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/supabase/auth';
 import { prisma } from '@/lib/prisma';
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const body = await request.json();
 
     const { leagueId, seasonId, espnS2, swid } = body;
@@ -33,11 +34,11 @@ export async function POST(request: Request) {
     let leagueInfo;
     try {
       leagueInfo = await fetchESPNLeagueInfo(espnConfig);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching ESPN league:', error);
       return NextResponse.json({
         success: false,
-        error: error?.message || 'Failed to connect to ESPN league. Check your League ID and cookies.',
+        error: (error instanceof Error ? error.message : '') || 'Failed to connect to ESPN league. Check your League ID and cookies.',
       }, { status: 400 });
     }
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     try {
       teams = await fetchESPNTeams(espnConfig);
       console.log('Fetched teams from ESPN:', JSON.stringify(teams, null, 2));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching ESPN teams:', error);
       return NextResponse.json({
         success: false,
@@ -124,8 +125,8 @@ export async function POST(request: Request) {
       espnS2: encryptCredential(espnS2),
       swid: encryptCredential(swid),
       seasonId: seasonId.toString(),
-      roster: selectedTeam.roster as any,
-      leagueSettings: leagueInfo.settings as any,
+      roster: selectedTeam.roster as unknown as Prisma.InputJsonValue,
+      leagueSettings: leagueInfo.settings as unknown as Prisma.InputJsonValue,
       lastSyncedAt: new Date(),
       isActive: true,
     };

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is admin
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const user = await getUserById(userId);
     if (!user || !isAdmin(user)) {
       return NextResponse.json(
