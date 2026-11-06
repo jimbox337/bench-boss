@@ -5,6 +5,8 @@ import {
   attachRecords,
   pickFeatured,
   normalizePlayByPlay,
+  normalizeShifts,
+  onIceAtPlay,
   shotDistance,
   shotStrength,
   deriveLineScore,
@@ -18,6 +20,25 @@ import {
   type GoalEvent,
   type SkaterLine,
 } from './nhlGameCenter';
+
+describe('official shift charts', () => {
+  const shifts = normalizeShifts([
+    { playerId: 10, teamAbbrev: 'OTT', period: 2, startTime: '05:00', endTime: '05:44', firstName: 'Tim', lastName: 'Stutzle' },
+    { playerId: 20, teamAbbrev: 'BUF', period: 2, startTime: '05:20', endTime: '06:02', firstName: 'Rasmus', lastName: 'Dahlin' },
+    { playerId: 30, teamAbbrev: 'BUF', period: 1, startTime: '05:20', endTime: '06:02' },
+    { teamAbbrev: 'OTT', period: 2, startTime: '05:00', endTime: '05:44' },
+  ]);
+
+  it('normalizes complete shift rows and drops malformed ones', () => {
+    expect(shifts).toHaveLength(3);
+    expect(shifts[0]).toMatchObject({ playerId: 10, team: 'OTT', period: 2, start: '05:00', end: '05:44' });
+  });
+
+  it('returns the players on ice at the selected play time and period', () => {
+    expect(onIceAtPlay(shifts, { period: '2', time: '05:30' }).map(shift => shift.playerId)).toEqual([10, 20]);
+    expect(onIceAtPlay(shifts, { period: 'SO', time: '00:20' })).toEqual([]);
+  });
+});
 
 const goal = (period: string, team: string, scorerId: number, strength = 'ev', assists: number[] = []): GoalEvent => ({
   period, time: '10:00', team, scorerId, scorer: `P${scorerId}`, assists: assists.map(id => ({ playerId: id, name: `P${id}` })), strength,

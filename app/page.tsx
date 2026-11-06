@@ -123,7 +123,7 @@ export default function Dashboard() {
               </div>
               <h3 className="text-xl font-medium text-ink mb-2">Lineup Optimizer</h3>
               <p className="text-muted text-sm">
-                Maximize your weekly points with AI-powered lineup recommendations
+                Maximize your weekly points with data-driven lineup recommendations
               </p>
             </div>
 

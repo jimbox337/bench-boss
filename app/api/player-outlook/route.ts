@@ -1,4 +1,4 @@
-import { AI_MODEL } from '@/lib/aiModel';
+import { OUTLOOK_MODEL } from '@/lib/outlookModel';
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { Player, PlayerOutlook } from '@/lib/calculator';
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(`Generating AI outlook for ${player.name}...`);
+    console.log(`Generating player outlook for ${player.name}...`);
 
     const verifiedContext = await getVerifiedPlayerContext(player);
     const prompt = `You are an expert fantasy hockey analyst. Analyze this player using only the verified data supplied below. Do not invent injuries, linemates, deployment, news, or role changes. Clearly say when a fact is unavailable.
@@ -93,7 +93,7 @@ Consider:
 Never claim that you searched the web. The NHL API context above is the authoritative live source for this response.`;
 
     const completion = await client.chat.completions.create({
-      model: AI_MODEL,
+      model: OUTLOOK_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -119,9 +119,9 @@ Never claim that you searched the web. The NHL API context above is the authorit
       });
     }
 
-    throw new Error('Failed to parse AI response');
+    throw new Error('Failed to parse outlook response');
   } catch (error) {
-    console.error('AI Outlook Error:', error);
+    console.error('Player Outlook Error:', error);
     return NextResponse.json(
       {
         success: false,

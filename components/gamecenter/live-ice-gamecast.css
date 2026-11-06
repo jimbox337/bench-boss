@@ -1,0 +1,102 @@
+/* Hallmark · shape: live broadcast workbench · genre: modern-minimal · theme: Bench Boss dark · signature: animated live ice · v2.0.0 */
+/* Hallmark · pre-emit critique: the ESPN reference is dense and bright; this version keeps its useful three-column hierarchy inside the newer black Bench Boss system. */
+:root {
+  --icecast-panel: var(--color-paper-2);
+  --icecast-stage: oklch(13% 0.015 255);
+  --icecast-rail: oklch(16% 0.016 255);
+  --icecast-rink: oklch(93% 0.018 220);
+  --icecast-rink-stripe: oklch(88% 0.025 220);
+  --icecast-red: oklch(55% 0.21 28);
+  --icecast-blue: oklch(54% 0.19 252);
+  --icecast-puck: oklch(8% 0.01 255);
+  --icecast-white: oklch(100% 0 0);
+  --icecast-live: oklch(65% 0.2 28);
+  --icecast-live-soft: color-mix(in oklab, var(--icecast-live) 15%, transparent);
+  --icecast-shadow: color-mix(in oklab, var(--icecast-puck) 50%, transparent);
+}
+
+.icecast { overflow: clip; border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--icecast-panel); }
+.icecast-bar { display: flex; min-height: 68px; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-sm) var(--space-lg); border-bottom: 1px solid var(--color-rule); background: var(--icecast-stage); }
+.icecast-title { display: grid; min-width: 0; gap: var(--space-2xs); }
+.icecast-title h2 { min-width: 0; color: var(--color-ink); font-family: var(--font-display); font-size: var(--text-xl); font-weight: 800; line-height: 1; overflow-wrap: break-word; text-wrap: balance; }
+.icecast-title small, .icecast-roster small, .icecast-call small { color: var(--color-muted); font-size: var(--text-xs); }
+.icecast-status { padding: var(--space-xs) var(--space-sm); border: 1px solid var(--color-rule); color: var(--color-ink-2); font-size: var(--text-sm); font-weight: 700; white-space: nowrap; }
+.icecast-status[data-live] { border-color: var(--icecast-live); background: var(--icecast-live-soft); color: var(--icecast-live); }
+.icecast-layout { display: grid; grid-template-columns: minmax(12rem, .72fr) minmax(0, 2.4fr) minmax(12rem, .72fr); min-height: 580px; }
+
+.icecast-roster { min-width: 0; background: var(--icecast-rail); }
+.icecast-roster:first-child { border-right: 1px solid var(--color-rule); }
+.icecast-roster:last-child { border-left: 1px solid var(--color-rule); }
+.icecast-roster > header { display: flex; min-height: 74px; align-items: center; gap: var(--space-sm); padding: var(--space-md); border-bottom: 1px solid var(--color-rule); }
+.icecast-roster > header > span { display: grid; min-width: 0; }
+.icecast-roster > header strong { overflow: hidden; color: var(--color-ink); font-size: var(--text-sm); text-overflow: ellipsis; white-space: nowrap; }
+.icecast-roster ol { list-style: none; margin: 0; padding: 0; }
+.icecast-roster li { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; min-height: 70px; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border-bottom: 1px solid var(--color-rule-2); }
+.icecast-number { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border: 2px solid color-mix(in oklab, var(--icecast-white) 45%, transparent); border-radius: 50%; background: var(--club); color: var(--icecast-white); font-family: var(--font-display); font-size: var(--text-xs); font-weight: 800; }
+.icecast-name { display: grid; min-width: 0; }
+.icecast-name a { overflow: hidden; color: var(--color-ink); font-size: var(--text-sm); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.icecast-name a:hover { color: var(--color-accent); }
+.icecast-name a:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.icecast-fp { display: grid; justify-items: end; color: var(--color-ink); font-family: var(--font-display); font-size: var(--text-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.icecast-fp small { font-family: var(--font-body); }
+.icecast-empty { padding: var(--space-md); color: var(--color-muted); font-size: var(--text-sm); }
+
+.icecast-stage { display: grid; grid-template-rows: auto minmax(0,1fr) auto; min-width: 0; background: var(--icecast-stage); }
+.icecast-call { position: relative; display: grid; min-height: 106px; justify-items: center; gap: var(--space-2xs); padding: var(--space-md) var(--space-lg); text-align: center; }
+.icecast-call::before { position: absolute; inset: 0 0 auto; height: 4px; background: var(--club); content: ''; }
+.icecast-call > span { color: var(--club); font-size: var(--text-xs); font-weight: 800; text-transform: capitalize; }
+.icecast-call strong { max-width: 52ch; color: var(--color-ink); font-family: var(--font-display); font-size: clamp(1.15rem,2.2vw,1.7rem); line-height: 1.12; overflow-wrap: break-word; text-wrap: balance; }
+
+.icecast-rink { position: relative; min-height: 380px; margin: 0 var(--space-md) var(--space-md); overflow: clip; border: 5px solid var(--icecast-rink-stripe); border-radius: 92px; background-color: var(--icecast-rink); background-image: repeating-linear-gradient(90deg,transparent 0 7%,color-mix(in oklab,var(--icecast-blue) 4%,transparent) 7% 14%); isolation: isolate; box-shadow: 0 18px 40px var(--icecast-shadow); }
+.icecast-line { position: absolute; inset-block: 0; width: 5px; background: var(--icecast-blue); opacity: .62; }
+.icecast-line--center { left: 50%; width: 4px; transform: translateX(-50%); background: var(--icecast-red); opacity: .75; }
+.icecast-line--left { left: 30%; }
+.icecast-line--right { right: 30%; }
+.icecast-circle { position: absolute; width: 86px; aspect-ratio: 1; border: 3px solid var(--icecast-red); border-radius: 50%; opacity: .45; }
+.icecast-circle--center { left: 50%; top: 50%; transform: translate(-50%,-50%); border-color: var(--icecast-blue); }
+.icecast-circle--one { left: 10%; top: 13%; }
+.icecast-circle--two { left: 10%; bottom: 13%; }
+.icecast-circle--three { right: 10%; top: 13%; }
+.icecast-circle--four { right: 10%; bottom: 13%; }
+.icecast-crease { position: absolute; top: 50%; width: 32px; height: 72px; transform: translateY(-50%); border: 3px solid var(--icecast-red); background: color-mix(in oklab,var(--icecast-blue) 18%,transparent); }
+.icecast-crease--left { left: -4px; border-radius: 0 42px 42px 0; }
+.icecast-crease--right { right: -4px; border-radius: 42px 0 0 42px; }
+.icecast-puck { position: absolute; z-index: 4; width: 11px; aspect-ratio: 1; transform: translate(-50%,-50%); border-radius: 50%; background: var(--icecast-puck); box-shadow: 0 4px 9px var(--icecast-shadow); will-change: transform,opacity; }
+.icecast-signal { position: absolute; z-index: 3; width: 42px; aspect-ratio: 1; transform: translate(-50%,-50%); border: 3px solid var(--club); border-radius: 50%; animation: icecast-signal 900ms var(--ease-out) both; }
+
+.icecast-controls { display: flex; min-height: 58px; align-items: center; justify-content: center; gap: var(--space-xs); padding: var(--space-xs) var(--space-md); border-top: 1px solid var(--color-rule); background: var(--icecast-stage); }
+.icecast-controls button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: var(--space-xs); padding: 0 var(--space-sm); border: 1px solid var(--color-rule); background: var(--icecast-rail); color: var(--color-ink); font-weight: 700; transition: border-color var(--dur-short) var(--ease-out),background-color var(--dur-short) var(--ease-out),transform var(--dur-micro) var(--ease-out); white-space: nowrap; }
+.icecast-controls button:hover:not(:disabled) { border-color: var(--color-field-border); background: var(--color-paper-3); }
+.icecast-controls button:active:not(:disabled) { transform: translateY(1px); }
+.icecast-controls button:disabled { cursor: not-allowed; opacity: .32; }
+.icecast-controls button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.icecast-controls svg { width: 17px; height: 17px; }
+.icecast-controls > span { margin-inline-start: var(--space-xs); color: var(--color-muted); font-size: var(--text-xs); white-space: nowrap; }
+
+@keyframes icecast-signal { from { opacity: 0; transform: translate(-50%,-50%) scale(.3); } 60% { opacity: .8; } to { opacity: 0; transform: translate(-50%,-50%) scale(1.8); } }
+
+@media (max-width: 75rem) {
+  .icecast-layout { grid-template-columns: minmax(0,1fr); }
+  .icecast-stage { grid-row: 1; }
+  .icecast-roster { border: 0 !important; border-top: 1px solid var(--color-rule) !important; }
+  .icecast-roster ol { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); }
+  .icecast-roster li { grid-template-columns: 30px minmax(0,1fr); }
+  .icecast-fp { display: none; }
+}
+@media (max-width: 60rem) {
+  .icecast-roster ol { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .icecast-rink { min-height: 320px; }
+}
+@media (max-width: 40rem) {
+  .icecast-bar { align-items: flex-start; padding: var(--space-sm); }
+  .icecast-status { font-size: var(--text-xs); }
+  .icecast-call { min-height: 96px; padding-inline: var(--space-sm); }
+  .icecast-rink { min-height: 250px; margin-inline: var(--space-xs); border-width: 3px; border-radius: 54px; }
+  .icecast-circle { width: 56px; }
+  .icecast-roster ol { grid-template-columns: minmax(0,1fr); }
+  .icecast-controls > span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icecast-puck,.icecast-signal { animation: none; }
+  .icecast-controls button { transition: none; }
+}

@@ -6,7 +6,7 @@ A professional fantasy hockey management application with enterprise-grade secur
 
 ### Fantasy Hockey Tools
 - **📊 Dashboard** - Overview of your team and weekly projections
-- **🤖 AI Player Analysis** - Click any player to get AI-powered insights, outlook, and injury risk assessment
+- **🤖 Player Insights** - Click any player to get data-driven insights, outlook, and injury risk assessment
 - **⚡ Lineup Optimizer** - Automatically set your best lineup
 - **🤔 Start / Sit** - Compare players for optimal decisions
 - **🔄 Trade Analyzer** - Evaluate trades with data-driven insights
@@ -133,18 +133,18 @@ bench-boss/
 - **Next.js API Routes** - Serverless functions
 - **NextAuth.js** - Authentication
 - **bcryptjs** - Password hashing
-- **Groq API** - Free-tier AI player analysis (`openai/gpt-oss-120b` by default; see `lib/aiModel.ts`)
+- **Groq API** - Free-tier player outlooks (`openai/gpt-oss-120b` by default; see `lib/outlookModel.ts`)
 
 ### Data
 - **NHL API** - Real-time hockey data
 - **Prisma + SQLite** - Database ORM and local storage
 - **In-memory caching** - Fast data access
 
-## 🤖 AI Player Analysis
+## 🤖 Player Insights
 
 ### Features
 Click on any player in your team roster to get:
-- **AI-Powered Outlook** - Analysis of verified NHL stats using Groq-hosted `openai/gpt-oss-120b`
+- **Data-Driven Outlook** - Analysis of verified NHL stats using Groq-hosted `openai/gpt-oss-120b`
 - **Fantasy Value Rating** - Must-Start, Start, Flex, Bench, or Drop
 - **Trend Analysis** - Hot 🔥, Cold 🥶, or Steady ➡️
 - **Strengths & Weaknesses** - Key performance indicators
@@ -155,12 +155,12 @@ Click on any player in your team roster to get:
 ### How It Works
 1. Navigate to "My Team" page
 2. Click on any player row
-3. AI analyzes current stats, trends, and context
+3. The outlook service analyzes current stats, trends, and context
 4. Get actionable insights in seconds
 
 ### API Usage
-The AI analysis uses the **FREE** Groq API with the following model:
-- **Model**: `openai/gpt-oss-120b` (default in `lib/aiModel.ts`; override server-side with `GROQ_MODEL`)
+The player insight uses the **FREE** Groq API with the following model:
+- **Model**: `openai/gpt-oss-120b` (default in `lib/outlookModel.ts`; override server-side with `GROQ_MODEL`)
 - **Max Tokens**: 1500 per request
 - **Cost**: **$0.00** - Completely FREE! 🎉
 - **Rate Limits**: 30 requests/minute (very generous)
