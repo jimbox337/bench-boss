@@ -392,9 +392,9 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
               </div>
             ) : <p className="pc-note">{card ? 'No upcoming games on the schedule.' : 'Loading…'}</p>}
 
-            <div className="pc-ai">
-              <div className="pc-section-head"><h4>AI outlook</h4>{dataPlayer && !outlook && <button type="button" className="pc-outline-button" onClick={loadOutlook} disabled={outlookState === 'loading'}>{outlookState === 'loading' ? 'Writing…' : 'Generate'}</button>}</div>
-              {!dataPlayer && <p className="pc-note">AI outlooks are available for players in the Bench Boss player pool.</p>}
+            <div className="pc-outlook">
+              <div className="pc-section-head"><h4>Player outlook</h4>{dataPlayer && !outlook && <button type="button" className="pc-outline-button" onClick={loadOutlook} disabled={outlookState === 'loading'}>{outlookState === 'loading' ? 'Writing…' : 'Generate'}</button>}</div>
+              {!dataPlayer && <p className="pc-note">Player outlooks are available for players in the Bench Boss player pool.</p>}
               {outlookState === 'error' && <p className="text-sm text-error">Couldn’t write an outlook right now. Try again.</p>}
               {outlook && (
                 <div className="space-y-3 text-sm leading-relaxed text-ink-2">

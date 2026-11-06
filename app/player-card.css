@@ -124,8 +124,8 @@
 .pc-upcoming { margin-top: 12px; border-top: 1px solid var(--color-rule); }
 .pc-upcoming li { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 12px; padding: 10px 6px; border-bottom: 1px solid var(--color-rule-2); font-size: 14px; }
 .pc-upcoming .pc-stars { font-size: 15px; }
-.pc-ai { margin-top: 22px; padding: 18px 20px; border-radius: 12px; border: 1px dashed var(--color-rule); }
-.pc-ai .pc-section-head { margin-bottom: 10px; }
+.pc-outlook { margin-top: 22px; padding: 18px 20px; border-radius: 12px; border: 1px dashed var(--color-rule); }
+.pc-outlook .pc-section-head { margin-bottom: 10px; }
 
 @media (max-width: 1180px) { .pc-close { right: 12px; top: 12px; background: oklch(0% 0 0 / 0.35); color: white; } .pc-trade { margin-right: 52px; } }
 @media (max-width: 760px) {

@@ -13,6 +13,7 @@ import { teamColor } from '@/lib/teamColors';
 import { SectionTitle, StarterLine, TeamLink, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
 import ShotChart from '@/components/gamecenter/ShotChart';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
+import LiveIceGamecast from '@/components/gamecenter/LiveIceGamecast';
 
 const TABS = ['Game', 'Box score', 'Plays', 'Team stats'] as const;
 type Tab = (typeof TABS)[number];
@@ -178,6 +179,7 @@ function GameTab({ detail, settings, onAllPlays }: { detail: GameDetail; setting
   };
   return (
     <div className="space-y-8">
+      <LiveIceGamecast detail={detail} settings={settings} />
       {detail.threeStars.length > 0 && (
         <section>
           <SectionTitle>Three stars</SectionTitle>

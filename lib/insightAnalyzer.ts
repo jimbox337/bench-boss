@@ -1,4 +1,4 @@
-import { AI_MODEL } from './aiModel';
+import { OUTLOOK_MODEL } from './outlookModel';
 import Groq from 'groq-sdk';
 import { Player, LeagueSettings } from './calculator';
 
@@ -39,13 +39,13 @@ export interface HotPlayer {
 /** One player entry in the model's JSON reply; names are matched back to real players. */
 type AIItem = { playerName: string; position: string; reason: string; priority: 'high' | 'medium' | 'low'; trend: HotPlayer['trend']; recentStats: string; recommendation: string };
 
-/** Drops entries whose name did not match a known player, so AI output can't add players. */
+/** Drops entries whose name did not match a known player, so generated output cannot add players. */
 function withPlayer<T extends { player: Player | undefined }>(items: T[]): (T & { player: Player })[] {
   return items.filter((item): item is T & { player: Player } => Boolean(item.player));
 }
 
 /**
- * Analyze lineup and provide AI-powered suggestions
+ * Analyze lineup and provide evidence-based suggestions.
  */
 export async function analyzeLineup(
   roster: Player[],
@@ -79,7 +79,7 @@ Format as JSON:
 
   try {
     const completion = await client.chat.completions.create({
-      model: AI_MODEL,
+      model: OUTLOOK_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -108,13 +108,13 @@ Format as JSON:
       };
     }
 
-    throw new Error('Failed to parse AI response');
+    throw new Error('Failed to parse insight response');
   } catch (error) {
-    console.error('AI Analysis Error:', error);
+    console.error('Lineup Insight Error:', error);
     // Return fallback suggestion
     return {
-      suggestions: ['Unable to generate AI suggestions at this time'],
-      reasoning: 'AI service temporarily unavailable',
+      suggestions: ['Unable to generate lineup suggestions at this time'],
+      reasoning: 'Insight service temporarily unavailable',
       optimizedLineup: []
     };
   }
@@ -152,7 +152,7 @@ Format as JSON:
 
   try {
     const completion = await client.chat.completions.create({
-      model: AI_MODEL,
+      model: OUTLOOK_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -185,13 +185,13 @@ Format as JSON:
       };
     }
 
-    throw new Error('Failed to parse AI response');
+    throw new Error('Failed to parse insight response');
   } catch (error) {
-    console.error('AI Waiver Analysis Error:', error);
+    console.error('Waiver Insight Error:', error);
     return {
       topTargets: [],
       dropCandidates: [],
-      summary: 'AI analysis temporarily unavailable'
+      summary: 'Player insights temporarily unavailable'
     };
   }
 }
@@ -219,7 +219,7 @@ Format as JSON array:
 
   try {
     const completion = await client.chat.completions.create({
-      model: AI_MODEL,
+      model: OUTLOOK_MODEL,
       messages: [{
         role: 'user',
         content: prompt
@@ -242,7 +242,7 @@ Format as JSON array:
       })));
     }
 
-    throw new Error('Failed to parse AI response');
+    throw new Error('Failed to parse insight response');
   } catch (error) {
     console.error('Hot Players Detection Error:', error);
     return [];
