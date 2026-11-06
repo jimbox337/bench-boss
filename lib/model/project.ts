@@ -12,13 +12,18 @@ import type { RuntimeData } from './runtimeData';
 export const SKATER_TARGETS = ['goals', 'assists', 'shots', 'ppPoints', 'hits', 'blocks'] as const;
 type Target = (typeof SKATER_TARGETS)[number];
 
+export type BoosterComponent = { features: string[]; initScore?: string | null; booster: CompactBooster };
+
 export type TargetArtifact = {
-  selected: 'baseline' | 'shrunk' | 'direct' | 'residual' | 'residualShrunk' | string;
+  selected: 'baseline' | 'shrunk' | 'direct' | 'residual' | 'residualShrunk' | 'stack' | string;
   dispersion: number;
   shrinkage: ShrinkParams;
   features?: string[];
   initScore?: string | null;
   booster?: CompactBooster;
+  /** For `stack`: non-negative weight per projection (baseline, shrunk or a booster component). */
+  stack?: Record<string, number>;
+  components?: Record<string, BoosterComponent>;
 };
 
 export type ModelArtifact = {
@@ -42,15 +47,21 @@ export const INACTIVE_PLAY_PROBABILITY = 0.3;
 export function perGameStat(artifact: ModelArtifact, stat: Target, f: Record<string, number>, position: string): number {
   const t = artifact.skater.targets[stat];
   const base = productionBaseline(f, stat, position, artifact.skater.positionFallback[stat] || {});
+  const shrunk = () => shrunkBaseline(f, stat, position, t.shrinkage);
+  const boosted = (c: BoosterComponent) => {
+    const x = toVector(c.features, f);
+    if (c.initScore === 'log(shrunkBaseline)') return Math.max(shrunk(), 1e-3) * Math.exp(rawScore(c.booster, x));
+    if (c.initScore === 'log(productionBaseline)') return Math.max(base, 1e-3) * Math.exp(rawScore(c.booster, x));
+    return predict(c.booster, x);
+  };
+  const single = (name: string, c?: BoosterComponent) =>
+    name === 'baseline' ? base : name === 'shrunk' ? shrunk() : c ? boosted(c) : base;
   let model: number;
-  if (t.selected === 'baseline') model = base;
-  else if (t.selected === 'shrunk') model = shrunkBaseline(f, stat, position, t.shrinkage);
-  else if (t.booster && t.features) {
-    const x = toVector(t.features, f);
-    if (t.initScore === 'log(shrunkBaseline)') model = Math.max(shrunkBaseline(f, stat, position, t.shrinkage), 1e-3) * Math.exp(rawScore(t.booster, x));
-    else if (t.initScore === 'log(productionBaseline)') model = Math.max(base, 1e-3) * Math.exp(rawScore(t.booster, x));
-    else model = predict(t.booster, x);
-  } else model = base;
+  if (t.selected === 'stack' && t.stack) {
+    model = Object.entries(t.stack).reduce((sum, [name, w]) => sum + w * single(name, t.components?.[name]), 0);
+  } else {
+    model = single(t.selected, t.booster && t.features ? { features: t.features, initScore: t.initScore, booster: t.booster } : undefined);
+  }
   const baselineWeight = artifact.skater.blendWithProductionBaseline ?? 0;
   return (1 - baselineWeight) * model + baselineWeight * base;
 }

@@ -13,6 +13,7 @@ const artifact: ModelArtifact & { goalie?: { targets: Record<string, { booster?:
 describe('tree evaluator matches LightGBM', () => {
   const boosters = [
     ...SKATER_TARGETS.map(t => artifact.skater.targets[t].booster),
+    ...SKATER_TARGETS.flatMap(t => Object.values(artifact.skater.targets[t].components || {}).map(c => c.booster)),
     ...Object.values(artifact.goalie?.targets || {}).map(t => t.booster),
     artifact.availability?.booster,
   ].filter((b): b is NonNullable<typeof b> => !!b && !!b.parity?.length);

@@ -30,6 +30,7 @@ from typing import Any
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from scipy.optimize import nnls
 from scipy.stats import spearmanr
 
 from . import FEATURE_SCHEMA_VERSION, PIPELINE_VERSION
@@ -240,11 +241,36 @@ SKATER_CANDIDATES = {
     "residualXg": {"features": RESIDUAL_FEATURES + XG_FEATURES, "init": "shr", "params": RESIDUAL_PARAMS, "servable": False},
 }
 BLEND_GRID = (1.0, 0.75, 0.5)
+LAST_SKATER_FRAMES: dict[str, pd.DataFrame] = {}
 INIT_LABELS = {"base": "log(productionBaseline)", "shr": "log(shrunkBaseline)"}
 
 
 def prediction_column(name: str, target: str) -> str:
     return {"baseline": f"base_{target}", "shrunk": f"shr_{target}"}.get(name, f"{name}_{target}")
+
+
+STACK_MIN_WEIGHT = 0.02
+
+
+def stack_weights(frame: pd.DataFrame, target: str, names: list[str]) -> dict[str, float]:
+    """Non-negative weights over servable projections that minimise weekly squared error.
+
+    Weekly sums are linear in the weights, so this is NNLS on player-week sums. Components
+    under STACK_MIN_WEIGHT are dropped and the rest refitted, which keeps the artifact small.
+    """
+    names = list(names)
+    weekly = frame.assign(week=week_key(frame["gameDate"])).groupby(["playerId", "week"])[
+        [prediction_column(n, target) for n in names] + [target]].sum()
+    while True:
+        weights, _ = nnls(weekly[[prediction_column(n, target) for n in names]].to_numpy(float), weekly[target].to_numpy(float))
+        keep = [n for n, w in zip(names, weights) if w >= STACK_MIN_WEIGHT]
+        if len(keep) == len(names) or not keep:
+            return {n: float(w) for n, w in zip(names, weights) if w > 0}
+        names = keep
+
+
+def apply_stack(frame: pd.DataFrame, target: str, weights: dict[str, float]) -> pd.Series:
+    return sum(w * frame[prediction_column(n, target)] for n, w in weights.items())
 
 
 def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
@@ -296,7 +322,14 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             candidates[name] = {"best": int(best), "export": export_model, "spec": spec}
 
         valid = frames["validation"]
+        # Stack every servable projection with weights fitted on validation weekly sums; the
+        # test and live seasons stay untouched for the gate.
+        stack_names = ["baseline", "shrunk"] + [n for n, c in candidates.items() if c["spec"]["servable"]]
+        stack = stack_weights(valid, target, stack_names)
+        for frame in frames.values():
+            frame[f"stack_{target}"] = apply_stack(frame, target, stack)
         weekly_rmse = {name: weekly_stat_rmse(valid, target, f"{name}_{target}") for name in candidates}
+        weekly_rmse["stack"] = weekly_stat_rmse(valid, target, f"stack_{target}")
         weekly_rmse["baseline"] = weekly_stat_rmse(valid, target, base_col)
         weekly_rmse["shrunk"] = weekly_stat_rmse(valid, target, f"shr_{target}")
         servable = {k: v for k, v in weekly_rmse.items() if k not in candidates or candidates[k]["spec"]["servable"]}
@@ -325,7 +358,15 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         entry: dict[str, Any] = {"selected": selected, "objective": "poisson", "dispersion": dispersion,
                                  "validationWeeklyRmse": weekly_rmse,
                                  "shrinkage": {k: v for k, v in shrinkage[target].items() if k != "validationGrid"}}
-        if selected in candidates:
+        def booster_entry(chosen: dict[str, Any]) -> dict[str, Any]:
+            importance = dict(zip(chosen["export"].feature_name(), chosen["export"].feature_importance("gain").tolist()))
+            return {"features": list(chosen["spec"]["features"]), "initScore": INIT_LABELS.get(chosen["spec"]["init"]),
+                    "bestIteration": chosen["best"], "topFeatures": sorted(importance, key=importance.get, reverse=True)[:8],
+                    "booster": compact_booster(chosen["export"], chosen["spec"]["features"], frames.get("test", full))}
+        if selected == "stack":
+            entry["stack"] = stack
+            entry["components"] = {n: booster_entry(candidates[n]) for n in stack if n in candidates}
+        elif selected in candidates:
             chosen = candidates[selected]
             importance = dict(zip(chosen["export"].feature_name(), chosen["export"].feature_importance("gain").tolist()))
             entry.update({
@@ -336,7 +377,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
                 "booster": compact_booster(chosen["export"], chosen["spec"]["features"], frames.get("test", full)),
             })
         artifact["targets"][target] = entry
-        report["targets"][target] = {"selected": selected, "selectedIncludingXg": selected_any, "dispersion": dispersion, "validationWeeklyRmse": weekly_rmse,
+        report["targets"][target] = {"selected": selected, "selectedIncludingXg": selected_any, "stackWeights": stack, "dispersion": dispersion, "validationWeeklyRmse": weekly_rmse,
                                      "shrinkK": shrinkage[target]["k"], "priorWeight": shrinkage[target]["priorWeight"], "seasonWeight": shrinkage[target]["seasonWeight"], "shrinkGrid": shrinkage[target]["validationGrid"],
                                      "trees": {n: c["best"] for n, c in candidates.items()},
                                      "topFeatures": entry.get("topFeatures", []), "scores": scores}
@@ -392,6 +433,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         report["weekly"][split_name] = result
         report["gate"][split_name] = promotion_gate(result["benchBossSelected"], result["productionBaseline"])
     artifact["intervalZ"] = INTERVAL_Z
+    LAST_SKATER_FRAMES.clear(); LAST_SKATER_FRAMES.update(frames)  # for offline experiments
     gate = report["gate"]
     report["promotion"] = {
         "eligible": gate["validation"]["passed"] and gate.get("test", {"passed": False})["passed"],
