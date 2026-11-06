@@ -15,19 +15,20 @@ import AlertsMenu from './shell/AlertsMenu';
 import SearchBar from './shell/CommandSearch';
 import { platformLabel } from '@/lib/teamSetup';
 
-const TOOL_PATHS = ['/startsit', '/trades', '/waivers'];
+const TOOL_PATHS = ['/tools', '/startsit', '/trades', '/waivers'];
 
 const railItems = [
   { icon: Home, name: 'Home', path: '/', match: ['/'] },
   { icon: CalendarDays, name: 'Scores', path: '/games', match: ['/games'] },
   { icon: Zap, name: 'Lineup', path: '/lineup', match: ['/lineup'] },
   { icon: BarChart3, name: 'Rankings', path: '/players', match: ['/players'] },
-  { icon: Wrench, name: 'Tools', path: '/startsit', match: TOOL_PATHS },
+  { icon: Wrench, name: 'Tools', path: '/tools', match: TOOL_PATHS },
   { icon: Trophy, name: 'Teams', path: '/nhl-teams', match: ['/nhl-teams'] },
   { icon: Shirt, name: 'My team', path: '/myteam', match: ['/myteam', '/teams'] },
 ];
 const mobileItems = railItems.filter(item => ['Home', 'Scores', 'Lineup', 'Tools', 'Teams'].includes(item.name));
 const toolTabs = [
+  { name: 'All tools', path: '/tools' },
   { name: 'Start / Sit', path: '/startsit' },
   { name: 'Trade Analyzer', path: '/trades' },
   { name: 'Waiver Wire', path: '/waivers' },

@@ -1,167 +1,118 @@
 'use client';
 
-import { useState } from 'react';
-import { Scale, X } from 'lucide-react';
-import { analyzeTrade } from '@/lib/calculator';
-import { pointsScoring } from '@/components/gamecenter/shared';
-import { useData } from '@/lib/DataContext';
+import { useMemo, useState } from 'react';
+import { ArrowLeftRight, RotateCcw } from 'lucide-react';
+import { usePlayerCard } from '@/components/player/PlayerCardProvider';
+import { BalanceBar, PlayerChip, PlayerSearch, ScoringNote, ToolHeader, useToolData, type ToolPlayer } from '@/components/tools/toolkit';
+import { tradeVerdict } from '@/lib/toolVerdicts';
+
+function Side({ title, ids, rows, pool, exclude, onAdd, onRemove, total, tone }: {
+  title: string;
+  ids: string[];
+  rows: Map<string, ToolPlayer>;
+  pool: ToolPlayer[];
+  exclude: string[];
+  onAdd: (id: string) => void;
+  onRemove: (id: string) => void;
+  total: number;
+  tone?: 'win' | 'loss';
+}) {
+  const { openPlayer } = usePlayerCard();
+  return (
+    <section className="tk-card" aria-label={title}>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2>{title}</h2>
+        <span className="text-sm text-muted"><strong className="text-ink tabular-nums">{total.toFixed(1)}</strong> pts / wk</span>
+      </div>
+      <div className="mt-4 space-y-2.5">
+        {ids.map((id) => {
+          const row = rows.get(id);
+          return row ? <PlayerChip key={id} row={row} tone={tone} onOpen={() => openPlayer(id)} onRemove={() => onRemove(id)} /> : null;
+        })}
+        <PlayerSearch rows={pool} exclude={exclude} onPick={(row) => onAdd(row.player.id)} placeholder={ids.length ? 'Add another player' : 'Search for a player'} />
+      </div>
+    </section>
+  );
+}
 
 export default function TradeAnalyzer() {
-  const { players, projections, myTeam, leagueSettings } = useData();
-  const scoring = pointsScoring(leagueSettings);
-  const outgoingPlayers = myTeam.length ? myTeam : players;
-  const [playersOut, setPlayersOut] = useState<string[]>([myTeam[2]?.id || '']);
-  const [playersIn, setPlayersIn] = useState<string[]>([myTeam[0]?.id || '']);
-  const [analyzed, setAnalyzed] = useState(false);
+  const { byId, myTeam, scoring } = useToolData();
+  const [receive, setReceive] = useState<string[]>([]);
+  const [send, setSend] = useState<string[]>([]);
 
-  const handleAnalyze = () => {
-    setAnalyzed(true);
-  };
+  const all = useMemo(() => [...byId.values()], [byId]);
+  const mine = useMemo(() => new Set(myTeam.map((p) => p.id)), [myTeam]);
+  // With a roster, I send my players and receive anyone else; without one, either side is open.
+  const sendPool = useMemo(() => (mine.size ? all.filter((r) => mine.has(r.player.id)) : all), [all, mine]);
+  const receivePool = useMemo(() => (mine.size ? all.filter((r) => !mine.has(r.player.id)) : all), [all, mine]);
 
-  const playersOutObjs = playersOut.map(id => players.find(p => p.id === id)!).filter(Boolean);
-  const playersInObjs = playersIn.map(id => players.find(p => p.id === id)!).filter(Boolean);
-
-  const analysis = analyzeTrade(playersOutObjs, playersInObjs, projections, scoring.settings);
+  const total = (ids: string[]) => ids.reduce((sum, id) => sum + (byId.get(id)?.fpts ?? 0), 0);
+  const inValue = total(receive);
+  const outValue = total(send);
+  const ready = receive.length > 0 && send.length > 0;
+  const share = inValue + outValue > 0 ? inValue / (inValue + outValue) : 0.5;
+  const verdict = tradeVerdict(share);
+  const net = inValue - outValue;
+  const taken = [...receive, ...send];
 
   return (
-    <>
     <div className="bb-page">
-      <header className="bb-page-header"><div><h1>Trade Analyzer</h1><p>Compare the players leaving your roster with the players coming in.</p></div></header>
+      <ToolHeader accent="trade" eyebrow="Trade analyzer" title="Know before you send" blurb="Add the players on each side. The verdict updates as you build the deal, from each player's projected fantasy points." />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Giving Up */}
-        <div className="bb-panel p-6">
-          <h3 className="text-lg font-medium text-error mb-4">Giving up</h3>
-          <div className="space-y-2 mb-4">
-            {playersOut.map((id, idx) => {
-              const player = players.find(p => p.id === id);
-              return (
-                <div key={idx} className="flex items-center gap-2">
-                  <select
-                    className="bb-field min-w-0 flex-1"
-                    value={id}
-                    onChange={(e) => {
-                      const newPlayersOut = [...playersOut];
-                      newPlayersOut[idx] = e.target.value;
-                      setPlayersOut(newPlayersOut);
-                    }}
-                  >
-                    <option value="">Choose a player</option>
-                    {outgoingPlayers.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => setPlayersOut(playersOut.filter((_, i) => i !== idx))}
-                    aria-label={`Remove ${player?.name || 'player'} from giving up`} className="bb-button-secondary shrink-0"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => setPlayersOut([...playersOut, myTeam[0]?.id || ''])}
-            className="bb-button-secondary w-full"
-          >
-            + Add Player
-          </button>
-        </div>
+      <section className="tk-card tk-verdict mb-5" aria-live="polite">
+        {ready ? (
+          <>
+            <p className={`tk-verdict-title is-${verdict.tone}`}>{verdict.title}</p>
+            <p className="tk-verdict-sub">
+              {Math.abs(net) < 0.05 ? 'Both sides project the same this week.' : `You ${net > 0 ? 'gain' : 'lose'} ${Math.abs(net).toFixed(1)} projected points per week.`}
+            </p>
+            <BalanceBar share={share} label="Share of the trade's projected value on your side" />
+            <div className="mx-auto mt-2 flex max-w-[34rem] justify-between text-xs text-muted"><span>You get {Math.round(share * 100)}%</span><span>They get {100 - Math.round(share * 100)}%</span></div>
+          </>
+        ) : (
+          <>
+            <p className="tk-verdict-title"><ArrowLeftRight className="mr-2 inline h-7 w-7 align-[-4px] text-muted" aria-hidden="true" />Build a trade</p>
+            <p className="tk-verdict-sub">Add at least one player to each side to see who wins.</p>
+          </>
+        )}
+      </section>
 
-        {/* Getting */}
-        <div className="bb-panel p-6">
-          <h3 className="text-lg font-medium text-success mb-4">Getting</h3>
-          <div className="space-y-2 mb-4">
-            {playersIn.map((id, idx) => {
-              const player = players.find(p => p.id === id);
-              return (
-                <div key={idx} className="flex items-center gap-2">
-                  <select
-                    className="bb-field min-w-0 flex-1"
-                    value={id}
-                    onChange={(e) => {
-                      const newPlayersIn = [...playersIn];
-                      newPlayersIn[idx] = e.target.value;
-                      setPlayersIn(newPlayersIn);
-                    }}
-                  >
-                    <option value="">Choose a player</option>
-                    {players.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => setPlayersIn(playersIn.filter((_, i) => i !== idx))}
-                    aria-label={`Remove ${player?.name || 'player'} from getting`} className="bb-button-secondary shrink-0"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          <button
-            onClick={() => setPlayersIn([...playersIn, players[0]?.id || ''])}
-            className="bb-button-secondary w-full"
-          >
-            + Add Player
-          </button>
-        </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Side
+          title="I receive"
+          ids={receive}
+          rows={byId}
+          pool={receivePool}
+          exclude={taken}
+          onAdd={(id) => setReceive((ids) => [...ids, id])}
+          onRemove={(id) => setReceive((ids) => ids.filter((x) => x !== id))}
+          total={inValue}
+          tone={ready ? (verdict.tone === 'win' ? 'win' : undefined) : undefined}
+        />
+        <Side
+          title="They receive"
+          ids={send}
+          rows={byId}
+          pool={sendPool}
+          exclude={taken}
+          onAdd={(id) => setSend((ids) => [...ids, id])}
+          onRemove={(id) => setSend((ids) => ids.filter((x) => x !== id))}
+          total={outValue}
+          tone={ready ? (verdict.tone === 'loss' ? 'win' : undefined) : undefined}
+        />
       </div>
 
-      <button
-        disabled={!playersOutObjs.length || !playersInObjs.length}
-        onClick={handleAnalyze}
-        className="bb-button mb-8"
-      >
-        Analyze Trade
-      </button>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" className="bb-button-secondary inline-flex items-center gap-2" disabled={!taken.length} onClick={() => { setReceive(send); setSend(receive); }}>
+          <ArrowLeftRight size={15} aria-hidden="true" /> Swap sides
+        </button>
+        <button type="button" className="bb-button-secondary inline-flex items-center gap-2" disabled={!taken.length} onClick={() => { setReceive([]); setSend([]); }}>
+          <RotateCcw size={15} aria-hidden="true" /> Clear
+        </button>
+        {mine.size === 0 && <span className="text-xs text-muted">Tip: add your roster on My team and &ldquo;They receive&rdquo; will only show your players.</span>}
+      </div>
 
-      {/* Trade Result */}
-      {analyzed && (
-        <>
-          <div className={` p-6 mb-6 border-2 ${
-            analysis.verdict === 'Win' ? 'bg-paper-2 border-success' :
-            analysis.verdict === 'Loss' ? 'bg-paper-2 border-error' :
-            'bg-paper-2 border-accent'
-          }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className={`text-2xl font-medium ${
-                  analysis.verdict === 'Win' ? 'text-success' :
-                  analysis.verdict === 'Loss' ? 'text-error' : 'text-accent'
-                }`}>
-                  {analysis.verdict === 'Win' ? 'Accept this trade' :
-                   analysis.verdict === 'Loss' ? 'Reject this trade' :
-                   'Fair trade'}
-                </h3>
-                <p className={`mt-1 ${
-                  analysis.verdict === 'Win' ? 'text-success' :
-                  analysis.verdict === 'Loss' ? 'text-error' : 'text-accent'
-                }`}>
-                  {analysis.summary}
-                </p>
-              </div>
-              <div className="text-5xl">
-                <Scale className="h-8 w-8 text-muted" aria-hidden="true" />
-              </div>
-            </div>
-          </div>
-
-          {/* Detailed Stats */}
-          <div className="bb-panel p-6">
-            <h3 className="text-xl font-medium mb-4">Net Gain/Loss</h3>
-            <div className="flex flex-wrap items-baseline justify-between gap-4">
-              <p className={`text-4xl font-medium ${analysis.netGain > 0 ? 'text-success' : analysis.netGain < 0 ? 'text-error' : 'text-muted'}`}>
-                {analysis.netGain > 0 ? '+' : ''}{analysis.netGain.toFixed(1)} pts
-              </p>
-              <p className="text-sm text-muted mt-2">Rest of Season</p>
-            </div>
-          </div>
-        </>
-      )}
+      <ScoringNote label={scoring.label} />
     </div>
-    </>
   );
 }

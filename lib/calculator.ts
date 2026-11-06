@@ -1,3 +1,4 @@
+import { hasPosition } from './positions';
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
@@ -283,7 +284,7 @@ export function optimizeLineup(
     if (slotType === 'G') return player.isGoalie;
     if (slotType === 'UTIL') return !player.isGoalie;
     if (slotType === 'BN' || slotType === 'IR') return true;
-    return player.positions?.includes(slotType) ?? false;
+    return hasPosition(player, slotType);
   };
 
   const positionOrder: ('C' | 'LW' | 'RW' | 'D' | 'G' | 'UTIL')[] = ['C', 'LW', 'RW', 'D', 'G'];

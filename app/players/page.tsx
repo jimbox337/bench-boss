@@ -7,6 +7,7 @@ import { calculateFantasyPoints, type GoalieStats, type Player, type Projection,
 import { usePlayerCard } from '@/components/player/PlayerCardProvider';
 import { pointsScoring } from '@/components/gamecenter/shared';
 import './players.css';
+import { displayPositions, hasPosition } from '@/lib/positions';
 
 const PAGE_SIZE = 25;
 const POSITIONS = [
@@ -103,7 +104,7 @@ export default function PlayerExplorer() {
           const p = projectionById.get(player.id);
           if (p) {
             projection = p;
-            stats = { GP: p.gamesPlayed, ...(goalies ? p.goalieStats : p.skaterStats) };
+            stats = { GP: Math.round(p.gamesPlayed), ...(goalies ? p.goalieStats : p.skaterStats) };
           }
         } else if (player.seasonStats) {
           const base = effectiveView === 'per_game' ? perGame(player.seasonStats, player.gamesPlayed ?? 0) : player.seasonStats;
@@ -127,7 +128,7 @@ export default function PlayerExplorer() {
     const q = search.trim().toLowerCase();
     const filtered = groupRows.filter(({ player, mine }) => {
       if (q && !player.name.toLowerCase().includes(q) && !player.nhlTeam.toLowerCase().includes(q)) return false;
-      if (!goalies && tab !== 'skaters' && !player.positions?.includes(tab)) return false;
+      if (!goalies && tab !== 'skaters' && !hasPosition(player, tab)) return false;
       if (status === 'mine' && !mine) return false;
       if (status === 'available' && mine) return false;
       if (status === 'injured' && (!player.injuryStatus || player.injuryStatus === 'Healthy')) return false;
@@ -249,7 +250,7 @@ export default function PlayerExplorer() {
                             {injury && <span className="pl-injury" title={player.injuryStatus}>{injury}</span>}
                             {mine && <Star size={12} className="pl-mine" aria-label="On my team" />}
                           </span>
-                          <span className="pl-meta">{player.nhlTeam} - {player.positions?.join(',') || (player.isGoalie ? 'G' : '')}</span>
+                          <span className="pl-meta">{player.nhlTeam} - {displayPositions(player.positions).join(',') || (player.isGoalie ? 'G' : '')}</span>
                         </span>
                       </div>
                     </th>

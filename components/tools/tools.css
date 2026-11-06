@@ -1,0 +1,246 @@
+/* Shared look for the fantasy tools: colorful tiles, rounded player chips with
+   color-coded position badges, and big plain-language verdicts. */
+
+:root {
+  --tk-c: #4f9dff;
+  --tk-lw: #3ccf91;
+  --tk-rw: #f2a93b;
+  --tk-d: #e05a8a;
+  --tk-g: #9a7bff;
+  --tk-win: #35c97a;
+  --tk-loss: #ef5a5a;
+  --tk-even: #f2c14e;
+}
+
+/* Hero header with a colored glow per tool */
+.tk-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  padding: 1.6rem 1.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 1.1rem;
+  background: var(--color-paper-2);
+}
+.tk-hero::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto auto;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: var(--tk-glow, var(--tk-c));
+  opacity: 0.22;
+  filter: blur(60px);
+}
+.tk-hero > * { position: relative; }
+.tk-hero-trade { --tk-glow: #b04cf5; }
+.tk-hero-startsit { --tk-glow: #2f7cf6; }
+.tk-hero-waivers { --tk-glow: #19b47a; }
+.tk-hero-lineup { --tk-glow: #f08a24; }
+.tk-hero-tools { --tk-glow: #e2445c; }
+.tk-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-muted); }
+.tk-hero h1 { margin-top: 0.3rem; font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800; line-height: 1.05; text-transform: uppercase; color: var(--color-ink); }
+.tk-hero p { margin-top: 0.5rem; max-width: 60ch; font-size: 0.92rem; color: var(--color-ink-2); }
+
+.tk-note { margin-top: 1rem; font-size: 0.75rem; color: var(--color-muted); }
+
+/* Position badges */
+.tk-pos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.4rem;
+  background: var(--tk-pos, var(--tk-c));
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.1rem;
+  letter-spacing: 0.02em;
+}
+.tk-pos-rank { font-weight: 600; opacity: 0.9; }
+.tk-pos-C { --tk-pos: var(--tk-c); }
+.tk-pos-LW { --tk-pos: var(--tk-lw); }
+.tk-pos-RW { --tk-pos: var(--tk-rw); }
+.tk-pos-D { --tk-pos: var(--tk-d); }
+.tk-pos-G { --tk-pos: var(--tk-g); }
+
+.tk-value {
+  padding: 0.05rem 0.45rem;
+  border-radius: 0.4rem;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+.tk-team { font-size: 0.72rem; color: var(--color-muted); }
+.tk-injury { padding: 0 0.3rem; border-radius: 0.25rem; background: var(--tk-loss); color: #fff; font-size: 0.62rem; font-weight: 800; line-height: 1rem; }
+
+/* Headshots */
+.tk-headshot {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: linear-gradient(160deg, var(--color-paper-3), var(--color-paper));
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+.tk-headshot img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.tk-headshot span { align-self: center; }
+
+/* Player chips */
+.tk-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.6rem 0.55rem 0.55rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 1rem;
+  background: var(--color-paper-3);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.tk-chip:hover { border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-rule)); }
+.tk-chip-win { border-color: color-mix(in srgb, var(--tk-win) 70%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--tk-win) 35%, transparent); }
+.tk-chip-loss { opacity: 0.8; }
+.tk-chip-body { min-width: 0; flex: 1; }
+.tk-chip-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  text-align: left;
+}
+.tk-chip-name:not(:disabled):hover { color: var(--color-accent); }
+.tk-chip-name:disabled { cursor: default; }
+.tk-chip-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-top: 0.25rem; }
+.tk-chip-remove {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--color-ink-2);
+}
+.tk-chip-remove:hover { background: var(--color-paper); color: var(--tk-loss); }
+
+/* Search */
+.tk-search { position: relative; }
+.tk-search input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 1rem 0 2.5rem;
+  border: 1px dashed var(--color-field-border, var(--color-rule));
+  border-radius: 1rem;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+}
+.tk-search input:focus { outline: none; border-style: solid; border-color: var(--color-accent); background: var(--color-paper); }
+.tk-search-icon { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--color-muted); pointer-events: none; }
+.tk-search-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 0.3rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.9rem;
+  background: var(--color-paper-2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+.tk-search-list li { display: flex; align-items: center; gap: 0.55rem; padding: 0.4rem 0.5rem; border-radius: 0.6rem; cursor: pointer; }
+.tk-search-list li.is-active { background: var(--color-paper-3); }
+.tk-search-list .tk-headshot { border-radius: 0.5rem; }
+.tk-search-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.88rem; font-weight: 600; color: var(--color-ink); }
+
+/* Panels */
+.tk-card {
+  border: 1px solid var(--color-rule);
+  border-radius: 1.1rem;
+  background: var(--color-paper-2);
+  padding: 1.25rem;
+}
+.tk-card h2 { font-size: 1.15rem; font-weight: 800; color: var(--color-ink); }
+
+/* Verdict */
+.tk-verdict { text-align: center; }
+.tk-verdict-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; line-height: 1.1; color: var(--color-ink); }
+.tk-verdict-title.is-win { color: var(--tk-win); }
+.tk-verdict-title.is-loss { color: var(--tk-loss); }
+.tk-verdict-title.is-even { color: var(--tk-even); }
+.tk-verdict-sub { margin-top: 0.4rem; font-size: 0.88rem; color: var(--color-ink-2); }
+
+.tk-balance {
+  position: relative;
+  height: 1rem;
+  margin: 1rem auto 0;
+  max-width: 34rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+}
+.tk-balance span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; transition: width 0.4s ease; }
+.tk-balance i { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--color-ink-2); opacity: 0.5; }
+.tk-balance-win span { background: linear-gradient(90deg, #1f8f55, var(--tk-win)); }
+.tk-balance-loss span { background: linear-gradient(90deg, #a83232, var(--tk-loss)); }
+.tk-balance-even span { background: linear-gradient(90deg, #b58a1f, var(--tk-even)); }
+
+/* Tool tiles */
+.tk-tiles { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.tk-tile {
+  position: relative;
+  display: flex;
+  min-height: 11rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  color: #fff;
+  background: var(--tk-tile);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.tk-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); }
+.tk-tile:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.tk-tile-icon { position: absolute; right: 1rem; top: 1rem; opacity: 0.9; }
+.tk-tile-art { position: absolute; right: -1.5rem; bottom: -1.5rem; opacity: 0.16; }
+.tk-tile strong { font-size: 1.4rem; font-weight: 800; line-height: 1.1; }
+.tk-tile span { margin-top: 0.25rem; font-size: 0.85rem; opacity: 0.88; }
+.tk-tile-trade { --tk-tile: linear-gradient(140deg, #7a2bd6, #c03fa0); }
+.tk-tile-startsit { --tk-tile: linear-gradient(140deg, #1f5fe0, #3aa7f2); }
+.tk-tile-waivers { --tk-tile: linear-gradient(140deg, #0f8a5c, #34c58a); }
+.tk-tile-lineup { --tk-tile: linear-gradient(140deg, #d05a12, #f2a33a); }
+.tk-tile-players { --tk-tile: linear-gradient(140deg, #2a3550, #44567e); }
+
+/* Pills */
+.tk-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tk-pills button {
+  min-height: 2.1rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-ink-2);
+}
+.tk-pills button:hover { color: var(--color-ink); border-color: var(--color-accent); }
+.tk-pills button[aria-pressed='true'] { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-paper); }
+
+.tk-empty { padding: 1.25rem; border: 1px dashed var(--color-rule); border-radius: 1rem; text-align: center; font-size: 0.85rem; color: var(--color-muted); }
