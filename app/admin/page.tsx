@@ -118,6 +118,7 @@ export default function AdminConsolePage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [authWarning, setAuthWarning] = useState('');
   const [query, setQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | ManagedUser['role']>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended' | 'unverified' | 'legacy'>('all');
@@ -147,6 +148,8 @@ export default function AdminConsolePage() {
       setUsers(data.users);
       setCurrentUserId(data.currentUserId);
       setLoadError('');
+      setAuthWarning(data.authAvailable === false ? (data.authError || 'Supabase Auth is unavailable') : '');
+      if (data.authAvailable === false) pushLog('err', `supabase auth unavailable: ${data.authError || 'unknown error'} (showing database rows only)`);
       pushLog('info', `GET /api/admin/users → ${response.status} (${data.users.length} rows)`);
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Unable to load users';
@@ -320,6 +323,7 @@ export default function AdminConsolePage() {
           <div className="adm-head">
             <h1>Users</h1>
             <p>Accounts in the Bench Boss database, matched to Supabase Auth.</p>
+            {authWarning && <p className="adm-warn" role="status">! auth data unavailable: {authWarning}. Showing database rows only; sign-in times, providers and legacy sync are hidden.</p>}
             <div className="adm-stats" aria-label="User totals">
               <span>total=<b>{stats.total}</b></span>
               <span>active=<b className="adm-green">{stats.active}</b></span>
@@ -401,7 +405,7 @@ export default function AdminConsolePage() {
                       <td className="col-lg adm-dim">@{user.username}</td>
                       <td className="col-md"><RolePill role={user.role} /></td>
                       <td><StatusPill user={user} /></td>
-                      <td className="col-lg">{user.authLinked
+                      <td className="col-lg">{authWarning ? <span className="adm-faint">n/a</span> : user.authLinked
                         ? <span className="adm-dim">{user.auth?.providers.length ? user.auth.providers.join(',') : 'linked'}</span>
                         : <span className="adm-pill adm-pill-warn">legacy</span>}</td>
                       <td className="col-lg adm-dim">{user._count.teams}</td>

@@ -42,6 +42,7 @@
 .adm-faint { color: var(--adm-faint); }
 .adm-green { color: var(--adm-green); }
 .adm-err { color: var(--adm-red); }
+.adm .adm-warn { color: var(--adm-amber); }
 
 /* ── top bar ───────────────────────────────── */
 .adm-top {
