@@ -219,10 +219,35 @@ export function goalieFantasyPoints(line: GoalieLine, settings: LeagueSettings):
 // ------------------------------------------------------------------------------------
 
 export type PlayKind = 'goal' | 'shot' | 'miss' | 'block' | 'hit' | 'penalty' | 'faceoff' | 'giveaway' | 'takeaway' | 'stoppage' | 'period';
-export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string; x?: number; y?: number };
+export type ShotResult = 'goal' | 'shot' | 'miss' | 'block';
+export type ShotStrength = 'EV' | 'PP' | 'SH' | 'EN';
+/**
+ * A shot attempt in a fixed orientation: the home team always attacks the right net (x > 0)
+ * and the away team the left, whatever end they played that period. Feet, rink centre 0,0.
+ */
+export type ShotInfo = {
+  result: ShotResult; team: string; shooterId?: number; shooter: string; goalie?: string; blocker?: string;
+  shotType?: string; reason?: string; strength: ShotStrength; x: number; y: number;
+};
+export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string; x?: number; y?: number; shot?: ShotInfo };
+
+/** Strength for the shooting side from the NHL situation code (away goalie, away skaters, home skaters, home goalie). */
+export function shotStrength(code: string | undefined, shooterIsHome: boolean): ShotStrength {
+  if (!code || !/^\d{4}$/.test(code)) return 'EV';
+  const [awayGoalie, awaySkaters, homeSkaters, homeGoalie] = code.split('').map(Number);
+  const own = shooterIsHome ? homeSkaters : awaySkaters;
+  const opp = shooterIsHome ? awaySkaters : homeSkaters;
+  if ((shooterIsHome ? awayGoalie : homeGoalie) === 0) return 'EN';
+  return own > opp ? 'PP' : own < opp ? 'SH' : 'EV';
+}
+
+/** Distance in feet from a normalized shot to the net it attacks (goal line at x = ±89). */
+export function shotDistance(shot: Pick<ShotInfo, 'x' | 'y'>, attacksRight: boolean): number {
+  return Math.hypot((attacksRight ? 89 : -89) - shot.x, shot.y);
+}
 
 type RawPlay = {
-  eventId: number; sortOrder?: number; typeDescKey: string; timeInPeriod?: string;
+  eventId: number; sortOrder?: number; typeDescKey: string; timeInPeriod?: string; situationCode?: string; homeTeamDefendingSide?: string;
   periodDescriptor?: { number?: number; periodType?: string };
   details?: Record<string, string | number | undefined>;
 };
@@ -235,7 +260,9 @@ const KIND: Record<string, PlayKind> = {
 const human = (value: unknown) => String(value || '').replace(/-/g, ' ');
 
 /** Turn the NHL play-by-play into readable events (oldest first). Unknown event types are skipped. */
-export function normalizePlayByPlay(payload: { plays?: RawPlay[]; rosterSpots?: RawRosterSpot[] } | null, teams: Record<number, string>): PlayEvent[] {
+export function normalizePlayByPlay(payload: { plays?: RawPlay[]; rosterSpots?: RawRosterSpot[]; homeTeam?: { id?: number } } | null, teams: Record<number, string>, homeId?: number): PlayEvent[] {
+  const home = homeId ?? payload?.homeTeam?.id;
+  const otherTeam = (id: unknown) => Object.entries(teams).find(([key]) => Number(key) !== id)?.[1];
   const names = new Map((payload?.rosterSpots || []).map(spot => [spot.playerId, `${text(spot.firstName).charAt(0)}. ${text(spot.lastName)}`.trim()]));
   const who = (id: unknown) => (typeof id === 'number' ? names.get(id) || `#${id}` : 'Unknown');
   const events: PlayEvent[] = [];
@@ -269,7 +296,28 @@ export function normalizePlayByPlay(payload: { plays?: RawPlay[]; rosterSpots?: 
     }
     const x = typeof d.xCoord === 'number' ? d.xCoord : undefined;
     const y = typeof d.yCoord === 'number' ? d.yCoord : undefined;
-    events.push({ id: play.eventId, period, time: play.timeInPeriod || '', kind, team, text: line, score, x, y });
+    let shot: ShotInfo | undefined;
+    if ((kind === 'goal' || kind === 'shot' || kind === 'miss' || kind === 'block') && x !== undefined && y !== undefined && team) {
+      // Blocks belong to the blocking team in the feed; the attempt belongs to the shooter's team.
+      const shooterTeam = kind === 'block' ? otherTeam(d.eventOwnerTeamId) : team;
+      const shooterIsHome = kind === 'block' ? d.eventOwnerTeamId !== home : d.eventOwnerTeamId === home;
+      if (shooterTeam && home !== undefined) {
+        let nx = x, ny = y;
+        if (kind === 'block') {
+          // Block coordinates sit at the blocker; mirror them into the shooter's attacking half.
+          if ((shooterIsHome && nx < 0) || (!shooterIsHome && nx > 0)) { nx = -nx; ny = -ny; }
+        } else if (play.homeTeamDefendingSide === 'right') { nx = -nx; ny = -ny; }
+        const shooterId = (kind === 'goal' ? d.scoringPlayerId : d.shootingPlayerId) as number | undefined;
+        shot = {
+          result: kind, team: shooterTeam, shooterId: typeof shooterId === 'number' ? shooterId : undefined, shooter: who(shooterId),
+          goalie: typeof d.goalieInNetId === 'number' ? who(d.goalieInNetId) : undefined,
+          blocker: kind === 'block' ? who(d.blockingPlayerId) : undefined,
+          shotType: d.shotType ? human(d.shotType) : undefined, reason: kind === 'miss' && d.reason ? human(d.reason) : undefined,
+          strength: shotStrength(play.situationCode, shooterIsHome), x: nx, y: ny,
+        };
+      }
+    }
+    events.push({ id: play.eventId, period, time: play.timeInPeriod || '', kind, team, text: line, score, x, y, ...(shot ? { shot } : {}) });
   }
   return events;
 }
@@ -524,7 +572,7 @@ export async function fetchGameDetail(gameId: number): Promise<GameDetail> {
   const teamIds: Record<number, string> = {};
   if (game.away.id) teamIds[game.away.id] = game.away.abbrev;
   if (game.home.id) teamIds[game.home.id] = game.home.abbrev;
-  detail.plays = normalizePlayByPlay(pbp, teamIds);
+  detail.plays = normalizePlayByPlay(pbp, teamIds, game.home.id);
   const row = (abbrev: string) => standings.find(s => s.abbrev === abbrev);
   const away = row(game.away.abbrev);
   const home = row(game.home.abbrev);

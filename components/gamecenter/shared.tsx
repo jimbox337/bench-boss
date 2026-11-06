@@ -95,7 +95,7 @@ export function SectionTitle({ children, action }: { children: React.ReactNode; 
   return <div className="mb-3 flex items-center justify-between gap-3 border-b border-rule pb-2"><h2 className="bb-section-title">{children}</h2>{action}</div>;
 }
 
-export function TeamColorBar({ away, home, className = 'h-1.5' }: { away: string; home: string; className?: string }) {
+export function TeamColorBar({ away, home, className = 'h-1' }: { away: string; home: string; className?: string }) {
   return <div className={`flex gap-1 ${className}`} aria-hidden><span className="flex-1" style={{ background: teamColor(away) }} /><span className="flex-1" style={{ background: teamColor(home) }} /></div>;
 }
 
@@ -122,12 +122,12 @@ export function GameHero({ game, footer }: { game: ScoreboardGame; footer?: Reac
     </div>
   );
   return (
-    <div className="bb-game-hero overflow-hidden rounded-2xl border border-rule" style={{ '--away': teamColor(game.away.abbrev), '--home': teamColor(game.home.abbrev) } as React.CSSProperties}>
+    <div className="bb-game-hero overflow-hidden rounded-2xl border border-rule">
       <TeamColorBar away={game.away.abbrev} home={game.home.abbrev} />
       <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
         {side('away')}
         <span className="bb-led-score" data-dim={game.isFinal && (game.away.score ?? 0) < (game.home.score ?? 0) || undefined}>{started ? game.away.score ?? 0 : ''}</span>
-        <span className="bb-faceoff" data-live={game.isLive || undefined}><strong>{top}</strong>{bottom && <span>{bottom}</span>}</span>
+        <span className="bb-game-status" data-live={game.isLive || undefined}>{game.isLive && !game.inIntermission && <i aria-hidden />}<strong>{top}</strong>{bottom && <span>{bottom}</span>}</span>
         <span className="bb-led-score" data-dim={game.isFinal && (game.home.score ?? 0) < (game.away.score ?? 0) || undefined}>{started ? game.home.score ?? 0 : ''}</span>
         {side('home')}
       </div>

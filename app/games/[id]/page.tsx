@@ -199,16 +199,14 @@ function GameTab({ detail, settings, onAllPlays }: { detail: GameDetail; setting
         </section>
       )}
 
-      <div className="grid gap-6 2xl:grid-cols-2">
-        <section>
-          <SectionTitle>Shot chart</SectionTitle>
-          {started ? <ShotChart plays={detail.plays} away={game.away.abbrev} home={game.home.abbrev} /> : <p className="text-sm text-muted">Shots appear after puck drop.</p>}
-        </section>
-        <section>
-          <SectionTitle action={<button type="button" onClick={onAllPlays} className="flex items-center gap-1 text-sm font-semibold text-accent">View all <ChevronRight className="h-4 w-4" /></button>}>Recent plays</SectionTitle>
-          {recent.length === 0 ? <p className="text-sm text-muted">Plays appear after puck drop.</p> : <ol>{recent.map(p => <PlayRow key={p.id} play={p} />)}</ol>}
-        </section>
-      </div>
+      <section>
+        <SectionTitle>Shot chart</SectionTitle>
+        {started ? <ShotChart plays={detail.plays} away={game.away.abbrev} home={game.home.abbrev} /> : <p className="text-sm text-muted">Shots appear after puck drop.</p>}
+      </section>
+      <section>
+        <SectionTitle action={<button type="button" onClick={onAllPlays} className="flex items-center gap-1 text-sm font-semibold text-accent">View all <ChevronRight className="h-4 w-4" /></button>}>Recent plays</SectionTitle>
+        {recent.length === 0 ? <p className="text-sm text-muted">Plays appear after puck drop.</p> : <ol>{recent.map(p => <PlayRow key={p.id} play={p} />)}</ol>}
+      </section>
 
       <section>
         <SectionTitle>Score by period</SectionTitle>
@@ -367,12 +365,12 @@ export default function GamePage() {
       <Link href={`/games?date=${game.gameDate}`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline"><ArrowLeft className="h-4 w-4" /> Scores</Link>
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0">
-          <header className="bb-game-hero overflow-hidden rounded-2xl border border-rule" style={{ '--away': teamColor(game.away.abbrev), '--home': teamColor(game.home.abbrev) } as React.CSSProperties}>
-            <div className="flex h-1.5 gap-1" aria-hidden><span className="flex-1" style={{ background: teamColor(game.away.abbrev) }} /><span className="flex-1" style={{ background: teamColor(game.home.abbrev) }} /></div>
+          <header className="bb-game-hero overflow-hidden rounded-2xl border border-rule">
+            <div className="flex h-1" aria-hidden><span className="flex-1" style={{ background: teamColor(game.away.abbrev) }} /><span className="flex-1" style={{ background: teamColor(game.home.abbrev) }} /></div>
             <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-3 px-4 py-6 md:gap-6 md:px-6">
               {heroTeam('away')}
               <span className="bb-led-score" data-dim={game.isFinal && (game.away.score ?? 0) < (game.home.score ?? 0) || undefined}>{started ? game.away.score ?? 0 : ''}</span>
-              <span className="bb-faceoff" data-live={game.isLive || undefined}><strong>{status[0]}</strong>{status[1] && <span>{status[1]}</span>}</span>
+              <span className="bb-game-status" data-live={game.isLive || undefined}>{game.isLive && !game.inIntermission && <i aria-hidden />}<strong>{status[0]}</strong>{status[1] && <span>{status[1]}</span>}</span>
               <span className="bb-led-score" data-dim={game.isFinal && (game.home.score ?? 0) < (game.away.score ?? 0) || undefined}>{started ? game.home.score ?? 0 : ''}</span>
               {heroTeam('home')}
             </div>

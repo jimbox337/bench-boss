@@ -5,6 +5,8 @@ import {
   attachRecords,
   pickFeatured,
   normalizePlayByPlay,
+  shotDistance,
+  shotStrength,
   deriveLineScore,
   goalieFantasyPoints,
   normalizeScoreGame,
@@ -168,5 +170,44 @@ describe('slateDate', () => {
     expect(slateDate(new Date('2026-11-05T18:00:00Z'))).toBe('2026-11-05'); // 10:00 PST
     expect(slateDate(new Date('2026-07-01T17:00:00Z'))).toBe('2026-07-01'); // 10:00 PDT
     expect(slateDate(new Date('2026-03-01T07:30:00Z'))).toBe('2026-02-28'); // 23:30 PST, month edge
+  });
+});
+
+describe('shot attempts', () => {
+  const roster = [
+    { teamId: 8, playerId: 10, firstName: { default: 'Cole' }, lastName: { default: 'Caufield' } },
+    { teamId: 68, playerId: 20, firstName: { default: 'Clayton' }, lastName: { default: 'Keller' } },
+    { teamId: 68, playerId: 21, firstName: { default: 'Karel' }, lastName: { default: 'Vejmelka' } },
+  ];
+  const period = { number: 1, periodType: 'REG' };
+  const payload = {
+    homeTeam: { id: 8 }, rosterSpots: roster,
+    plays: [
+      // Home (MTL) defends the right this period, so it shoots at the left net: flipped to the right.
+      { eventId: 1, sortOrder: 1, typeDescKey: 'shot-on-goal', situationCode: '1451', homeTeamDefendingSide: 'right', periodDescriptor: period,
+        details: { eventOwnerTeamId: 8, shootingPlayerId: 10, goalieInNetId: 21, shotType: 'snap', xCoord: -80, yCoord: 5 } },
+      // Away shot at the right net that period: flipped to the left.
+      { eventId: 2, sortOrder: 2, typeDescKey: 'missed-shot', situationCode: '1551', homeTeamDefendingSide: 'right', periodDescriptor: period,
+        details: { eventOwnerTeamId: 68, shootingPlayerId: 20, reason: 'wide-of-net', xCoord: 70, yCoord: -10 } },
+      // MTL blocks a UTA shot; the attempt is UTA's and lands in UTA's attacking (left) half.
+      { eventId: 3, sortOrder: 3, typeDescKey: 'blocked-shot', situationCode: '1551', homeTeamDefendingSide: 'right', periodDescriptor: period,
+        details: { eventOwnerTeamId: 8, blockingPlayerId: 10, shootingPlayerId: 20, xCoord: 60, yCoord: 4 } },
+    ],
+  };
+  const shots = normalizePlayByPlay(payload, { 8: 'MTL', 68: 'UTA' }).map(e => e.shot);
+
+  it('orients home attacks right and away attacks left', () => {
+    expect(shots[0]).toMatchObject({ result: 'shot', team: 'MTL', shooter: 'C. Caufield', goalie: 'K. Vejmelka', shotType: 'snap', strength: 'PP', x: 80, y: -5 });
+    expect(shots[1]).toMatchObject({ result: 'miss', team: 'UTA', reason: 'wide of net', strength: 'EV', x: -70, y: 10 });
+    expect(shots[2]).toMatchObject({ result: 'block', team: 'UTA', shooter: 'C. Keller', blocker: 'C. Caufield', x: -60, y: -4 });
+  });
+  it('reads strength from the situation code', () => {
+    expect(shotStrength('1451', false)).toBe('SH');
+    expect(shotStrength('0651', true)).toBe('EN');
+    expect(shotStrength(undefined, true)).toBe('EV');
+  });
+  it('measures distance to the attacked net', () => {
+    expect(shotDistance({ x: 80, y: 0 }, true)).toBeCloseTo(9);
+    expect(shotDistance({ x: -86, y: 4 }, false)).toBeCloseTo(5);
   });
 });
