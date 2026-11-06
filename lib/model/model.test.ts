@@ -6,6 +6,7 @@ import { productionBaseline, shrunkBaseline } from './baselines';
 import { predict } from './gbdt';
 import { combineProjections, projectionCacheKey } from './index';
 import { buildIndexes } from './features';
+import { neuralForward } from './neural';
 import { goalieProjection, perGameStat, projectTeamGoalies, SKATER_TARGETS, type ModelArtifact } from './project';
 import type { RuntimeData } from './runtimeData';
 
@@ -31,6 +32,25 @@ describe('tree evaluator matches LightGBM', () => {
         expect(Math.abs(got - sample.y) / Math.max(Math.abs(sample.y), 1e-9)).toBeLessThan(1e-6);
       }
     }
+  });
+});
+
+describe('neural challenger matches PyTorch', () => {
+  const net = artifact.skater.neural;
+  it.skipIf(!net)('reproduces the exported parity samples', () => {
+    expect(net!.parity?.length).toBeGreaterThan(0);
+    for (const sample of net!.parity!) {
+      const x = sample.x.map(v => (v === null ? NaN : v));
+      const got = neuralForward(net!, x, sample.offset.map(v => (v === null ? NaN : v)));
+      // PyTorch runs in float32; weights are exported to 8 decimals.
+      got.forEach((v, i) => expect(Math.abs(v - sample.y[i]) / Math.max(sample.y[i], 1e-6)).toBeLessThan(1e-4));
+    }
+  });
+  it.skipIf(!net)('is not served unless promoted and flagged on', async () => {
+    const { neuralActive } = await import('./project');
+    expect(neuralActive(artifact, {})).toBe(false);
+    expect(neuralActive({ ...artifact, skater: { ...artifact.skater, neural: { ...net!, promoted: false } } }, { neural: true })).toBe(false);
+    expect(neuralActive({ ...artifact, skater: { ...artifact.skater, neural: { ...net!, promoted: true } } }, { neural: true })).toBe(true);
   });
 });
 

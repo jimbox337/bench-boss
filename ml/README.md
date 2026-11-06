@@ -107,6 +107,25 @@ On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1
   - Skater fantasy-point MAE: 0.972 for v2, versus 1.006 for the baseline.
   - Starting goalies: 1 of 8 correct, before the rotation features existed.
 
+## Neural challenger (experiment, not served)
+
+`benchboss_ml/neural.py` trains one small shared network for all six skater stats: two hidden ReLU layers (128, 64) with dropout and weight decay, and six Poisson outputs, each offset by log(shrunk baseline). It uses the same features, the same chronological split and early stopping on the validation season. It trains on a laptop CPU in a few minutes (`pip install -r requirements-neural.txt`; `train --no-neural` skips it). It runs in a child process, because PyTorch and LightGBM deadlock in one process on macOS (OpenMP).
+
+It competes rather than replaces. It joins the LightGBM stack as one more NNLS component, so validation chooses its weight. It reaches the app only if the ensemble passes a stricter gate: better weekly MAE and RMSE than the current model, no loss in start/sit or top-50, at most 0.5% worse MAE for forwards or defence, on validation **and** test. Even then it stays behind `BENCHBOSS_NEURAL=1`.
+
+**First result (20261106): not promoted.**
+
+| Weekly FP, 2025-26 test | Baseline | LightGBM (served) | Neural alone | LightGBM + neural |
+|---|---|---|---|---|
+| MAE | 1.604 | **1.574** | 1.603 | **1.574** |
+| RMSE | 2.170 | 2.123 | 2.200 | 2.123 |
+| Start/sit | 0.760 | 0.761 | 0.758 | 0.762 |
+| Top-50 | 0.459 | **0.466** | 0.448 | 0.465 |
+
+On its own the network is about baseline quality. It is biased low (−0.19 FP per week on test) and ranks players worse than the shrunk baseline it starts from. Validation gave it weight only for assists (0.06), so the ensemble is the current model to three decimals, and it fails the start/sit (validation) and top-50 (test) checks by about 0.001. As expected, better inputs (injuries, lines, roles) matter more than the model family.
+
+The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` but never shown, so live evidence builds up for a future promotion.
+
 ## Daily track record
 
 `python -m benchboss_ml.daily` collects the current season, locks today's games before puck drop, and scores yesterday's. Each run appends a line to `predictions/daily-log.jsonl`.

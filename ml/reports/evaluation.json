@@ -2,7 +2,7 @@
   "modelVersion": "bench-boss-lgbm-20261106",
   "pipelineVersion": "2026.11.0",
   "featureSchemaVersion": 1,
-  "trainedAt": "2026-11-06T00:49:52.931448+00:00",
+  "trainedAt": "2026-11-06T04:14:18.655136+00:00",
   "dataThrough": "2026-11-04",
   "split": {
     "train": [
@@ -2494,6 +2494,38 @@
             "D": 1.4210288716800847,
             "F": 1.7294315709740637
           }
+        },
+        "neuralOnly": {
+          "mae": 1.5860544757886328,
+          "rmse": 2.150024068957135,
+          "spearman": 0.7119721781294664,
+          "bias": -0.12553914713708014,
+          "n": 16914,
+          "weeklySpearman": 0.6886777697004683,
+          "top50Precision": 0.4222222222222222,
+          "startSitAccuracy": 0.7487198584861745,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.3854471304818279,
+            "F": 1.6905246919383374
+          }
+        },
+        "lightgbmNeuralEnsemble": {
+          "mae": 1.545447587476683,
+          "rmse": 2.081275770412868,
+          "spearman": 0.7283149030173092,
+          "bias": 0.00423159430123484,
+          "n": 16914,
+          "weeklySpearman": 0.7052935529824406,
+          "top50Precision": 0.44814814814814813,
+          "startSitAccuracy": 0.761474723023927,
+          "startSitPairs": 10741,
+          "weeks": 27,
+          "byPositionMae": {
+            "D": 1.3509909597860283,
+            "F": 1.6467146965923343
+          }
         }
       },
       "test": {
@@ -2624,6 +2656,38 @@
           "byPositionMae": {
             "D": 1.4521754829518065,
             "F": 1.7515100689053762
+          }
+        },
+        "neuralOnly": {
+          "mae": 1.6034427519740022,
+          "rmse": 2.200021506909301,
+          "spearman": 0.7188182509574982,
+          "bias": -0.18702526004909964,
+          "n": 16432,
+          "weeklySpearman": 0.697629146272583,
+          "top50Precision": 0.4476923076923077,
+          "startSitAccuracy": 0.7575522098105877,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.4057677812881777,
+            "F": 1.7049200301654543
+          }
+        },
+        "lightgbmNeuralEnsemble": {
+          "mae": 1.5736556494870506,
+          "rmse": 2.1226034105836744,
+          "spearman": 0.7336290047248388,
+          "bias": 0.0006026923377261165,
+          "n": 16432,
+          "weeklySpearman": 0.713983387469538,
+          "top50Precision": 0.4646153846153846,
+          "startSitAccuracy": 0.7618261291889267,
+          "startSitPairs": 10295,
+          "weeks": 26,
+          "byPositionMae": {
+            "D": 1.3759701885309654,
+            "F": 1.6751383129028932
           }
         }
       },
@@ -2756,6 +2820,38 @@
             "D": 1.2352264902216372,
             "F": 1.6318303603060924
           }
+        },
+        "neuralOnly": {
+          "mae": 1.4791879647881596,
+          "rmse": 2.0764468927952633,
+          "spearman": 0.7079413517920572,
+          "bias": -0.21572324006374316,
+          "n": 3703,
+          "weeklySpearman": 0.6498797778606832,
+          "top50Precision": 0.45999999999999996,
+          "startSitAccuracy": 0.7622466216216216,
+          "startSitPairs": 2368,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.2260624314226423,
+            "F": 1.61179241086812
+          }
+        },
+        "lightgbmNeuralEnsemble": {
+          "mae": 1.424682831123042,
+          "rmse": 1.9983980284261922,
+          "spearman": 0.7353808921472936,
+          "bias": -0.04770739442951079,
+          "n": 3703,
+          "weeklySpearman": 0.681329305266634,
+          "top50Precision": 0.49,
+          "startSitAccuracy": 0.7715371621621622,
+          "startSitPairs": 2368,
+          "weeks": 6,
+          "byPositionMae": {
+            "D": 1.1658403740694345,
+            "F": 1.5602821923696435
+          }
         }
       }
     },
@@ -2787,6 +2883,116 @@
           "top50NotWorse": true
         }
       }
+    },
+    "neural": {
+      "bestEpoch": 11,
+      "validationLoss": [
+        9.564055442810059,
+        9.5374116897583,
+        9.526744842529297,
+        9.530226707458496,
+        9.52550983428955,
+        9.529414176940918,
+        9.522989273071289,
+        9.52196216583252,
+        9.521608352661133,
+        9.530634880065918,
+        9.520013809204102,
+        9.538265228271484,
+        9.528494834899902,
+        9.521618843078613,
+        9.522724151611328
+      ],
+      "stackWeights": {
+        "goals": {
+          "baseline": 0.23231619325634878,
+          "shrunk": 0.5344242391513748,
+          "direct": 0.15117351338461876,
+          "residualShrunk": 0.08794634179549014
+        },
+        "assists": {
+          "baseline": 0.24977257986585105,
+          "shrunk": 0.09845419143615786,
+          "direct": 0.07350762410056921,
+          "residualShrunk": 0.5432742408420811,
+          "neural": 0.06337850850118375
+        },
+        "shots": {
+          "shrunk": 0.36752475644577826,
+          "direct": 0.10259558454757735,
+          "residual": 0.11739622783005417,
+          "residualShrunk": 0.4075546993001053
+        },
+        "ppPoints": {
+          "baseline": 0.137036892654488,
+          "shrunk": 0.33184204774884524,
+          "direct": 0.19940405517343607,
+          "residualShrunk": 0.3471177885713028
+        },
+        "hits": {
+          "baseline": 0.22552448064277375,
+          "direct": 0.1577779940600511,
+          "residualShrunk": 0.6042965004510347
+        },
+        "blocks": {
+          "direct": 0.15728605530417367,
+          "residual": 0.13299576820279246,
+          "residualShrunk": 0.6776928843654767
+        }
+      },
+      "modelWeight": 0.75,
+      "validationWeeklyRmse": {
+        "goals": {
+          "neural": 0.6842585359096948,
+          "stackWithNeural": 0.6622040093940275
+        },
+        "assists": {
+          "neural": 0.8898340023648075,
+          "stackWithNeural": 0.8612972459900081
+        },
+        "shots": {
+          "neural": 2.212195383751608,
+          "stackWithNeural": 2.1661248664692137
+        },
+        "ppPoints": {
+          "neural": 0.5151738058473783,
+          "stackWithNeural": 0.49440812794803596
+        },
+        "hits": {
+          "neural": 2.043958504749398,
+          "stackWithNeural": 1.9913757629355098
+        },
+        "blocks": {
+          "neural": 1.6128419334994417,
+          "stackWithNeural": 1.5749023512590525
+        }
+      },
+      "gate": {
+        "validation": {
+          "passed": false,
+          "checks": {
+            "weeklyMaeImproves": true,
+            "weeklyRmseImproves": true,
+            "startSitNotWorse": false,
+            "top50NotWorse": true,
+            "FMaeNotWorse": true,
+            "DMaeNotWorse": true
+          }
+        },
+        "test": {
+          "passed": false,
+          "checks": {
+            "weeklyMaeImproves": true,
+            "weeklyRmseImproves": true,
+            "startSitNotWorse": true,
+            "top50NotWorse": false,
+            "FMaeNotWorse": true,
+            "DMaeNotWorse": true
+          }
+        }
+      },
+      "promoted": false,
+      "rule": "The LightGBM + neural ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season; and validation must give the network a non-zero weight."
     },
     "promotion": {
       "eligible": true,

@@ -20,10 +20,31 @@ import requests
 
 from .dataset import load_processed
 from .features import GOALIE_FEATURES, SKATER_TARGETS, goalie_features, shrinkage_reference, shrunk_baseline, skater_baseline, skater_features
+from .neural import add_inputs, forward_numpy
 from .paths import ML_ROOT, REPORTS_DIR
 from .train import DEFAULT_SKATER_SCORING, SKATER_CANDIDATES, fit, predict, prediction_column
 
 PREDICTIONS_DIR = ML_ROOT / "predictions"
+# Committed app artifact: the neural challenger's weights for shadow predictions.
+APP_ARTIFACT = ML_ROOT.parent / "lib" / "model" / "artifacts" / "bench-boss-model.json"
+
+
+def shadow_predictions(out: pd.DataFrame, report: dict[str, Any]) -> dict[str, pd.Series] | None:
+    """Neural ensemble per stat from the committed artifact, or None when it has no network."""
+    if not APP_ARTIFACT.exists():
+        return None
+    net = json.loads(APP_ARTIFACT.read_text()).get("skater", {}).get("neural")
+    if not net:
+        return None
+    frame = add_inputs(out)
+    preds = forward_numpy(net, frame)
+    out_cols = {t: preds[:, i] for i, t in enumerate(net["targets"])}
+    blend = net["blendWithProductionBaseline"]
+    result = {}
+    for stat in SKATER_TARGETS:
+        ensemble = sum(w * (out_cols[stat] if name == "neural" else out[prediction_column(name, stat)]) for name, w in net["stack"][stat].items())
+        result[stat] = (1 - blend) * ensemble + blend * out[f"base_{stat}"]
+    return result
 
 
 def fetch_schedule(date: str) -> list[dict[str, Any]]:
@@ -97,7 +118,8 @@ def main(argv: list[str] | None = None) -> int:
             frame[f"shr_{stat}"] = shrunk_baseline(frame, stat, info.get("shrinkK", 10.0), reference, info.get("priorWeight", 0.0), info.get("seasonWeight", 0.45))
         selected = info["selected"]
         components = info.get("stackWeights", {}) if selected == "stack" else {selected: 1.0}
-        for name in components:
+        shadow_stack = report["skater"].get("neural", {}).get("stackWeights", {}).get(stat, {})
+        for name in set(components) | set(shadow_stack):
             if name in SKATER_CANDIDATES:
                 spec = SKATER_CANDIDATES[name]
                 init = f"{spec['init']}_{stat}" if spec["init"] else None
@@ -108,7 +130,13 @@ def main(argv: list[str] | None = None) -> int:
     model_weight = report["skater"].get("blend", {}).get("chosenModelWeight", 1.0)
     for stat in SKATER_TARGETS:
         out[f"model_{stat}"] = model_weight * out[f"model_{stat}"] + (1 - model_weight) * out[f"base_{stat}"]
-    for prefix in ("base", "model"):
+    # Shadow: the neural challenger ensemble, recorded for live tracking but never shown.
+    shadow = shadow_predictions(out, report)
+    if shadow is not None:
+        for stat in SKATER_TARGETS:
+            out[f"nn_{stat}"] = shadow[stat]
+    prefixes = ("base", "model", "nn") if shadow is not None else ("base", "model")
+    for prefix in prefixes:
         out[f"{prefix}_fp"] = sum(out[f"{prefix}_{s}"] * w for s, w in DEFAULT_SKATER_SCORING.items())
 
     gfeats = goalie_features(goalies_hist, teams_ext)
@@ -132,7 +160,8 @@ def main(argv: list[str] | None = None) -> int:
             {"gameId": int(r.gameId), "playerId": int(r.playerId), "name": r.name, "team": r.team, "opp": r.opp, "position": r.position,
              **{f"model_{s}": round(float(getattr(r, f"model_{s}")), 4) for s in SKATER_TARGETS},
              **{f"base_{s}": round(float(getattr(r, f"base_{s}")), 4) for s in SKATER_TARGETS},
-             "model_fp": round(float(r.model_fp), 3), "base_fp": round(float(r.base_fp), 3)}
+             "model_fp": round(float(r.model_fp), 3), "base_fp": round(float(r.base_fp), 3),
+             **({f"nn_{s}": round(float(getattr(r, f"nn_{s}")), 4) for s in [*SKATER_TARGETS, "fp"]} if shadow is not None else {})}
             for r in out.itertuples(index=False)
         ],
         "goalies": [
