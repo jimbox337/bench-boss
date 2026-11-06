@@ -94,14 +94,14 @@ export async function POST(request: Request) {
           espnTeamId,
         },
       });
-    } else if (normalizedPlatform.toLowerCase() === 'custom') {
+    } else if (['custom', 'test'].includes(normalizedPlatform.toLowerCase())) {
+      // Test mode (formerly Custom): one sample team per user; update it instead of duplicating.
       team = await prisma.team.findFirst({
-        where: {
-          userId,
-          platform: 'Custom',
-          isActive: true,
-        },
+        where: { userId, platform: { in: ['Custom', 'Test'] } },
+        orderBy: { updatedAt: 'desc' },
       });
+    } else if (normalizedPlatform.toLowerCase() === 'yahoo') {
+      team = await prisma.team.findFirst({ where: { userId, platform: 'yahoo', name: normalizedName } });
     }
 
     if (team) {

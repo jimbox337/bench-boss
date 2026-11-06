@@ -36,7 +36,7 @@ export default function NoTeamDashboard({ onAddTeam, onBrowsePlayers }: NoTeamDa
               <div className="mt-5 flex flex-wrap items-center gap-3"><button onClick={onAddTeam} className="bb-button">Build a roster</button><button onClick={onBrowsePlayers} className="bb-button-secondary">Browse player pool</button></div>
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-rule bg-paper-3 px-5 py-3 text-xs text-muted">
-              <span className="font-medium text-ink-2">League setup</span><span>ESPN import</span><span>Custom roster</span><Link href="/teams/yahoo" className="text-accent hover:underline">Yahoo connection</Link>
+              <span className="font-medium text-ink-2">League setup</span><Link href="/teams/espn" className="text-accent hover:underline">ESPN import</Link><Link href="/teams/yahoo" className="text-accent hover:underline">Yahoo connection</Link><Link href="/teams/test" className="text-accent hover:underline">Test mode</Link>
             </div>
           </section>
 

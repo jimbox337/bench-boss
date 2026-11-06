@@ -200,7 +200,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: espnLeagueInfo?.name || 'My Team',
-          platform: espnConfig ? 'ESPN' : 'Custom',
+          platform: espnConfig ? 'ESPN' : 'Test',
           espnLeagueId: espnConfig?.leagueId,
           espnTeamId: localStorage.getItem('benchBossESPNTeamId') || undefined,
           espnS2: espnConfig?.espnS2,

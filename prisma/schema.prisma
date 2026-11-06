@@ -41,6 +41,7 @@ model User {
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
   teams                     Team[]
+  yahooConnection           YahooConnection?
 }
 
 model Team {
@@ -61,4 +62,17 @@ model Team {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// Yahoo Fantasy OAuth connection. Tokens are AES-GCM encrypted (lib/espnCredentials.ts helpers)
+// and never sent to the browser.
+model YahooConnection {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String
+  accessToken  String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

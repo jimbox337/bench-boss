@@ -13,6 +13,7 @@ import BenchBossLogo from './BenchBossLogo';
 import ScoreStrip from './shell/ScoreStrip';
 import AlertsMenu from './shell/AlertsMenu';
 import SearchBar from './shell/CommandSearch';
+import { platformLabel } from '@/lib/teamSetup';
 
 const TOOL_PATHS = ['/startsit', '/trades', '/waivers'];
 
@@ -113,7 +114,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         setHasTeam(teamData.success && team !== null);
         if (team) {
           setTeamName(team.name || 'My Team');
-          setTeamPlatform(team.platform || 'Custom');
+          setTeamPlatform(platformLabel(team.platform));
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
