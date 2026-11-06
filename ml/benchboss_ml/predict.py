@@ -96,13 +96,14 @@ def main(argv: list[str] | None = None) -> int:
             frame[f"base_{stat}"] = skater_baseline(frame, stat, fallback)
             frame[f"shr_{stat}"] = shrunk_baseline(frame, stat, info.get("shrinkK", 10.0), reference, info.get("priorWeight", 0.0), info.get("seasonWeight", 0.45))
         selected = info["selected"]
-        if selected in SKATER_CANDIDATES:
-            spec = SKATER_CANDIDATES[selected]
-            init = f"{spec['init']}_{stat}" if spec["init"] else None
-            booster = fit(train_frame, spec["features"], stat, "poisson", rounds=info["trees"][selected], init_col=init, params=spec["params"])
-            out[f"model_{stat}"] = predict(booster, out, spec["features"], init)
-        else:
-            out[f"model_{stat}"] = out[prediction_column(selected, stat)]
+        components = info.get("stackWeights", {}) if selected == "stack" else {selected: 1.0}
+        for name in components:
+            if name in SKATER_CANDIDATES:
+                spec = SKATER_CANDIDATES[name]
+                init = f"{spec['init']}_{stat}" if spec["init"] else None
+                booster = fit(train_frame, spec["features"], stat, "poisson", rounds=info["trees"][name], init_col=init, params=spec["params"])
+                out[f"{name}_{stat}"] = predict(booster, out, spec["features"], init)
+        out[f"model_{stat}"] = sum(w * out[prediction_column(name, stat)] for name, w in components.items())
     # Same rank-aware blend with the production baseline that was chosen on validation.
     model_weight = report["skater"].get("blend", {}).get("chosenModelWeight", 1.0)
     for stat in SKATER_TARGETS:

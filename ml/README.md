@@ -3,7 +3,7 @@
 An offline pipeline that collects free, public NHL game data, builds pre-game features,
 trains local LightGBM models, and compares them with the projection the app uses today.
 
-**Status: in the app (with fallback).** The latest model (`bench-boss-lgbm-20261105`) passed the
+**Status: in the app (with fallback).** The latest model (`bench-boss-lgbm-20261106`) passed the
 promotion gate on the validation and the untouched test season, so its artifact ships in
 `lib/model/artifacts/` and the app serves its projections, labelled as model estimates. Any model
 error, timeout or an artifact that fails the gate falls back to the schedule-aware engine. See
@@ -81,17 +81,21 @@ On **both** validation and test, the combined weekly fantasy-point projection mu
 1. beat the production baseline on weekly MAE **and** RMSE, and
 2. not lose more than 0.005 in start/sit accuracy or top-50 precision.
 
-### Results (`bench-boss-lgbm-20261105`, 12 seasons)
+### Results (`bench-boss-lgbm-20261106`, 12 seasons)
 
-| Weekly fantasy points, 2025-26 test | Production baseline | Bench Boss model |
-|---|---|---|
-| MAE | 1.604 | **1.579** (−1.5%) |
-| RMSE | 2.170 | **2.129** (−1.9%) |
-| Rank correlation | 0.704 | **0.712** |
-| Top-50 precision | 0.459 | **0.463** |
-| Start/sit accuracy | 0.759 | **0.762** |
+| Weekly fantasy points, 2025-26 test | Production baseline | Previous model (20261105) | Bench Boss model |
+|---|---|---|---|
+| MAE | 1.604 | 1.580 | **1.574** (−1.9%) |
+| RMSE | 2.170 | 2.129 | **2.123** (−2.2%) |
+| Rank correlation | 0.704 | 0.712 | **0.714** |
+| Top-50 precision | 0.459 | 0.463 | **0.466** |
+| Start/sit accuracy | 0.759 | 0.762 | 0.761 |
 
-- **What helps:** empirical-Bayes shrinkage of player rates toward last season and ice time, plus small context multipliers (opponent, rest, usage) for shots, PP points and hits. The final projection is a 50/50 blend with the production baseline. That weight was chosen on validation start/sit accuracy and top-50 precision.
+On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1.433 for the previous model and 1.486 for the baseline, and RMSE is 1.998 vs 2.019 and 2.125.
+
+- **Stacking (new in 20261106):** instead of picking one projection per stat, each stat is a non-negative weighted sum of the production baseline, the shrunk baseline and the direct, residual and residual-on-shrunk boosters. Weights are fitted by NNLS on validation player-week sums, so test and live stay untouched. The direct model ranks single games best but is biased low, while the shrunk baseline is unbiased but blunter; stacking takes the strengths of both. Then 75% stack and 25% production baseline, chosen on validation ranking metrics.
+
+- **What helps:** empirical-Bayes shrinkage of player rates toward last season and ice time, plus small context multipliers (opponent, rest, usage) for shots, PP points and hits. These are now combined by the stack above.
 - **Goalie starts:** the model picks the actual starter 73–76% of the time, versus 59–62% for recent usage. That's after adding the rotation features (back-to-back after starting, streaks, rough last start, workload rank).
 - **Expected goals:** the xG model is good on its own (test AUC 0.737 vs 0.695 for distance only). Its player features barely move weekly fantasy accuracy (test MAE 1.577 vs 1.579), and serving them would need per-game play-by-play, so xG stays offline.
 - **Availability:** P(dress) has validation log loss 0.209, versus 0.483 for recent play share. It weights each game in the app's weekly projection.
@@ -119,7 +123,6 @@ Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` 
 
 ## Possible next experiments (not done)
 
-- Fit a calibrated blend weight between the baseline and residual projections on validation, targeting rank metrics
 - Add a de-biasing step for the top of the distribution
 - Use a weekly-sum objective
 - Add more seasons

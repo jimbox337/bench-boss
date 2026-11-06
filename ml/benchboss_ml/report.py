@@ -85,11 +85,15 @@ def render_markdown(report: dict[str, Any]) -> str:
 
     lines += ["", "## Skater statistics", "",
               "Selection metric is validation weekly RMSE of the statistic (player-week sums).", "",
-              "| Target | Selected (servable) | Best incl. xG | Shrink k / prior weight | baseline | shrunk | direct | residual | residualShrunk | residualXg |", "|---|---|---|---|---|---|---|---|---|---|"]
+              "| Target | Selected (servable) | Best incl. xG | Shrink k / prior weight | baseline | shrunk | direct | residual | residualShrunk | residualXg | stack |", "|---|---|---|---|---|---|---|---|---|---|---|"]
     for target, info in skater["targets"].items():
         w = info["validationWeeklyRmse"]
         lines.append(f"| {target} | **{info['selected']}** | {info.get('selectedIncludingXg', '—')} | {_f(info.get('shrinkK'), 0)} / {_f(info.get('priorWeight'), 2)} | {_f(w['baseline'])} | {_f(w.get('shrunk'))} | "
-                     f"{_f(w['direct'])} | {_f(w['residual'])} | {_f(w.get('residualShrunk'))} | {_f(w.get('residualXg'))} |")
+                     f"{_f(w['direct'])} | {_f(w['residual'])} | {_f(w.get('residualShrunk'))} | {_f(w.get('residualXg'))} | {_f(w.get('stack'))} |")
+    stacks = {t: i["stackWeights"] for t, i in skater["targets"].items() if i.get("stackWeights")}
+    if stacks:
+        lines += ["", "Stack weights (non-negative least squares on validation player-week sums; the test and live seasons are untouched):", ""]
+        lines += [f"- {t}: " + ", ".join(f"{n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in stacks.items()]
 
     blend = skater.get("blend")
     if blend:
