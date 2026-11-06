@@ -8,7 +8,9 @@ Design (kept deliberately small so it trains on a laptop CPU and runs in the web
     initialised at zero, so the untrained network *is* the shrunk baseline and training learns
     multipliers on it
   * loss: Poisson negative log-likelihood, each stat weighted by 1 / its training mean so
-    shots and hits do not drown out goals and PP points
+    shots and hits do not drown out goals and PP points; per game by default, or on each
+    player-week's total (`loss="week"`, which needs a GROUP column and is only safe on
+    week-start frames, where no input carries a result from earlier in the same week)
   * early stopping on the validation season; the test season is never used for any decision
 
 `export_network` writes plain weights (no PyTorch needed at serving time) plus parity samples
@@ -41,6 +43,7 @@ PATIENCE = 4
 CLIP = 5.0  # standardised inputs are clipped to ±CLIP
 MIN_RATE = 1e-3
 
+GROUP = "_week_group"  # player-week id, for the weekly-total loss
 OFFSET_COLUMNS = tuple(f"shr_{t}" for t in SKATER_TARGETS)
 EXTRA_FEATURES = tuple(f"lshr_{t}" for t in SKATER_TARGETS)
 NEURAL_FEATURES: tuple[str, ...] = tuple(SKATER_FEATURES) + EXTRA_FEATURES
@@ -102,14 +105,14 @@ def _torch():
     return torch
 
 
-def build_network(n_in: int, seed: int):
+def build_network(n_in: int, seed: int, dropout: float = DROPOUT):
     torch = _torch()
     nn = torch.nn
     torch.manual_seed(seed)
     layers: list[Any] = []
     width = n_in
     for h in HIDDEN:
-        layers += [nn.Linear(width, h), nn.ReLU(), nn.Dropout(DROPOUT)]
+        layers += [nn.Linear(width, h), nn.ReLU(), nn.Dropout(dropout)]
         width = h
     head = nn.Linear(width, len(SKATER_TARGETS))
     nn.init.zeros_(head.weight)
@@ -126,39 +129,95 @@ def _targets(frame: pd.DataFrame) -> np.ndarray:
     return frame[list(SKATER_TARGETS)].to_numpy(float).astype(np.float32)
 
 
-def _loss(torch, log_rate, y, weights):
+def _loss(torch, log_rate, y, weights, row_weights=None):
     # Poisson NLL without the log(y!) constant: exp(eta) - y * eta.
-    return ((torch.exp(log_rate) - y * log_rate) * weights).sum(dim=1).mean()
+    per_row = ((torch.exp(log_rate) - y * log_rate) * weights).sum(dim=1)
+    return per_row.mean() if row_weights is None else (per_row * row_weights).sum() / row_weights.sum()
 
 
-def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, epochs: int | None = None) -> dict[str, Any]:
-    """Fit on `train`; with `valid`, early-stop on its loss. With `epochs`, train exactly that many."""
+def recency_weights(frame: pd.DataFrame, half_life: float | None) -> np.ndarray | None:
+    """Row weights halving every `half_life` seasons before the newest season in `frame`
+    (none when half_life is None), so training leans towards current scoring levels."""
+    if half_life is None:
+        return None
+    start = frame["season"].astype(str).str[:4].astype(int).to_numpy()
+    return (0.5 ** ((start.max() - start) / half_life)).astype(np.float32)
+
+
+def _week_loss(torch, log_rate, y, weights, group, n_groups, row_weights=None):
+    # Poisson NLL on player-week totals: the expected total is the sum of per-game rates.
+    mu = torch.zeros(n_groups, log_rate.shape[1]).index_add_(0, group, torch.exp(log_rate))
+    total = torch.zeros(n_groups, log_rate.shape[1]).index_add_(0, group, y)
+    per_group = ((mu - total * torch.log(mu.clamp_min(1e-6))) * weights).sum(dim=1)
+    if row_weights is None:
+        return per_group.mean()
+    # A player-week sits in one season, so every row of a group has the same weight.
+    gw = torch.zeros(n_groups).index_reduce_(0, group, row_weights, "amax", include_self=False)
+    return (per_group * gw).sum() / gw.sum()
+
+
+def _dense_groups(frame: pd.DataFrame) -> np.ndarray:
+    return pd.factorize(frame[GROUP].to_numpy())[0]
+
+
+def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, epochs: int | None = None,
+                  loss: str = "game", dropout: float = DROPOUT, half_life: float | None = None) -> dict[str, Any]:
+    """Fit on `train`; with `valid`, early-stop on its loss. With `epochs`, train exactly that many.
+    `loss="week"` fits player-week totals; batches then hold whole player-weeks."""
     torch = _torch()
     torch.set_num_threads(4)
     prep = Preprocess.fit(train, NEURAL_FEATURES)
     x, off, y = (torch.from_numpy(a) for a in (prep.transform(train), _offsets(train), _targets(train)))
     weights = torch.from_numpy((1.0 / np.clip(_targets(train).mean(axis=0), 1e-3, None)).astype(np.float32))
-    net = build_network(x.shape[1], seed)
+    rw = recency_weights(train, half_life)
+    rw = None if rw is None else torch.from_numpy(rw)
+    net = build_network(x.shape[1], seed, dropout)
     optimiser = torch.optim.AdamW(net.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     generator = torch.Generator().manual_seed(seed)
     if valid is not None:
         vx, voff, vy = (torch.from_numpy(a) for a in (prep.transform(valid), _offsets(valid), _targets(valid)))
+    weekly = loss == "week"
+    if weekly:
+        groups = _dense_groups(train)
+        by_group = np.argsort(groups, kind="stable")
+        starts = np.r_[0, np.flatnonzero(np.diff(groups[by_group])) + 1]
+        sizes = np.diff(np.r_[starts, len(by_group)])
+        per_batch = max(1, int(BATCH / sizes.mean()))
+        if valid is not None:
+            vgroups = _dense_groups(valid)
+            vgroup, n_vgroups = torch.from_numpy(vgroups), int(vgroups.max()) + 1
+    elif loss != "game":
+        raise ValueError(f"unknown loss {loss!r}")
     history: list[float] = []
     best_state, best_loss, best_epoch, stale = None, math.inf, 0, 0
     for epoch in range(1, (epochs or MAX_EPOCHS) + 1):
         net.train()
-        order = torch.randperm(len(x), generator=generator)
-        for start in range(0, len(x), BATCH):
-            idx = order[start:start + BATCH]
-            optimiser.zero_grad()
-            loss = _loss(torch, net(x[idx]) + off[idx], y[idx], weights)
-            loss.backward()
-            optimiser.step()
+        if weekly:
+            perm = torch.randperm(len(starts), generator=generator).numpy()
+            for b in range(0, len(perm), per_batch):
+                chosen = perm[b:b + per_batch]
+                rows = np.concatenate([by_group[starts[g]:starts[g] + sizes[g]] for g in chosen])
+                local = torch.from_numpy(np.repeat(np.arange(len(chosen)), sizes[chosen]))
+                idx = torch.from_numpy(rows)
+                optimiser.zero_grad()
+                batch_loss = _week_loss(torch, net(x[idx]) + off[idx], y[idx], weights, local, len(chosen),
+                                        None if rw is None else rw[idx])
+                batch_loss.backward()
+                optimiser.step()
+        else:
+            order = torch.randperm(len(x), generator=generator)
+            for start in range(0, len(x), BATCH):
+                idx = order[start:start + BATCH]
+                optimiser.zero_grad()
+                batch_loss = _loss(torch, net(x[idx]) + off[idx], y[idx], weights, None if rw is None else rw[idx])
+                batch_loss.backward()
+                optimiser.step()
         if valid is None:
             continue
         net.eval()
         with torch.no_grad():
-            v = float(_loss(torch, net(vx) + voff, vy, weights))
+            eta = net(vx) + voff
+            v = float(_week_loss(torch, eta, vy, weights, vgroup, n_vgroups) if weekly else _loss(torch, eta, vy, weights))
         history.append(v)
         if v < best_loss - 1e-6:
             best_loss, best_epoch, stale = v, epoch, 0
@@ -171,7 +230,19 @@ def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, ep
         net.load_state_dict(best_state)
     net.eval()
     return {"net": net, "prep": prep, "bestEpoch": best_epoch or (epochs or MAX_EPOCHS), "validationLoss": history,
-            "lossWeights": weights.tolist()}
+            "lossWeights": weights.tolist(), "loss": loss, "dropout": dropout, "halfLife": half_life}
+
+
+def calibrate_export(export: dict[str, Any], factors: list[float]) -> dict[str, Any]:
+    """Fold per-stat multipliers into the output bias: exp(eta + log c) = c * exp(eta), so the
+    app's forward pass needs no change. Parity samples are scaled to match."""
+    out = json.loads(json.dumps(export))
+    last = out["layers"][-1]
+    last["bias"] = [b + math.log(c) for b, c in zip(last["bias"], factors)]
+    for sample in out.get("parity", []):
+        sample["y"] = [y * c for y, c in zip(sample["y"], factors)]
+    out["calibration"] = [float(c) for c in factors]
+    return out
 
 
 def predict_network(model: dict[str, Any], frame: pd.DataFrame) -> np.ndarray:
@@ -207,18 +278,20 @@ COLUMNS = list(NEURAL_FEATURES) + list(OFFSET_COLUMNS) + list(SKATER_TARGETS)
 
 
 def run_isolated(train: pd.DataFrame, valid: pd.DataFrame, full: pd.DataFrame, frames: dict[str, pd.DataFrame],
-                 seed: int, export_sample: str = "test") -> dict[str, Any]:
+                 seed: int, export_sample: str = "test", loss: str = "game",
+                 dropout: float = DROPOUT, half_life: float | None = None) -> dict[str, Any]:
     """Train (early stopping on `valid`), refit on `full` for the best epoch count, predict
     every frame (live with the refit, others with the train-only fit). Returns predictions,
     the exported network and the training history."""
     with tempfile.TemporaryDirectory(prefix="benchboss-neural-") as tmp:
         d = Path(tmp)
-        train[COLUMNS].to_parquet(d / "train.parquet")
-        valid[COLUMNS].to_parquet(d / "valid.parquet")
-        full[COLUMNS].to_parquet(d / "full.parquet")
+        fit_columns = COLUMNS + ([GROUP] if loss == "week" else []) + (["season"] if half_life is not None else [])
+        train[fit_columns].to_parquet(d / "train.parquet")
+        valid[fit_columns].to_parquet(d / "valid.parquet")
+        full[fit_columns].to_parquet(d / "full.parquet")
         for name, frame in frames.items():
             frame[COLUMNS].reset_index(drop=True).to_parquet(d / f"frame_{name}.parquet")
-        (d / "job.json").write_text(json.dumps({"seed": seed, "frames": list(frames), "exportSample": export_sample}))
+        (d / "job.json").write_text(json.dumps({"seed": seed, "frames": list(frames), "exportSample": export_sample, "loss": loss, "dropout": dropout, "halfLife": half_life}))
         env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
         subprocess.run([sys.executable, "-m", "benchboss_ml.neural", str(d)], check=True, env=env)
         result = json.loads((d / "result.json").read_text())
@@ -230,9 +303,12 @@ def _child(directory: str) -> None:
     d = Path(directory)
     job = json.loads((d / "job.json").read_text())
     train, valid, full = (pd.read_parquet(d / f"{n}.parquet") for n in ("train", "valid", "full"))
-    model = train_network(train, valid, job["seed"])
+    loss = job.get("loss", "game")
+    dropout = job.get("dropout", DROPOUT)
+    half_life = job.get("halfLife")
+    model = train_network(train, valid, job["seed"], loss=loss, dropout=dropout, half_life=half_life)
     print(f"  BenchBoss AI: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
-    export = train_network(full, None, job["seed"], epochs=model["bestEpoch"])
+    export = train_network(full, None, job["seed"], epochs=model["bestEpoch"], loss=loss, dropout=dropout, half_life=half_life)
     frames = {name: pd.read_parquet(d / f"frame_{name}.parquet") for name in job["frames"]}
     for name, frame in frames.items():
         preds = predict_network(export if name.startswith("live") else model, frame)
@@ -240,7 +316,7 @@ def _child(directory: str) -> None:
     sample = frames.get(job["exportSample"], full)
     (d / "result.json").write_text(json.dumps({
         "export": export_network(export, sample), "bestEpoch": int(model["bestEpoch"]),
-        "validationLoss": model["validationLoss"], "lossWeights": model["lossWeights"],
+        "validationLoss": model["validationLoss"], "lossWeights": model["lossWeights"], "loss": loss, "dropout": dropout, "halfLife": half_life,
     }))
 
 

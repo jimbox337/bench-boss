@@ -50,6 +50,14 @@ USE_NEURAL = NEURAL_AVAILABLE
 # Fit stack weights, per-stat selection, the baseline blend and the interval scale on the
 # week-start validation frame (what the app sees) rather than the per-game one.
 FIT_WEEK_START = True
+# BenchBoss AI loss: "game" (per-game Poisson) or "week" (player-week totals, trained and
+# early-stopped on week-start frames so no input carries a result from the same week).
+NEURAL_LOSS = "game"
+NEURAL_DROPOUT = 0.1
+NEURAL_HALF_LIFE: float | None = None  # seasons; None weights every training season equally
+# Scale each BenchBoss AI stat so its validation total matches the actual total (fitted on the
+# same validation frame as the stack; test and live untouched). Folded into the exported bias.
+NEURAL_CALIBRATE = True
 # A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
 NEURAL_POSITION_TOLERANCE = 0.005
 
@@ -382,24 +390,47 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
               "test": feats[feats["season"] == split.test].copy(),
               "live": feats[feats["season"] == split.live].copy() if split.live else feats.iloc[0:0].copy()}
     frames = {k: v for k, v in frames.items() if not v.empty}
-    ws = {k: week_start_frame(v) for k, v in frames.items()}
-    for f in ws.values():
+    def frozen(frame: pd.DataFrame) -> pd.DataFrame:
+        f = week_start_frame(frame)
         for t in SKATER_TARGETS:
             sh = shrinkage[t]
             f[f"base_{t}"] = skater_baseline(f, t, fallback[t])
             f[f"shr_{t}"] = shrunk_baseline(f, t, sh["k"], sh["reference"], sh["priorWeight"], sh["seasonWeight"])
-    if USE_NEURAL:
-        ws = {k: add_inputs(v) for k, v in ws.items()}
+        return add_inputs(f) if USE_NEURAL else f
+
+    ws = {k: frozen(v) for k, v in frames.items()}
 
     neural: dict[str, Any] = {}
     if USE_NEURAL:
         from .neural import run_isolated
         print("  BenchBoss AI: training on train seasons, early stopping on validation (separate process)...", flush=True)
-        neural["run"] = run_isolated(train, frames["validation"], full, {**frames, **{f"{k}_ws": v for k, v in ws.items()}}, SEED)
+        predict_frames = {**frames, **{f"{k}_ws": v for k, v in ws.items()}}
+        if NEURAL_LOSS == "week":
+            from .neural import GROUP
+
+            def grouped(frame: pd.DataFrame) -> pd.DataFrame:
+                return frame.assign(**{GROUP: frame["playerId"].astype(str) + "|" + week_key(frame["gameDate"])})
+            neural["run"] = run_isolated(grouped(frozen(train)), grouped(ws["validation"]), grouped(frozen(full)),
+                                         predict_frames, SEED, loss="week", dropout=NEURAL_DROPOUT,
+                                         half_life=NEURAL_HALF_LIFE)
+        else:
+            neural["run"] = run_isolated(train, frames["validation"], full, predict_frames, SEED, dropout=NEURAL_DROPOUT,
+                                         half_life=NEURAL_HALF_LIFE)
         for split_name, frame in [*frames.items(), *((f"{k}_ws", v) for k, v in ws.items())]:
             preds = neural["run"]["predictions"][split_name]
             for i, t in enumerate(SKATER_TARGETS):
                 frame[f"neural_{t}"] = preds[:, i]
+                frame[f"neuralRaw_{t}"] = preds[:, i]
+        neural["calibration"] = None
+        if NEURAL_CALIBRATE:
+            from .neural import calibrate_export
+            fit_frame = ws["validation"] if FIT_WEEK_START else frames["validation"]
+            neural["calibration"] = {t: float(fit_frame[t].sum() / fit_frame[f"neural_{t}"].sum()) for t in SKATER_TARGETS}
+            for frame in [*frames.values(), *ws.values()]:
+                for t in SKATER_TARGETS:
+                    frame[f"neural_{t}"] = frame[f"neuralRaw_{t}"] * neural["calibration"][t]
+            neural["run"]["export"] = calibrate_export(neural["run"]["export"], [neural["calibration"][t] for t in SKATER_TARGETS])
+            print("  BenchBoss AI calibration: " + " ".join(f"{t}={c:.3f}" for t, c in neural["calibration"].items()), flush=True)
         neural["stacks"] = {}
 
     artifact: dict[str, Any] = {"targets": {}, "positionFallback": fallback,
@@ -562,6 +593,8 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         }
         if USE_NEURAL:
             tables["neuralOnly"] = weekly_table(frame, {s: f"neural_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
+            if NEURAL_CALIBRATE:
+                tables["neuralUncalibrated"] = weekly_table(frame, {s: f"neuralRaw_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
             tables["lightgbmNeuralEnsemble"] = weekly_table(frame, {s: f"ensembleNN_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
         report["weeklyWeekStart"][split_name] = {label: weekly_metrics(table) for label, table in tables.items()}
         report["weeklyWeekStart"][split_name]["benchBossSelected"]["interval80Coverage"] = interval_coverage(tables["benchBossSelected"], artifact["intervalScale"])
@@ -589,7 +622,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             **neural["run"]["export"],
             "stack": neural["stacks"], "blendWithProductionBaseline": 1 - neural["alpha"], "promoted": promoted,
         }
-        report["neural"] = {"bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
+        report["neural"] = {"loss": NEURAL_LOSS, "dropout": NEURAL_DROPOUT, "halfLife": NEURAL_HALF_LIFE, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
         print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
@@ -781,9 +814,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--today", help="Override today's date (YYYY-MM-DD) for reproducible splits")
     parser.add_argument("--no-neural", action="store_true", help="Skip BenchBoss AI (the neural challenger)")
+    parser.add_argument("--neural-loss", choices=("game", "week"), default="game",
+                        help="BenchBoss AI loss: per game, or player-week totals on week-start frames")
+    parser.add_argument("--neural-dropout", type=float, default=0.1, help="BenchBoss AI dropout rate")
+    parser.add_argument("--neural-half-life", type=float, default=None,
+                        help="Weight BenchBoss AI training rows by recency, halving every N seasons")
+    parser.add_argument("--neural-calibrate", action=argparse.BooleanOptionalAction, default=True,
+                        help="Scale each BenchBoss AI stat to match its validation total (default on)")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
-    global USE_NEURAL, FIT_WEEK_START
+    global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE, NEURAL_HALF_LIFE
+    NEURAL_HALF_LIFE = args.neural_half_life
+    NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE = args.neural_loss, args.neural_dropout, args.neural_calibrate
     USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural
     FIT_WEEK_START = not args.fit_per_game
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()

@@ -76,3 +76,57 @@ def test_isolated_run():
     result = neural.run_isolated(train, valid, pd.concat([train, valid]), {"validation": valid, "live": valid}, seed=3, export_sample="validation")
     assert result["predictions"]["validation"].shape == (1000, len(SKATER_TARGETS))
     assert result["export"]["parity"] and result["bestEpoch"] >= 1
+
+
+def test_week_loss_is_poisson_nll_on_weekly_totals():
+    log_rate = torch.log(torch.tensor([[0.5], [1.0], [2.0]]))
+    y = torch.tensor([[1.0], [0.0], [3.0]])
+    group = torch.tensor([0, 0, 1])
+    got = float(neural._week_loss(torch, log_rate, y, torch.ones(1), group, 2))
+    want = ((1.5 - 1 * math.log(1.5)) + (2.0 - 3 * math.log(2.0))) / 2
+    assert math.isclose(got, want, rel_tol=1e-6)
+
+
+def test_weekly_training_learns_and_runs_isolated():
+    train, valid = frame(6000, 1), frame(2000, 2)
+    for f in (train, valid):
+        f[neural.GROUP] = np.arange(len(f)) // 3  # three games per player-week
+    model = neural.train_network(train, valid, seed=3, loss="week")
+    assert model["loss"] == "week" and min(model["validationLoss"]) < model["validationLoss"][0] + 1e-9
+    base_mae = float(np.mean(np.abs(valid["goals"] - valid["shr_goals"])))
+    assert float(np.mean(np.abs(valid["goals"] - neural.predict_network(model, valid)[:, 0]))) < base_mae
+    result = neural.run_isolated(train, valid, pd.concat([train, valid]), {"validation": valid}, seed=3,
+                                 export_sample="validation", loss="week")
+    assert result["loss"] == "week" and result["predictions"]["validation"].shape == (2000, len(SKATER_TARGETS))
+    with pytest.raises(ValueError):
+        neural.train_network(train, None, seed=3, epochs=1, loss="season")
+
+
+def test_calibration_is_folded_into_the_exported_bias():
+    train = frame(2000, 4)
+    model = neural.train_network(train, None, seed=9, epochs=2, dropout=0.0)
+    assert model["dropout"] == 0.0
+    export = neural.export_network(model, train, n_parity=4)
+    factors = [1.1, 0.9, 1.0, 1.25, 1.05, 0.8]
+    calibrated = neural.calibrate_export(export, factors)
+    assert calibrated["calibration"] == factors and "calibration" not in export
+    for raw, cal in zip(export["parity"], calibrated["parity"]):
+        got = numpy_forward(calibrated, cal["x"], cal["offset"])
+        for a, y, c in zip(got, raw["y"], factors):
+            assert math.isclose(a, y * c, rel_tol=1e-4)
+
+
+def test_recency_weights_halve_per_season_and_train():
+    f = pd.DataFrame({"season": ["20212022", "20222023", "20232024"]})
+    np.testing.assert_allclose(neural.recency_weights(f, 1.0), [0.25, 0.5, 1.0])
+    assert neural.recency_weights(f, None) is None
+    train, valid = frame(4000, 1), frame(1000, 2)
+    train["season"] = np.where(np.arange(len(train)) < 2000, "20222023", "20232024")
+    model = neural.train_network(train, valid, seed=3, half_life=2.0)
+    assert model["halfLife"] == 2.0 and min(model["validationLoss"]) < model["validationLoss"][0] + 1e-9
+    log_rate, y = torch.zeros(4, 1), torch.tensor([[0.0], [2.0], [1.0], [1.0]])
+    rw = torch.tensor([1.0, 1.0, 0.5, 0.5])
+    group = torch.tensor([0, 0, 1, 1])
+    got = float(neural._week_loss(torch, log_rate, y, torch.ones(1), group, 2, rw))
+    want = (1.0 * (2 - 2 * math.log(2)) + 0.5 * (2 - 2 * math.log(2))) / 1.5
+    assert math.isclose(got, want, rel_tol=1e-6)
