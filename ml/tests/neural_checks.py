@@ -1,4 +1,4 @@
-"""BenchBoss AI (neural network) checks: starts at the shrunk baseline, learns, exports reproducible weights.
+"""BenchSniper (neural network) checks: starts at the shrunk baseline, learns, exports reproducible weights.
 
 Run through tests/test_neural.py in a fresh interpreter: PyTorch and LightGBM must not share
 a process on macOS (OpenMP conflict), and other test modules import LightGBM.

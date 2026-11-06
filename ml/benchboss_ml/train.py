@@ -41,7 +41,7 @@ from .features import (GOALIE_FEATURES, PRIOR_WEIGHT_GRID, RESIDUAL_FEATURES, XG
                        season_average_baseline, shrinkage_reference, shrunk_baseline, skater_baseline, skater_features)
 from .paths import ARTIFACT_DIR, MANIFEST_PATH, REPORTS_DIR
 
-# BenchBoss AI, the neural challenger (benchboss_ml.neural). On by default when PyTorch is installed; it only
+# BenchSniper, the neural challenger (benchboss_ml.neural). On by default when PyTorch is installed; it only
 # ships to the app if it passes NEURAL_GATE below, and even then stays behind a feature flag.
 # PyTorch is only imported in a child process (see neural.run_isolated).
 import importlib.util
@@ -50,12 +50,12 @@ USE_NEURAL = NEURAL_AVAILABLE
 # Fit stack weights, per-stat selection, the baseline blend and the interval scale on the
 # week-start validation frame (what the app sees) rather than the per-game one.
 FIT_WEEK_START = True
-# BenchBoss AI loss: "game" (per-game Poisson) or "week" (player-week totals, trained and
+# BenchSniper loss: "game" (per-game Poisson) or "week" (player-week totals, trained and
 # early-stopped on week-start frames so no input carries a result from the same week).
 NEURAL_LOSS = "game"
 NEURAL_DROPOUT = 0.1
 NEURAL_HALF_LIFE: float | None = None  # seasons; None weights every training season equally
-# Scale each BenchBoss AI stat so its validation total matches the actual total (fitted on the
+# Scale each BenchSniper stat so its validation total matches the actual total (fitted on the
 # same validation frame as the stack; test and live untouched). Folded into the exported bias.
 NEURAL_CALIBRATE = True
 # A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
@@ -304,9 +304,9 @@ def choose_blend(valid: pd.DataFrame, prefix: str, actual_cols: dict[str, str]) 
     return max(eligible, key=lambda a: (eligible[a]["startSitAccuracy"] + eligible[a][f"top{TOP_K}Precision"], a)), scores
 
 
-NEURAL_RULE = ("The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, "
+NEURAL_RULE = ("The LightGBM + BenchSniper ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, "
                f"not reduce start/sit accuracy or top-{TOP_K} precision, and not raise forward or defence weekly MAE by more than "
-               f"{NEURAL_POSITION_TOLERANCE:.1%}, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight.")
+               f"{NEURAL_POSITION_TOLERANCE:.1%}, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchSniper a non-zero weight.")
 
 
 def neural_gate(candidate: dict[str, Any], incumbent: dict[str, Any]) -> dict[str, Any]:
@@ -403,7 +403,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     neural: dict[str, Any] = {}
     if USE_NEURAL:
         from .neural import run_isolated
-        print("  BenchBoss AI: training on train seasons, early stopping on validation (separate process)...", flush=True)
+        print("  BenchSniper: training on train seasons, early stopping on validation (separate process)...", flush=True)
         predict_frames = {**frames, **{f"{k}_ws": v for k, v in ws.items()}}
         if NEURAL_LOSS == "week":
             from .neural import GROUP
@@ -430,7 +430,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
                 for t in SKATER_TARGETS:
                     frame[f"neural_{t}"] = frame[f"neuralRaw_{t}"] * neural["calibration"][t]
             neural["run"]["export"] = calibrate_export(neural["run"]["export"], [neural["calibration"][t] for t in SKATER_TARGETS])
-            print("  BenchBoss AI calibration: " + " ".join(f"{t}={c:.3f}" for t, c in neural["calibration"].items()), flush=True)
+            print("  BenchSniper calibration: " + " ".join(f"{t}={c:.3f}" for t, c in neural["calibration"].items()), flush=True)
         neural["stacks"] = {}
 
     artifact: dict[str, Any] = {"targets": {}, "positionFallback": fallback,
@@ -625,7 +625,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         report["neural"] = {"loss": NEURAL_LOSS, "dropout": NEURAL_DROPOUT, "halfLife": NEURAL_HALF_LIFE, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
-        print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
+        print(f"  BenchSniper: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
               + " ".join(f"{t}={neural['stacks'][t].get('neural', 0):.2f}" for t in SKATER_TARGETS))
     LAST_SKATER_FRAMES.clear(); LAST_SKATER_FRAMES.update(frames)  # for offline experiments
     gate, gate_ws = report["gate"], report["gateWeekStart"]
@@ -813,14 +813,14 @@ def train_availability(rows: pd.DataFrame, skater_feats: pd.DataFrame, split: Sp
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--today", help="Override today's date (YYYY-MM-DD) for reproducible splits")
-    parser.add_argument("--no-neural", action="store_true", help="Skip BenchBoss AI (the neural challenger)")
+    parser.add_argument("--no-neural", action="store_true", help="Skip BenchSniper (the neural challenger)")
     parser.add_argument("--neural-loss", choices=("game", "week"), default="game",
-                        help="BenchBoss AI loss: per game, or player-week totals on week-start frames")
-    parser.add_argument("--neural-dropout", type=float, default=0.1, help="BenchBoss AI dropout rate")
+                        help="BenchSniper loss: per game, or player-week totals on week-start frames")
+    parser.add_argument("--neural-dropout", type=float, default=0.1, help="BenchSniper dropout rate")
     parser.add_argument("--neural-half-life", type=float, default=None,
-                        help="Weight BenchBoss AI training rows by recency, halving every N seasons")
+                        help="Weight BenchSniper training rows by recency, halving every N seasons")
     parser.add_argument("--neural-calibrate", action=argparse.BooleanOptionalAction, default=True,
-                        help="Scale each BenchBoss AI stat to match its validation total (default on)")
+                        help="Scale each BenchSniper stat to match its validation total (default on)")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
     global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE, NEURAL_HALF_LIFE

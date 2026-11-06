@@ -29,8 +29,8 @@ Projections compared:
 - **shrunkBaselineOnly** — the production blend with empirical-Bayes shrinkage toward last season and a TOI-based prior (k tuned on validation).
 - **residualOnShrunkOnly** — LightGBM context/usage multipliers on top of the shrunk baseline.
 - **benchBossSelected** — the served LightGBM projection: per-stat NNLS stack of baselines and boosters, blended with the production baseline.
-- **benchBossAiOnly** — BenchBoss AI alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).
-- **lightgbmPlusBenchBossAi** — the same stack with BenchBoss AI as one more component; validation picks its weight.
+- **benchSniperOnly** — BenchSniper alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).
+- **lightgbmPlusBenchSniper** — the same stack with BenchSniper as one more component; validation picks its weight.
 
 ## Weekly fantasy points (default Bench Boss scoring; games actually played)
 
@@ -44,8 +44,8 @@ Projections compared:
 | validation | withXgOffline | 1.590 (+0.8% ✗) | 2.138 | -0.021 | 0.689 | 0.422 | 0.748 | — |
 | validation | productionBaseline | 1.578 | 2.129 | 0.033 | 0.695 | 0.444 | 0.758 | — |
 | validation | seasonAverageBaseline | 1.624 (+2.9% ✗) | 2.189 | 0.051 | 0.678 | 0.423 | 0.750 | — |
-| validation | benchBossAiOnly | 1.586 (+0.5% ✗) | 2.150 | -0.126 | 0.689 | 0.422 | 0.749 | — |
-| validation | lightgbmPlusBenchBossAi | 1.592 (+0.9% ✗) | 2.140 | -0.010 | 0.689 | 0.427 | 0.749 | — |
+| validation | benchSniperOnly | 1.586 (+0.5% ✗) | 2.150 | -0.126 | 0.689 | 0.422 | 0.749 | — |
+| validation | lightgbmPlusBenchSniper | 1.592 (+0.9% ✗) | 2.140 | -0.010 | 0.689 | 0.427 | 0.749 | — |
 | test | benchBossSelected | 1.611 (+0.5% ✗) | 2.181 | -0.047 | 0.698 | 0.448 | 0.757 | 0.805 |
 | test | directModelOnly | 1.615 (+0.7% ✗) | 2.202 | -0.116 | 0.696 | 0.445 | 0.757 | — |
 | test | residualModelOnly | 1.593 (-0.7% ✓) | 2.174 | -0.109 | 0.704 | 0.447 | 0.759 | — |
@@ -54,8 +54,8 @@ Projections compared:
 | test | withXgOffline | 1.611 (+0.5% ✗) | 2.181 | -0.047 | 0.698 | 0.448 | 0.757 | — |
 | test | productionBaseline | 1.604 | 2.170 | 0.040 | 0.704 | 0.459 | 0.759 | — |
 | test | seasonAverageBaseline | 1.650 (+2.9% ✗) | 2.233 | 0.051 | 0.687 | 0.442 | 0.749 | — |
-| test | benchBossAiOnly | 1.603 (-0.0% ✓) | 2.200 | -0.187 | 0.698 | 0.448 | 0.758 | — |
-| test | lightgbmPlusBenchBossAi | 1.611 (+0.4% ✗) | 2.182 | -0.049 | 0.697 | 0.445 | 0.757 | — |
+| test | benchSniperOnly | 1.603 (-0.0% ✓) | 2.200 | -0.187 | 0.698 | 0.448 | 0.758 | — |
+| test | lightgbmPlusBenchSniper | 1.611 (+0.4% ✗) | 2.182 | -0.049 | 0.697 | 0.445 | 0.757 | — |
 | live | benchBossSelected | 1.484 (-0.1% ✓) | 2.054 | -0.069 | 0.654 | 0.463 | 0.763 | 0.821 |
 | live | directModelOnly | 1.489 (+0.2% ✗) | 2.073 | -0.134 | 0.652 | 0.453 | 0.761 | — |
 | live | residualModelOnly | 1.473 (-0.8% ✓) | 2.097 | -0.128 | 0.661 | 0.457 | 0.768 | — |
@@ -64,14 +64,14 @@ Projections compared:
 | live | withXgOffline | 1.484 (-0.1% ✓) | 2.054 | -0.069 | 0.654 | 0.463 | 0.763 | — |
 | live | productionBaseline | 1.486 | 2.125 | -0.010 | 0.663 | 0.453 | 0.765 | — |
 | live | seasonAverageBaseline | 1.495 (+0.6% ✗) | 2.139 | -0.011 | 0.661 | 0.450 | 0.764 | — |
-| live | benchBossAiOnly | 1.479 (-0.5% ✓) | 2.076 | -0.216 | 0.650 | 0.460 | 0.762 | — |
-| live | lightgbmPlusBenchBossAi | 1.484 (-0.1% ✓) | 2.056 | -0.080 | 0.652 | 0.460 | 0.761 | — |
+| live | benchSniperOnly | 1.479 (-0.5% ✓) | 2.076 | -0.216 | 0.650 | 0.460 | 0.762 | — |
+| live | lightgbmPlusBenchSniper | 1.484 (-0.1% ✓) | 2.056 | -0.080 | 0.652 | 0.460 | 0.761 | — |
 
 Weekly fantasy-point MAE by position group (F = forwards, D = defence):
 
-- validation: benchBossSelected D 1.380 / F 1.699; productionBaseline D 1.386 / F 1.678; benchBossAiOnly D 1.385 / F 1.691; lightgbmPlusBenchBossAi D 1.384 / F 1.701
-- test: benchBossSelected D 1.411 / F 1.714; productionBaseline D 1.410 / F 1.703; benchBossAiOnly D 1.406 / F 1.705; lightgbmPlusBenchBossAi D 1.410 / F 1.714
-- live: benchBossSelected D 1.223 / F 1.621; productionBaseline D 1.229 / F 1.621; benchBossAiOnly D 1.226 / F 1.612; lightgbmPlusBenchBossAi D 1.225 / F 1.620
+- validation: benchBossSelected D 1.380 / F 1.699; productionBaseline D 1.386 / F 1.678; benchSniperOnly D 1.385 / F 1.691; lightgbmPlusBenchSniper D 1.384 / F 1.701
+- test: benchBossSelected D 1.411 / F 1.714; productionBaseline D 1.410 / F 1.703; benchSniperOnly D 1.406 / F 1.705; lightgbmPlusBenchSniper D 1.410 / F 1.714
+- live: benchBossSelected D 1.223 / F 1.621; productionBaseline D 1.229 / F 1.621; benchSniperOnly D 1.226 / F 1.612; lightgbmPlusBenchSniper D 1.225 / F 1.620
 
 ## Week-start backtest (how the app projects a week)
 
@@ -82,18 +82,18 @@ The per-game table above updates features before every game, so a later game in 
 | validation | benchBossSelected | 1.627 (-7.2% ✓) | 2.191 | -0.030 | 0.672 | 0.404 | 0.738 | ✓ |
 | validation | shrunkBaselineOnly | 1.683 (-4.0% ✓) | 2.263 | 0.053 | 0.651 | 0.384 | 0.734 |  |
 | validation | productionBaseline | 1.753 | 2.382 | 0.029 | 0.629 | 0.376 | 0.727 |  |
-| validation | benchBossAiOnly | 1.623 (-7.5% ✓) | 2.205 | -0.159 | 0.670 | 0.404 | 0.739 |  |
-| validation | lightgbmPlusBenchBossAi | 1.627 (-7.2% ✓) | 2.190 | -0.028 | 0.672 | 0.410 | 0.740 |  |
+| validation | benchSniperOnly | 1.623 (-7.5% ✓) | 2.205 | -0.159 | 0.670 | 0.404 | 0.739 |  |
+| validation | lightgbmPlusBenchSniper | 1.627 (-7.2% ✓) | 2.190 | -0.028 | 0.672 | 0.410 | 0.740 |  |
 | test | benchBossSelected | 1.651 (-7.8% ✓) | 2.238 | -0.057 | 0.679 | 0.428 | 0.748 | ✓ |
 | test | shrunkBaselineOnly | 1.712 (-4.4% ✓) | 2.307 | 0.045 | 0.657 | 0.409 | 0.740 |  |
 | test | productionBaseline | 1.790 | 2.443 | 0.043 | 0.634 | 0.393 | 0.730 |  |
-| test | benchBossAiOnly | 1.642 (-8.3% ✓) | 2.259 | -0.222 | 0.678 | 0.436 | 0.748 |  |
-| test | lightgbmPlusBenchBossAi | 1.648 (-8.0% ✓) | 2.236 | -0.068 | 0.679 | 0.429 | 0.747 |  |
+| test | benchSniperOnly | 1.642 (-8.3% ✓) | 2.259 | -0.222 | 0.678 | 0.436 | 0.748 |  |
+| test | lightgbmPlusBenchSniper | 1.648 (-8.0% ✓) | 2.236 | -0.068 | 0.679 | 0.429 | 0.747 |  |
 | live | benchBossSelected | 1.535 (-14.9% ✓) | 2.129 | -0.074 | 0.629 | 0.433 | 0.752 | ✓ |
 | live | shrunkBaselineOnly | 1.594 (-11.6% ✓) | 2.230 | -0.016 | 0.605 | 0.390 | 0.738 |  |
 | live | productionBaseline | 1.804 | 2.630 | -0.022 | 0.536 | 0.350 | 0.712 |  |
-| live | benchBossAiOnly | 1.522 (-15.6% ✓) | 2.145 | -0.253 | 0.629 | 0.440 | 0.747 |  |
-| live | lightgbmPlusBenchBossAi | 1.530 (-15.2% ✓) | 2.125 | -0.097 | 0.630 | 0.433 | 0.754 |  |
+| live | benchSniperOnly | 1.522 (-15.6% ✓) | 2.145 | -0.253 | 0.629 | 0.440 | 0.747 |  |
+| live | lightgbmPlusBenchSniper | 1.530 (-15.2% ✓) | 2.125 | -0.097 | 0.630 | 0.433 | 0.754 |  |
 
 ## Skater statistics
 
@@ -125,11 +125,11 @@ Rank-aware blend: model weight **1.0** (rest production baseline), chosen on val
 | 0.75 | 1.638 | 2.205 | 0.739 | 0.406 |
 | 0.5 | 1.663 | 2.242 | 0.735 | 0.399 |
 
-## BenchBoss AI (neural network)
+## BenchSniper (neural network)
 
-Gate basis: week-start backtest. Best epoch 11 (early stopping on validation); ensemble model weight 1.0 vs the production baseline. **Not promoted** — even when promoted it is served only with `BENCHBOSS_AI=1`.
+Gate basis: week-start backtest. Best epoch 11 (early stopping on validation); ensemble model weight 1.0 vs the production baseline. **Not promoted** — even when promoted it is served only with `BENCHSNIPER=1`.
 
-Rule: The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight.
+Rule: The LightGBM + BenchSniper ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchSniper a non-zero weight.
 
 | Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |
 |---|---|---|---|---|---|---|---|
@@ -141,26 +141,26 @@ Daily (single-game) accuracy, per-game features as at puck drop. Poisson devianc
 | Split | Projection | Poisson deviance | FP MAE | FP ρ |
 |---|---|---|---|---|
 | validation | benchBossSelected | 5.2571 | 0.9534 | 0.358 |
-| validation | benchBossAiOnly | 5.2753 | 0.9459 | 0.359 |
-| validation | lightgbmPlusBenchBossAi | 5.2544 | 0.9535 | 0.358 |
+| validation | benchSniperOnly | 5.2753 | 0.9459 | 0.359 |
+| validation | lightgbmPlusBenchSniper | 5.2544 | 0.9535 | 0.358 |
 | validation | productionBaseline | 8.1406 | 0.9827 | 0.317 |
 | test | benchBossSelected | 5.2083 | 0.9559 | 0.349 |
-| test | benchBossAiOnly | 5.2313 | 0.9474 | 0.351 |
-| test | lightgbmPlusBenchBossAi | 5.2049 | 0.9552 | 0.350 |
+| test | benchSniperOnly | 5.2313 | 0.9474 | 0.351 |
+| test | lightgbmPlusBenchSniper | 5.2049 | 0.9552 | 0.350 |
 | test | productionBaseline | 8.0720 | 0.9852 | 0.306 |
 | live | benchBossSelected | 5.3124 | 0.9908 | 0.323 |
-| live | benchBossAiOnly | 5.3320 | 0.9788 | 0.325 |
-| live | lightgbmPlusBenchBossAi | 5.3094 | 0.9886 | 0.324 |
+| live | benchSniperOnly | 5.3320 | 0.9788 | 0.325 |
+| live | lightgbmPlusBenchSniper | 5.3094 | 0.9886 | 0.324 |
 | live | productionBaseline | 15.8228 | 1.0695 | 0.232 |
 
-Stack weights with BenchBoss AI as a component (validation NNLS):
+Stack weights with BenchSniper as a component (validation NNLS):
 
-- goals: direct 0.708, BenchBoss AI 0.362
-- assists: direct 0.624, BenchBoss AI 0.448
-- shots: direct 0.767, BenchBoss AI 0.242
-- ppPoints: direct 0.712, BenchBoss AI 0.190, shrunk 0.146
-- hits: BenchBoss AI 0.453, direct 0.396, residual 0.070, residualShrunk 0.026, baseline 0.024
-- blocks: direct 0.584, BenchBoss AI 0.387
+- goals: direct 0.708, BenchSniper 0.362
+- assists: direct 0.624, BenchSniper 0.448
+- shots: direct 0.767, BenchSniper 0.242
+- ppPoints: direct 0.712, BenchSniper 0.190, shrunk 0.146
+- hits: BenchSniper 0.453, direct 0.396, residual 0.070, residualShrunk 0.026, baseline 0.024
+- blocks: direct 0.584, BenchSniper 0.387
 
 ## Expected goals (xG)
 
