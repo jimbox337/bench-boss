@@ -12,6 +12,7 @@ import {
 } from '@/lib/playerCardMetrics';
 import { teamColor } from '@/lib/teamColors';
 import { pointsScoring, TeamLogo } from '@/components/gamecenter/shared';
+import { formatPacific, pacificTime, calendarDay } from '@/lib/time';
 
 const SECTIONS = [
   { id: 'read', label: 'Overview' },
@@ -274,7 +275,7 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
                       return (
                         <tr key={game.gameId}>
                           <td className="pc-dim">{games.length - index}</td>
-                          <td className="pc-dim">{new Date(`${game.date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                          <td className="pc-dim">{calendarDay(game.date, { month: 'short', day: 'numeric' })}</td>
                           <td className="pc-opp"><span><TeamLogo team={{ abbrev: game.opponent }} size={18} />{game.home ? '' : '@'}{game.opponent}</span></td>
                           <Cell value={fp.toFixed(1)} tone={heat(fp, means.fp)} />
                           <Cell value={game.toi ?? '–'} tone={heat(toiMinutes(game.toi), means.toi)} />
@@ -360,10 +361,10 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
                   return (
                     <div className="pc-faceoff">
                       {side(away, 'Away')}
-                      <div className="pc-faceoff-dot" aria-label={`Puck drop ${new Date(next.startTimeUTC).toLocaleString()}`}>
-                        <span>{new Date(next.startTimeUTC).toLocaleDateString([], { weekday: 'short' })}</span>
-                        <strong>{new Date(next.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</strong>
-                        <span>{new Date(next.startTimeUTC).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                      <div className="pc-faceoff-dot" aria-label={`Puck drop ${formatPacific(next.startTimeUTC, { dateStyle: 'medium', timeStyle: 'short' })} PT`}>
+                        <span>{formatPacific(next.startTimeUTC, { weekday: 'short' })}</span>
+                        <strong>{pacificTime(next.startTimeUTC)}</strong>
+                        <span>{formatPacific(next.startTimeUTC, { month: 'short', day: 'numeric' })}</span>
                       </div>
                       {side(home, 'Home')}
                     </div>
@@ -381,7 +382,7 @@ export default function PlayerCard({ playerId, onClose }: { playerId: string; on
                       const opp = card.teams[game.opponent];
                       return (
                         <li key={game.gameId}>
-                          <span className="pc-dim">{new Date(`${game.date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                          <span className="pc-dim">{calendarDay(game.date, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                           <span className="inline-flex items-center gap-2 font-semibold"><TeamLogo team={{ abbrev: game.opponent }} size={20} />{game.home ? 'vs' : '@'} {game.opponent}</span>
                           <Stars count={matchupStars(opp, 32, isGoalie)} />
                         </li>

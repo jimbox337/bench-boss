@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, Newspaper } from 'lucide-react';
 import { findNhlStory, type NewsItem } from '@/lib/nhlNews';
 import StoryPlayers from '@/components/news/StoryPlayers';
 import '@/components/news/news-story.css';
+import { formatPacific } from '@/lib/time';
 
 export const revalidate = 600;
 
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function formatDate(iso: string | null) {
   if (!iso) return null;
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/New_York' }).format(new Date(iso)) + ' ET';
+  return `${formatPacific(iso, { dateStyle: 'medium', timeStyle: 'short' })} PT`;
 }
 
 function MoreStory({ item }: { item: NewsItem }) {

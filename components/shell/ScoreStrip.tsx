@@ -7,12 +7,13 @@ import { useData } from '@/lib/DataContext';
 import type { ScoreboardGame } from '@/lib/nhlGameCenter';
 import { teamColor } from '@/lib/teamColors';
 import { TeamLogo } from '@/components/gamecenter/shared';
+import { pacificTime } from '@/lib/time';
 
 function cardStatus(game: ScoreboardGame): string {
   const period = game.periodType === 'SO' ? 'SO' : game.periodType === 'OT' ? 'OT' : ['1ST', '2ND', '3RD'][(game.period || 1) - 1] || `P${game.period}`;
   if (game.isLive) return game.inIntermission ? `END ${period}` : `${period} ${game.clock || ''}`.trim();
   if (game.isFinal) return game.periodType && game.periodType !== 'REG' ? `FINAL/${game.periodType}` : 'FINAL';
-  return new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase();
+  return pacificTime(game.startTimeUTC).toUpperCase();
 }
 
 /** Compact live NHL score cards, shown under the top bar on the home page. */

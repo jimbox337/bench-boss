@@ -6,6 +6,7 @@ import type { TeamStarter } from '@/lib/goalieStarters';
 import type { ScoreboardGame, TeamSide } from '@/lib/nhlGameCenter';
 import { teamColor } from '@/lib/teamColors';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
+import { formatPacific, pacificTime } from '@/lib/time';
 
 /** League scoring for fantasy points: the user's points league, else Bench Boss defaults. */
 export function pointsScoring(settings: LeagueSettings): { settings: LeagueSettings; label: string } {
@@ -36,7 +37,7 @@ export function gameStatusText(game: ScoreboardGame): string {
     return `Final${suffix}`;
   }
   if (game.state === 'PPD') return 'Postponed';
-  return new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return pacificTime(game.startTimeUTC);
 }
 
 export function periodName(number?: number, type?: string): string {
@@ -105,7 +106,7 @@ export function shortStatus(game: ScoreboardGame): [string, string] {
   if (game.isFinal) return ['FINAL', game.periodType && game.periodType !== 'REG' ? game.periodType : ''];
   if (game.state === 'PPD') return ['PPD', ''];
   const start = new Date(game.startTimeUTC);
-  return [start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase(), start.toLocaleDateString([], { month: 'short', day: 'numeric' })];
+  return [pacificTime(start).toUpperCase(), formatPacific(start, { month: 'short', day: 'numeric' })];
 }
 
 /** Large hero for one game: team-colour bar, logos, names, records, big scores, centre status. */

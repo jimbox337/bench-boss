@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, Copy, KeyRound, LogOut, RefreshCw, ShieldCheck, UserCog, Users, X } from 'lucide-react';
+import { formatPacific, calendarIso } from '@/lib/time';
 
 type AuthFacts = {
   authId: string;
@@ -37,13 +38,12 @@ type Pending =
 type SortKey = 'createdAt' | 'lastSignInAt' | 'email';
 type Sort = { key: SortKey; dir: 'asc' | 'desc' };
 
-const pad = (value: number) => String(value).padStart(2, '0');
 
 function formatTs(value?: string | null) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${calendarIso(date)} ${formatPacific(date, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })} PT`;
 }
 
 function relative(value?: string | null) {
@@ -426,7 +426,7 @@ export default function AdminConsolePage() {
             <ol aria-live="polite">
               {log.map(line => (
                 <li key={line.id} data-level={line.level}>
-                  <time dateTime={line.at.toISOString()}>{pad(line.at.getHours())}:{pad(line.at.getMinutes())}:{pad(line.at.getSeconds())}</time>
+                  <time dateTime={line.at.toISOString()}>{formatPacific(line.at, { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })}</time>
                   <span className="msg">{line.msg}</span>
                 </li>
               ))}

@@ -10,6 +10,7 @@ import { scheduleVolume, type StandingRow, type TeamGoalieSeason, type TeamSched
 import { SectionTitle, TeamLogo, pointsScoring } from '@/components/gamecenter/shared';
 import { teamColor } from '@/lib/teamColors';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
+import { pacificTime, calendarDay } from '@/lib/time';
 
 type TeamPayload = { abbrev: string; standing: StandingRow | null; skaters: TeamSkaterSeason[]; goalies: TeamGoalieSeason[]; schedule: TeamScheduleGame[] };
 
@@ -17,7 +18,7 @@ const localToday = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 };
-const shortDate = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+const shortDate = (date: string) => calendarDay(date, { weekday: 'short', month: 'short', day: 'numeric' });
 const perGameStats = (stats: SkaterStats, games: number): SkaterStats => ({
   G: stats.G / games, A: stats.A / games, PTS: stats.PTS / games, plusMinus: stats.plusMinus / games, PPP: stats.PPP / games,
   SOG: stats.SOG / games, HIT: stats.HIT / games, BLK: stats.BLK / games, PIM: stats.PIM / games,
@@ -72,7 +73,7 @@ export default function TeamPage() {
       <span className="flex-1 font-display text-base font-bold">{g.opponent}</span>
       {withResult
         ? <span className="whitespace-nowrap font-display text-base font-bold tabular-nums"><span className={g.result === 'W' ? 'text-success' : 'text-error'}>{g.result}</span> {g.teamScore}–{g.oppScore}</span>
-        : <span className="whitespace-nowrap text-xs text-muted">{new Date(g.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
+        : <span className="whitespace-nowrap text-xs text-muted">{pacificTime(g.startTimeUTC)}</span>}
     </Link></li>
   );
 
