@@ -1,0 +1,124 @@
+.bb-story-back {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.bb-story-layout {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 1280px) {
+  .bb-story-layout { grid-template-columns: minmax(0, 1fr) 340px; }
+}
+
+.bb-story-hero { position: relative; margin: 0; aspect-ratio: 16 / 9; max-height: 26rem; overflow: hidden; background: var(--color-paper-3); }
+.bb-story-hero img { width: 100%; height: 100%; object-fit: cover; }
+.bb-story-hero figcaption {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.6rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(8, 12, 20, 0.7);
+  color: #fff;
+  font-size: 0.65rem;
+}
+
+.bb-story-body { padding: 1.5rem 1.5rem 1.75rem; }
+@media (min-width: 640px) { .bb-story-body { padding: 2rem 2.25rem; } }
+
+.bb-story-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: var(--color-muted); }
+.bb-story-source { font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-accent); }
+
+.bb-story-title {
+  margin-top: 0.6rem;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--color-ink);
+}
+
+.bb-story-summary {
+  margin: 1.25rem 0 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-accent);
+  max-width: 65ch;
+}
+.bb-story-summary p { font-size: 1.05rem; line-height: 1.65; color: var(--color-ink-2); }
+.bb-story-summary footer { margin-top: 0.4rem; font-size: 0.72rem; color: var(--color-muted); }
+
+.bb-story-cta { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; }
+.bb-story-note { margin-top: 0.75rem; font-size: 0.75rem; color: var(--color-muted); }
+
+.bb-story-players { padding: 1.25rem 1.5rem 1.5rem; border-top: 1px solid var(--color-rule); background: var(--color-paper-3); }
+@media (min-width: 640px) { .bb-story-players { padding: 1.5rem 2.25rem 2rem; } }
+
+.bb-story-player-list { display: grid; gap: 0.6rem; margin-top: 0.9rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) { .bb-story-player-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.bb-story-player {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.65rem;
+  background: var(--color-paper);
+  text-align: left;
+}
+.bb-story-player:hover { border-color: var(--color-accent); }
+
+.bb-story-avatar {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-paper-3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.bb-story-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.bb-story-injury { color: var(--color-error); }
+
+.bb-story-more-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; }
+.bb-story-more-item:hover { background: var(--color-paper-3); }
+.bb-story-more-item:hover .bb-story-more-title { color: var(--color-accent); }
+.bb-story-more-thumb {
+  display: flex;
+  width: 4.5rem;
+  aspect-ratio: 16 / 10;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background: var(--color-paper-3);
+  color: var(--color-muted);
+}
+.bb-story-more-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.bb-story-more-source { display: block; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-muted); }
+.bb-story-more-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.2rem;
+  color: var(--color-ink);
+}
