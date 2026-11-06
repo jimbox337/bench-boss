@@ -124,6 +124,21 @@ It competes rather than replaces. It joins the LightGBM stack as one more NNLS c
 
 On its own BenchBoss AI is about baseline quality. It is biased low (−0.19 FP per week on test) and ranks players worse than the shrunk baseline it starts from. Validation gave it weight only for assists (0.06), so the ensemble is the current model to three decimals, and it fails the start/sit (validation) and top-50 (test) checks by about 0.001. As expected, better inputs (injuries, lines, roles) matter more than the model family.
 
+**Follow-up experiments (2026-11-06), none promoted.** These were run with the real stack, blend and gate on dumped LightGBM frames:
+
+| Variant | Test weekly FP MAE, averaged over all 7 week start days (served 1.568) | Per-game deviance, sum of 6 stats (served 5.369) | Verdict |
+|---|---|---|---|
+| Shipped config | 1.601 | **5.227** | Better per game, worse per week (biased low) |
+| + last 10 games as raw inputs | 1.602 | 5.237 | Stack weight ≈ 0.15; ensemble = served |
+| Loss on player-week sums | 1.519 | 5.616 | **Leaky**: rejected |
+| Weekly loss + last 10 games | 1.144 | 7.403 | **Leaky**: rejected |
+
+A weekly-sum loss looks like a big win, but it is leakage. In the backtest each game's features include earlier games from the *same* week, and a loss on weekly totals lets the network use game 2's inputs (which contain game 1's result) to fix the week's sum. Per-game accuracy collapses while weekly error drops. The app projects the whole week from week-start data, so none of that would carry over. Don't train on weekly sums unless the features are frozen at the start of the week.
+
+The real lead is that BenchBoss AI is about 2.6% better than LightGBM per game (lower Poisson deviance on validation, test and live), even though it loses on weekly totals. Next steps:
+1. A *serving-faithful* weekly backtest (player-rate features frozen at the start of the week, game context per game). It is also a fairer test of LightGBM, whose weekly numbers above are slightly optimistic for the same reason.
+2. Evaluate BenchBoss AI for daily (single-game) decisions, where it already wins.
+
 The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchBoss AI shadow) but never shown, so live evidence builds up for a future promotion.
 
 ## Daily track record
