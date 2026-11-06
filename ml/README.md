@@ -79,12 +79,14 @@ Each player-game uses only games **strictly before it**, plus the published sche
 
 ### Promotion gate
 
-On **both** validation and test, the combined weekly fantasy-point projection must:
+On **both** validation and test of the **week-start weekly backtest** (see BenchBoss AI below), the combined weekly fantasy-point projection must:
 
 1. beat the production baseline on weekly MAE **and** RMSE, and
 2. not lose more than 0.005 in start/sit accuracy or top-50 precision.
 
 ### Results (`bench-boss-lgbm-20261106`, 12 seasons)
+
+These weekly numbers update features before every game, which is optimistic. The serving-faithful week-start backtest is under BenchBoss AI below.
 
 | Weekly fantasy points, 2025-26 test | Production baseline | Previous model (20261105) | Bench Boss model |
 |---|---|---|---|
@@ -106,6 +108,79 @@ On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1
 - **First live night (2026-11-04, locked before puck drop):**
   - Skater fantasy-point MAE: 0.972 for v2, versus 1.006 for the baseline.
   - Starting goalies: 1 of 8 correct, before the rotation features existed.
+
+## BenchBoss AI: the neural challenger (experiment, not served)
+
+BenchBoss AI (`benchboss_ml/neural.py`) is one small shared neural network for all six skater stats: two hidden ReLU layers (128, 64), dropout and weight decay, and six Poisson outputs, each offset by log(shrunk baseline). It uses the same features, the same chronological split and early stopping on the validation season. It trains on a laptop CPU in a few minutes (`pip install -r requirements-neural.txt`; `train --no-neural` skips it). It runs in a child process, because PyTorch and LightGBM deadlock in one process on macOS (OpenMP).
+
+It competes rather than replaces. It joins the LightGBM stack as one more NNLS component, so validation chooses its weight. It reaches the app only if the ensemble passes a stricter gate: better weekly MAE and RMSE than the current model, no loss in start/sit or top-50, at most 0.5% worse MAE for forwards or defence, on validation **and** test. Even then it stays behind `BENCHBOSS_AI=1`.
+
+**First result (20261106): not promoted.**
+
+| Weekly FP, 2025-26 test | Baseline | LightGBM (served) | BenchBoss AI alone | LightGBM + BenchBoss AI |
+|---|---|---|---|---|
+| MAE | 1.604 | **1.574** | 1.603 | **1.574** |
+| RMSE | 2.170 | 2.123 | 2.200 | 2.123 |
+| Start/sit | 0.760 | 0.761 | 0.758 | 0.762 |
+| Top-50 | 0.459 | **0.466** | 0.448 | 0.465 |
+
+On its own BenchBoss AI is about baseline quality. It is biased low (−0.19 FP per week on test) and ranks players worse than the shrunk baseline it starts from. Validation gave it weight only for assists (0.06), so the ensemble is the current model to three decimals, and it fails the start/sit (validation) and top-50 (test) checks by about 0.001. As expected, better inputs (injuries, lines, roles) matter more than the model family.
+
+**Follow-up experiments (2026-11-06), none promoted.** These were run with the real stack, blend and gate on dumped LightGBM frames:
+
+| Variant | Test weekly FP MAE, averaged over all 7 week start days (served 1.568) | Per-game deviance, sum of 6 stats (served 5.369) | Verdict |
+|---|---|---|---|
+| Shipped config | 1.601 | **5.227** | Better per game, worse per week (biased low) |
+| + last 10 games as raw inputs | 1.602 | 5.237 | Stack weight ≈ 0.15; ensemble = served |
+| Loss on player-week sums | 1.519 | 5.616 | **Leaky**: rejected |
+| Weekly loss + last 10 games | 1.144 | 7.403 | **Leaky**: rejected |
+
+A weekly-sum loss looks like a big win, but it is leakage. In the backtest each game's features include earlier games from the *same* week, and a loss on weekly totals lets the network use game 2's inputs (which contain game 1's result) to fix the week's sum. Per-game accuracy collapses while weekly error drops. The app projects the whole week from week-start data, so none of that would carry over. Don't train on weekly sums unless the features are frozen at the start of the week.
+
+### Week-start backtest (serving-faithful, 2026-11-06)
+
+The weekly tables above update features before every game, so a week's later games "know" its earlier results. That leaks part of the target into the weekly sum, so all those weekly numbers are optimistic. `week_start_frame` in `train.py` rebuilds each player-week the way the app sees it:
+
+- Every player-history and own-team feature is frozen at the player's first game of the calendar week.
+- `days_since_last_game` advances through the week.
+- Home, rest, back-to-back, schedule density, position and opponent rates stay per game.
+
+Baselines are recomputed on the frozen features, and the same fitted models, stack weights and blend are applied (`weeklyWeekStart` in `reports/evaluation.json`).
+
+| Weekly FP, week-start | Production baseline | Shrunk baseline | LightGBM (served) | BenchBoss AI alone |
+|---|---|---|---|---|
+| Test MAE | 1.790 | 1.712 | 1.715 | **1.642** (−4.2% vs served) |
+| Test RMSE | 2.443 | 2.308 | 2.324 | **2.259** (−2.8%) |
+| Test start/sit | 0.730 | 0.740 | 0.738 | **0.748** |
+| Test top-50 | 0.393 | 0.409 | 0.406 | **0.436** |
+| Validation MAE / RMSE | 1.753 / 2.382 | 1.683 / 2.263 | 1.682 / 2.272 | **1.623 / 2.205** |
+| Live (2026-27) MAE / RMSE | 1.804 / 2.630 | 1.594 / 2.230 | 1.638 / 2.320 | **1.522 / 2.145** |
+
+What this shows:
+
+- **Weekly error is higher than the per-game tables suggest**: about 9% for the served model, 12% for the production baseline and only 2% for BenchBoss AI. These are the honest numbers for what the app shows.
+- **The served model still passes its promotion gate** against the production baseline on validation, test and live. But it no longer beats the shrunk baseline: it is about equal on validation and test, and worse on live. Its edge in the per-game tables came partly from reacting to in-week results.
+- **BenchBoss AI alone wins on every weekly metric**, on validation, test and live, including ranking metrics, which don't reward its low bias (−0.22 FP per week). It also wins per game: Poisson deviance is 5.231 vs 5.369 on test, and the single-game FP rank correlation is 0.351 vs 0.325.
+- **It is still not promoted.** The stack weights and blend are fitted on per-game validation sums, where the leak favours LightGBM, so BenchBoss AI gets almost no weight (assists 0.06) and the ensemble is just the served model. The challenger gate now uses the week-start backtest, and the ensemble fails it on validation start/sit and top-50.
+
+### Refit on week-start validation (shipped as `bench-boss-lgbm-20261106-ws`)
+
+`train.py` now fits on the week-start validation frame by default (`--fit-per-game` restores the old behaviour). That covers the stack weights, the per-stat selection, the baseline blend and the interval scale. The boosters themselves are unchanged. Test and live stay untouched.
+
+| Weekly FP, week-start, 2025-26 test | Shrunk baseline | LightGBM, per-game fit (previous) | LightGBM, week-start fit (served) | BenchBoss AI alone | LightGBM + BenchBoss AI, week-start fit |
+|---|---|---|---|---|---|
+| MAE | 1.712 | 1.715 | 1.651 (−3.8%) | **1.642** | 1.648 |
+| RMSE | 2.308 | 2.324 | 2.238 (−3.7%) | 2.259 | **2.236** |
+| Start/sit | 0.740 | 0.738 | **0.748** | 0.748 | 0.747 |
+| Top-50 | 0.409 | 0.406 | 0.428 | **0.436** | 0.429 |
+| Live (2026-27) MAE / RMSE | 1.594 / 2.230 | 1.638 / 2.320 | 1.535 / 2.129 | **1.522** / 2.145 | 1.530 / **2.125** |
+
+- **The stack now leans on the direct booster** (weights 0.73–1.02), not the baseline-anchored components, and the blend keeps 100% model. The direct model was already the best single-game ranker. Per-game fitting under-weighted it because the leak rewarded components that chase in-week results.
+- **It is better per game too:** Poisson deviance is 5.208 vs 5.369 on test, and single-game FP rank correlation is 0.349 vs 0.325. 80% intervals cover 79–81% of week-start weeks.
+- **Shipped.** The served-model gate now uses the week-start backtest only, and the model passes it on validation, test and live. The per-game weekly gate is still reported, for information only: there the model loses to the production baseline by 0.4%, but that table rewards in-week leakage.
+- **BenchBoss AI now gets real weight** (0.19–0.45 per stat). The ensemble passes the challenger gate on validation. On test it fails only start/sit, by 0.0007 (0.7474 vs 0.7481).
+
+The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchBoss AI shadow) but never shown, so live evidence builds up for a future promotion.
 
 ## Daily track record
 
@@ -130,5 +205,6 @@ Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` 
 ## Possible next experiments (not done)
 
 - Add a de-biasing step for the top of the distribution
-- Use a weekly-sum objective
+- Fit stack weights and blend on week-start validation sums
+- Use a weekly-sum objective on week-start frames (safe there; leaky on per-game frames)
 - Score availability with team-game rows that include missed games

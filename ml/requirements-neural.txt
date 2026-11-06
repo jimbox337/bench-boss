@@ -1,0 +1,4 @@
+# Optional: only for training BenchBoss AI, the neural network (python -m benchboss_ml.train).
+# Daily predictions run the exported network with NumPy and do not need PyTorch.
+#   ml/.venv/bin/pip install -r ml/requirements-neural.txt
+torch==2.15.0

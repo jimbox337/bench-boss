@@ -64,6 +64,12 @@ def score(date: str, tag: str, skaters: pd.DataFrame, goalies: pd.DataFrame, fin
         }
     rank = dressed[["fp", "model_fp", "base_fp"]].rank()
     out["fpSpearman"] = {"model": float(rank["fp"].corr(rank["model_fp"])), "baseline": float(rank["fp"].corr(rank["base_fp"]))}
+    if "nn_fp" in dressed:
+        # Shadow BenchBoss AI ensemble (never shown in the app): same error metrics, for live tracking.
+        y = dressed["fp"].to_numpy(float)
+        nn = dressed["nn_fp"].to_numpy(float)
+        out["neuralShadow"] = {"fpMae": float(np.mean(np.abs(y - nn))), "fpRmse": float(math.sqrt(np.mean((y - nn) ** 2))),
+                               "fpSpearman": float(dressed[["fp", "nn_fp"]].rank().corr().iloc[0, 1])}
     out["topPerformers"] = dressed.sort_values("fp", ascending=False).head(8)[["name", "team", "fp", "model_fp", "base_fp"]].round(2).to_dict("records")
     out["biggestMisses"] = dressed.assign(err=dressed["fp"] - dressed["model_fp"]).sort_values("err").iloc[[0, 1, -2, -1]][["name", "team", "fp", "model_fp", "base_fp"]].round(2).to_dict("records")
 
@@ -109,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
         for stat, m in r["stats"].items():
             print(f"{stat:10} {m['actualMean']:7.3f} {m['modelMean']:7.3f} {m['baselineMean']:7.3f} | {m['modelMae']:9.3f} {m['baselineMae']:9.3f} | {m['modelRmse']:10.3f} {m['baselineRmse']:9.3f}")
         print("FP rank correlation:", {k: round(v, 3) for k, v in r["fpSpearman"].items()})
+        if "neuralShadow" in r:
+            print("BenchBoss AI shadow:", {k: round(v, 3) for k, v in r["neuralShadow"].items()})
         print("Not dressed:", r["notDressed"])
         print("Top performers:", r["topPerformers"])
         for g in r["goalies"]:

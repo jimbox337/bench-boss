@@ -41,6 +41,18 @@ from .features import (GOALIE_FEATURES, PRIOR_WEIGHT_GRID, RESIDUAL_FEATURES, XG
                        season_average_baseline, shrinkage_reference, shrunk_baseline, skater_baseline, skater_features)
 from .paths import ARTIFACT_DIR, MANIFEST_PATH, REPORTS_DIR
 
+# BenchBoss AI, the neural challenger (benchboss_ml.neural). On by default when PyTorch is installed; it only
+# ships to the app if it passes NEURAL_GATE below, and even then stays behind a feature flag.
+# PyTorch is only imported in a child process (see neural.run_isolated).
+import importlib.util
+NEURAL_AVAILABLE = importlib.util.find_spec("torch") is not None
+USE_NEURAL = NEURAL_AVAILABLE
+# Fit stack weights, per-stat selection, the baseline blend and the interval scale on the
+# week-start validation frame (what the app sees) rather than the per-game one.
+FIT_WEEK_START = True
+# A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
+NEURAL_POSITION_TOLERANCE = 0.005
+
 SEED = 20261104
 # Matches defaultLeagueSettings in lib/calculator.ts; used only for evaluation summaries.
 DEFAULT_SKATER_SCORING = {"goals": 2.0, "assists": 1.0, "ppPoints": 1.0, "shots": 0.1, "hits": 0.1, "blocks": 0.5}
@@ -269,8 +281,72 @@ def stack_weights(frame: pd.DataFrame, target: str, names: list[str]) -> dict[st
         names = keep
 
 
+def choose_blend(valid: pd.DataFrame, prefix: str, actual_cols: dict[str, str]) -> tuple[float, dict[float, dict[str, Any]]]:
+    """Model weight against the production baseline: best validation start/sit + top-50
+    among blends within 0.5% of the best weekly RMSE."""
+    scores = {}
+    for alpha in BLEND_GRID:
+        cols = {}
+        for s in actual_cols:
+            valid[f"_b_{s}"] = alpha * valid[f"{prefix}_{s}"] + (1 - alpha) * valid[f"base_{s}"]
+            cols[s] = f"_b_{s}"
+        scores[alpha] = weekly_metrics(weekly_table(valid, cols, actual_cols, DEFAULT_SKATER_SCORING))
+    best_rmse = min(m["rmse"] for m in scores.values())
+    eligible = {a: m for a, m in scores.items() if m["rmse"] <= best_rmse * 1.005}
+    return max(eligible, key=lambda a: (eligible[a]["startSitAccuracy"] + eligible[a][f"top{TOP_K}Precision"], a)), scores
+
+
+NEURAL_RULE = ("The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, "
+               f"not reduce start/sit accuracy or top-{TOP_K} precision, and not raise forward or defence weekly MAE by more than "
+               f"{NEURAL_POSITION_TOLERANCE:.1%}, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight.")
+
+
+def neural_gate(candidate: dict[str, Any], incumbent: dict[str, Any]) -> dict[str, Any]:
+    checks = {
+        "weeklyMaeImproves": candidate["mae"] < incumbent["mae"],
+        "weeklyRmseImproves": candidate["rmse"] < incumbent["rmse"],
+        "startSitNotWorse": candidate["startSitAccuracy"] >= incumbent["startSitAccuracy"],
+        "top50NotWorse": candidate[f"top{TOP_K}Precision"] >= incumbent[f"top{TOP_K}Precision"],
+        **{f"{g}MaeNotWorse": candidate["byPositionMae"][g] <= incumbent["byPositionMae"][g] * (1 + NEURAL_POSITION_TOLERANCE)
+           for g in ("F", "D")},
+    }
+    return {"passed": all(checks.values()), "checks": checks}
+
+
 def apply_stack(frame: pd.DataFrame, target: str, weights: dict[str, float]) -> pd.Series:
     return sum(w * frame[prediction_column(n, target)] for n, w in weights.items())
+
+
+# Week-start ("serving-faithful") backtest. The app projects a fantasy week once, from data
+# through the day before: lib/model/project.ts calls skaterFeatures(date) for every scheduled
+# game with player and team history frozen at that point. The per-game backtest instead updates
+# features before every game, so a later game in a week "knows" earlier results of that week.
+# week_start_frame rebuilds each player-week the way the app sees it:
+#   frozen at the player's first game of the calendar week: every player-history and own-team
+#     feature (season/L5/L10/L20/previous-season rates, games played, availability, deployment)
+#   advanced per game: days_since_last_game (week-start gap + days elapsed, capped)
+#   per game, as the app computes them from the schedule: home, rest, back-to-back, team games
+#     in the next 7 days, position flags; opponent rates stay per game (an approximation: they
+#     describe the opponent, not the player)
+WEEK_GAME_CONTEXT = ("home", "rest_days", "b2b", "team_games_next7", "pos_C", "pos_W", "pos_D",
+                     "opp_ga_pg", "opp_ga_l10", "opp_sa_pg", "opp_sv_pct")
+GAP_CAP_DAYS = 30
+
+
+def week_start_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    frozen = [c for c in dict.fromkeys(SKATER_FEATURES + RESIDUAL_FEATURES + XG_FEATURES)
+              if c in frame and c not in WEEK_GAME_CONTEXT and c != "days_since_last_game"]
+    f = frame.sort_values(["playerId", "gameDate", "gameId"], kind="stable")
+    group = f.groupby(["playerId", week_key(f["gameDate"])], sort=False).ngroup().to_numpy()
+    first = f.groupby(group, sort=False).cumcount().to_numpy() == 0
+    firsts = pd.DataFrame(f.loc[first, frozen].to_numpy(), index=group[first], columns=frozen)
+    out = f.copy()
+    out[frozen] = firsts.loc[group].to_numpy(dtype=float)
+    first_date = pd.Series(f.loc[first, "gameDate"].to_numpy(), index=group[first]).loc[group].to_numpy()
+    first_gap = pd.Series(f.loc[first, "days_since_last_game"].to_numpy(float), index=group[first]).loc[group].to_numpy()
+    elapsed = (f["gameDate"].to_numpy() - first_date) / np.timedelta64(1, "D")
+    out["days_since_last_game"] = np.minimum(first_gap + elapsed, GAP_CAP_DAYS)
+    return out.loc[frame.index]
 
 
 def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
@@ -297,12 +373,34 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         feats[f"shr_{target}"] = shrunk_baseline(feats, target, k_best, reference, weight_best, season_best)
         shrinkage[target] = {"k": k_best, "priorWeight": weight_best, "seasonWeight": season_best, "reference": reference, "validationGrid": grid}
 
+    if USE_NEURAL:
+        from .neural import add_inputs
+        feats = add_inputs(feats)
     train = feats[train_rows]
     full = feats[feats["season"].isin(split.train + [split.validation, split.test])]
     frames = {"validation": feats[feats["season"] == split.validation].copy(),
               "test": feats[feats["season"] == split.test].copy(),
               "live": feats[feats["season"] == split.live].copy() if split.live else feats.iloc[0:0].copy()}
     frames = {k: v for k, v in frames.items() if not v.empty}
+    ws = {k: week_start_frame(v) for k, v in frames.items()}
+    for f in ws.values():
+        for t in SKATER_TARGETS:
+            sh = shrinkage[t]
+            f[f"base_{t}"] = skater_baseline(f, t, fallback[t])
+            f[f"shr_{t}"] = shrunk_baseline(f, t, sh["k"], sh["reference"], sh["priorWeight"], sh["seasonWeight"])
+    if USE_NEURAL:
+        ws = {k: add_inputs(v) for k, v in ws.items()}
+
+    neural: dict[str, Any] = {}
+    if USE_NEURAL:
+        from .neural import run_isolated
+        print("  BenchBoss AI: training on train seasons, early stopping on validation (separate process)...", flush=True)
+        neural["run"] = run_isolated(train, frames["validation"], full, {**frames, **{f"{k}_ws": v for k, v in ws.items()}}, SEED)
+        for split_name, frame in [*frames.items(), *((f"{k}_ws", v) for k, v in ws.items())]:
+            preds = neural["run"]["predictions"][split_name]
+            for i, t in enumerate(SKATER_TARGETS):
+                frame[f"neural_{t}"] = preds[:, i]
+        neural["stacks"] = {}
 
     artifact: dict[str, Any] = {"targets": {}, "positionFallback": fallback,
                                 "baselineWeights": {"std": 0.45, "l20": 0.25, "l10": 0.20, "l5": 0.10}}
@@ -316,26 +414,36 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             model = fit(train, spec["features"], target, "poisson", valid=frames["validation"], init_col=init, params=spec["params"])
             best = model.best_iteration or model.current_iteration()
             export_model = fit(full, spec["features"], target, "poisson", rounds=best, init_col=init, params=spec["params"])
-            for split_name, frame in frames.items():
+            for split_name, frame in [*frames.items(), *ws.items()]:
                 booster, iteration = (export_model, None) if split_name == "live" else (model, best)
                 frame[f"{name}_{target}"] = predict(booster, frame, spec["features"], init, iteration)
             candidates[name] = {"best": int(best), "export": export_model, "spec": spec}
 
-        valid = frames["validation"]
-        # Stack every servable projection with weights fitted on validation weekly sums; the
-        # test and live seasons stay untouched for the gate.
+        # Stack every servable projection with weights fitted on validation weekly sums (week-start
+        # frame by default); the test and live seasons stay untouched for the gate.
+        valid = ws["validation"] if FIT_WEEK_START else frames["validation"]
         stack_names = ["baseline", "shrunk"] + [n for n, c in candidates.items() if c["spec"]["servable"]]
         stack = stack_weights(valid, target, stack_names)
-        for frame in frames.values():
+        for frame in [*frames.values(), *ws.values()]:
             frame[f"stack_{target}"] = apply_stack(frame, target, stack)
         weekly_rmse = {name: weekly_stat_rmse(valid, target, f"{name}_{target}") for name in candidates}
         weekly_rmse["stack"] = weekly_stat_rmse(valid, target, f"stack_{target}")
+        if USE_NEURAL:
+            # Challenger: the same stack with the network as one more component; validation
+            # chooses its weight (it may be zero).
+            neural["stacks"][target] = stack_weights(valid, target, stack_names + ["neural"])
+            for frame in [*frames.values(), *ws.values()]:
+                frame[f"stackNN_{target}"] = apply_stack(frame, target, neural["stacks"][target])
+            neural.setdefault("weeklyRmse", {})[target] = {"neural": weekly_stat_rmse(valid, target, f"neural_{target}"),
+                                                           "stackWithNeural": weekly_stat_rmse(valid, target, f"stackNN_{target}")}
         weekly_rmse["baseline"] = weekly_stat_rmse(valid, target, base_col)
         weekly_rmse["shrunk"] = weekly_stat_rmse(valid, target, f"shr_{target}")
         servable = {k: v for k, v in weekly_rmse.items() if k not in candidates or candidates[k]["spec"]["servable"]}
         selected = min(servable, key=servable.get)
         selected_any = min(weekly_rmse, key=weekly_rmse.get)
 
+        for frame in ws.values():
+            frame[f"final_{target}"] = frame[prediction_column(selected, target)]
         scores: dict[str, Any] = {}
         for split_name, frame in frames.items():
             frame[f"final_{target}"] = frame[prediction_column(selected, target)]
@@ -354,7 +462,8 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
                     for pos, group in frame.groupby("position")
                 },
             }
-        dispersion = nb_dispersion(valid[target].to_numpy(float), valid[f"final_{target}"].to_numpy(float))
+        per_game = frames["validation"]  # dispersion is a per-game property
+        dispersion = nb_dispersion(per_game[target].to_numpy(float), per_game[f"final_{target}"].to_numpy(float))
         entry: dict[str, Any] = {"selected": selected, "objective": "poisson", "dispersion": dispersion,
                                  "validationWeeklyRmse": weekly_rmse,
                                  "shrinkage": {k: v for k, v in shrinkage[target].items() if k != "validationGrid"}}
@@ -394,24 +503,29 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     # projection to blend with the production baseline using validation start/sit accuracy
     # and top-50 precision, among blends whose weekly RMSE is within 0.5% of the best.
     actual_cols = {s: s for s in DEFAULT_SKATER_SCORING}
-    valid = frames["validation"]
-    blend_scores = {}
-    for alpha in BLEND_GRID:
-        cols = {}
-        for s in actual_cols:
-            valid[f"_b_{s}"] = alpha * valid[f"final_{s}"] + (1 - alpha) * valid[f"base_{s}"]
-            cols[s] = f"_b_{s}"
-        blend_scores[alpha] = weekly_metrics(weekly_table(valid, cols, actual_cols, DEFAULT_SKATER_SCORING))
-    best_rmse = min(m["rmse"] for m in blend_scores.values())
-    eligible = {a: m for a, m in blend_scores.items() if m["rmse"] <= best_rmse * 1.005}
-    alpha = max(eligible, key=lambda a: (eligible[a]["startSitAccuracy"] + eligible[a][f"top{TOP_K}Precision"], a))
-    for frame in frames.values():
+    valid = ws["validation"] if FIT_WEEK_START else frames["validation"]
+    alpha, blend_scores = choose_blend(valid, "final", actual_cols)
+    for frame in [*frames.values(), *ws.values()]:
         for s in actual_cols:
             frame[f"final_{s}"] = alpha * frame[f"final_{s}"] + (1 - alpha) * frame[f"base_{s}"]
+    if USE_NEURAL:
+        neural["alpha"], _ = choose_blend(valid, "stackNN", actual_cols)
+        for frame in [*frames.values(), *ws.values()]:
+            for s in actual_cols:
+                frame[f"ensembleNN_{s}"] = neural["alpha"] * frame[f"stackNN_{s}"] + (1 - neural["alpha"]) * frame[f"base_{s}"]
     artifact["blendWithProductionBaseline"] = 1 - alpha
     report["blend"] = {"chosenModelWeight": alpha, "validation": {str(a): {k: m[k] for k in ("mae", "rmse", "startSitAccuracy", f"top{TOP_K}Precision")} for a, m in blend_scores.items()}}
     print(f"  blend: model weight {alpha} (validation start/sit + top-50 among RMSE-eligible blends)")
 
+    def add_pred_var(frame: pd.DataFrame) -> None:
+        frame["pred_var"] = sum((w ** 2) * (frame[f"final_{s}"] + artifact["targets"][s]["dispersion"] * frame[f"final_{s}"] ** 2)
+                                for s, w in DEFAULT_SKATER_SCORING.items())
+
+    if FIT_WEEK_START:
+        # Interval widths calibrated on week-start validation errors, which is what the app sees.
+        add_pred_var(ws["validation"])
+        artifact["intervalScale"] = interval_scale(weekly_table(ws["validation"], {s: f"final_{s}" for s in actual_cols}, actual_cols,
+                                                                DEFAULT_SKATER_SCORING, "pred_var"))
     report["weekly"], report["gate"] = {}, {}
     for split_name, frame in frames.items():
         frame["pred_var"] = sum((w ** 2) * (frame[f"final_{s}"] + artifact["targets"][s]["dispersion"] * frame[f"final_{s}"] ** 2)
@@ -426,20 +540,73 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             "productionBaseline": weekly_table(frame, {s: f"base_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
             "seasonAverageBaseline": weekly_table(frame, {s: f"avg_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
         }
-        if split_name == "validation":
+        if USE_NEURAL:
+            tables["neuralOnly"] = weekly_table(frame, {s: f"neural_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
+            tables["lightgbmNeuralEnsemble"] = weekly_table(frame, {s: f"ensembleNN_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
+        if split_name == "validation" and not FIT_WEEK_START:
             artifact["intervalScale"] = interval_scale(tables["benchBossSelected"])
         result = {label: weekly_metrics(table) for label, table in tables.items()}
         result["benchBossSelected"]["interval80Coverage"] = interval_coverage(tables["benchBossSelected"], artifact["intervalScale"])
         report["weekly"][split_name] = result
         report["gate"][split_name] = promotion_gate(result["benchBossSelected"], result["productionBaseline"])
     artifact["intervalZ"] = INTERVAL_Z
+
+    # Week-start backtest: the same models and weights, on features frozen the way the app sees them.
+    report["weeklyWeekStart"], report["gateWeekStart"] = {}, {}
+    for split_name, frame in ws.items():
+        add_pred_var(frame)
+        tables = {
+            "benchBossSelected": weekly_table(frame, {s: f"final_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING, "pred_var"),
+            "shrunkBaselineOnly": weekly_table(frame, {s: f"shr_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
+            "productionBaseline": weekly_table(frame, {s: f"base_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING),
+        }
+        if USE_NEURAL:
+            tables["neuralOnly"] = weekly_table(frame, {s: f"neural_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
+            tables["lightgbmNeuralEnsemble"] = weekly_table(frame, {s: f"ensembleNN_{s}" for s in actual_cols}, actual_cols, DEFAULT_SKATER_SCORING)
+        report["weeklyWeekStart"][split_name] = {label: weekly_metrics(table) for label, table in tables.items()}
+        report["weeklyWeekStart"][split_name]["benchBossSelected"]["interval80Coverage"] = interval_coverage(tables["benchBossSelected"], artifact["intervalScale"])
+        report["gateWeekStart"][split_name] = promotion_gate(report["weeklyWeekStart"][split_name]["benchBossSelected"],
+                                                             report["weeklyWeekStart"][split_name]["productionBaseline"])
+    print("  week-start backtest (test): " + " ".join(f"{k}={m['mae']:.4f}" for k, m in report["weeklyWeekStart"].get("test", {}).items()))
+
+    if USE_NEURAL:
+        # The challenger is judged on the week-start backtest: a model that only wins when it
+        # can see earlier results from the same week would not win in the app.
+        gate = {name: neural_gate(report["weeklyWeekStart"][name]["lightgbmNeuralEnsemble"], report["weeklyWeekStart"][name]["benchBossSelected"])
+                for name in ("validation", "test") if name in report["weeklyWeekStart"]}
+        daily = {}
+        for split_name, frame in frames.items():
+            fp = lambda prefix: sum(frame[f"{prefix}_{s}"] * w for s, w in DEFAULT_SKATER_SCORING.items())  # noqa: E731
+            actual_fp = sum(frame[s] * w for s, w in DEFAULT_SKATER_SCORING.items())
+            daily[split_name] = {
+                label: {"poissonDevianceSum": float(sum(regression_metrics(frame[t], frame[f"{prefix}_{t}"])["poissonDeviance"] for t in SKATER_TARGETS)),
+                        "fpMae": float(np.mean(np.abs(actual_fp - fp(prefix)))),
+                        "fpSpearman": float(spearmanr(actual_fp, fp(prefix)).statistic)}
+                for label, prefix in (("benchBossSelected", "final"), ("neuralOnly", "neural"), ("lightgbmNeuralEnsemble", "ensembleNN"), ("productionBaseline", "base"))
+            }
+        promoted = bool(gate) and all(g["passed"] for g in gate.values()) and any(neural["stacks"][t].get("neural", 0) > 0 for t in SKATER_TARGETS)
+        artifact["neural"] = {
+            **neural["run"]["export"],
+            "stack": neural["stacks"], "blendWithProductionBaseline": 1 - neural["alpha"], "promoted": promoted,
+        }
+        report["neural"] = {"bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
+                            "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
+                            "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
+        print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
+              + " ".join(f"{t}={neural['stacks'][t].get('neural', 0):.2f}" for t in SKATER_TARGETS))
     LAST_SKATER_FRAMES.clear(); LAST_SKATER_FRAMES.update(frames)  # for offline experiments
-    gate = report["gate"]
+    gate, gate_ws = report["gate"], report["gateWeekStart"]
+    report["fitBasis"] = "weekStart" if FIT_WEEK_START else "perGame"
     report["promotion"] = {
-        "eligible": gate["validation"]["passed"] and gate.get("test", {"passed": False})["passed"],
+        # Judged on the week-start backtest, which projects weeks the way the app does. The
+        # per-game weekly gate is kept as information only: it lets later games in a week see
+        # earlier results and rewards components that chase them.
+        "basis": "weekStart",
+        "eligible": all(gate_ws.get(name, {"passed": False})["passed"] for name in ("validation", "test")),
+        "perGameGate": {name: g["passed"] for name, g in gate.items()},
         "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, "
                 f"and not lose more than {GATE_RANKING_TOLERANCE:.3f} in start/sit accuracy or top-{TOP_K} precision, "
-                "on both the validation and the untouched test season.",
+                "on both the validation and the untouched test season of the week-start weekly backtest.",
     }
     return artifact, report
 
@@ -613,7 +780,12 @@ def train_availability(rows: pd.DataFrame, skater_feats: pd.DataFrame, split: Sp
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--today", help="Override today's date (YYYY-MM-DD) for reproducible splits")
+    parser.add_argument("--no-neural", action="store_true", help="Skip BenchBoss AI (the neural challenger)")
+    parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
+    global USE_NEURAL, FIT_WEEK_START
+    USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural
+    FIT_WEEK_START = not args.fit_per_game
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()
 
     tables = load_processed()

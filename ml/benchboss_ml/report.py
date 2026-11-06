@@ -24,6 +24,10 @@ def _delta(model: float, base: float, lower_is_better: bool = True) -> str:
     return f"{change:+.1f}% {'✓' if better else '✗'}"
 
 
+# Display names for report keys (keys stay stable so older evaluation.json files still render).
+LABELS = {"neuralOnly": "benchBossAiOnly", "lightgbmNeuralEnsemble": "lightgbmPlusBenchBossAi"}
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     split = report["split"]
     skater = report["skater"]
@@ -45,10 +49,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"Rule: {promotion['rule']}",
         "",
+        *([f"Per-game weekly gate (information only; it lets later games in a week see earlier results): "
+           + ", ".join(f"{k} {'passed' if v else 'failed'}" for k, v in promotion["perGameGate"].items()), ""]
+          if promotion.get("perGameGate") else []),
+        "Week-start backtest gate:",
+        "",
         "| Split | Passed | Weekly MAE better | Weekly RMSE better | Start/sit not worse | Top-50 not worse |",
         "|---|---|---|---|---|---|",
     ]
-    for name, gate in skater["gate"].items():
+    for name, gate in skater.get("gateWeekStart", skater["gate"]).items():
         c = gate["checks"]
         mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
         lines.append(f"| {name}{' (informational)' if name == 'live' else ''} | {mark(gate['passed'])} | {mark(c['weeklyMaeImproves'])} | "
@@ -62,7 +71,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         "- **residualModelOnly** — LightGBM Poisson starting from log(baseline), learning only context/usage multipliers.",
         "- **shrunkBaselineOnly** — the production blend with empirical-Bayes shrinkage toward last season and a TOI-based prior (k tuned on validation).",
         "- **residualOnShrunkOnly** — LightGBM context/usage multipliers on top of the shrunk baseline.",
-        "- **benchBossSelected** — per stat, whichever of the three had the lowest validation weekly RMSE.",
+        "- **benchBossSelected** — the served LightGBM projection: per-stat NNLS stack of baselines and boosters, blended with the production baseline.",
+        "- **benchBossAiOnly** — BenchBoss AI alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).",
+        "- **lightgbmPlusBenchBossAi** — the same stack with BenchBoss AI as one more component; validation picks its weight.",
         "",
         "## Weekly fantasy points (default Bench Boss scoring; games actually played)",
         "",
@@ -74,14 +85,31 @@ def render_markdown(report: dict[str, Any]) -> str:
         for label, m in result.items():
             delta = "" if label == "productionBaseline" else f" ({_delta(m['mae'], base['mae'])})"
             lines.append(
-                f"| {split_name} | {label} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | {_f(m['weeklySpearman'])} | "
+                f"| {split_name} | {LABELS.get(label, label)} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | {_f(m['weeklySpearman'])} | "
                 f"{_f(m['top50Precision'])} | {_f(m['startSitAccuracy'])} | {_f(m.get('interval80Coverage'))} |"
             )
     lines += ["", "Weekly fantasy-point MAE by position group (F = forwards, D = defence):", ""]
     for split_name, result in skater["weekly"].items():
-        parts = "; ".join(f"{label} " + " / ".join(f"{g} {_f(v, 3)}" for g, v in m["byPositionMae"].items()) for label, m in result.items()
-                          if label in ("benchBossSelected", "productionBaseline"))
+        parts = "; ".join(f"{LABELS.get(label, label)} " + " / ".join(f"{g} {_f(v, 3)}" for g, v in m["byPositionMae"].items()) for label, m in result.items()
+                          if label in ("benchBossSelected", "productionBaseline", "neuralOnly", "lightgbmNeuralEnsemble"))
         lines.append(f"- {split_name}: {parts}")
+
+    if skater.get("weeklyWeekStart"):
+        lines += ["", "## Week-start backtest (how the app projects a week)", "",
+                  "The per-game table above updates features before every game, so a later game in a week benefits from earlier results "
+                  "of that week. The app projects the whole week once, from data through the day before. Here each player's history and "
+                  "own-team features are frozen at his first game of the calendar week (days since last game advance; home, rest, "
+                  "back-to-back, schedule and opponent stay per game), and the same models and weights are re-scored.", "",
+                  "| Split | Projection | MAE | RMSE | Bias | Weekly ρ | Top-50 precision | Start/sit accuracy | Gate vs baseline |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
+        for split_name, result in skater["weeklyWeekStart"].items():
+            base = result["productionBaseline"]
+            for label, m in result.items():
+                delta = "" if label == "productionBaseline" else f" ({_delta(m['mae'], base['mae'])})"
+                gate = mark(skater["gateWeekStart"][split_name]["passed"]) if label == "benchBossSelected" else ""
+                lines.append(f"| {split_name} | {LABELS.get(label, label)} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | "
+                             f"{_f(m['weeklySpearman'])} | {_f(m['top50Precision'])} | {_f(m['startSitAccuracy'])} | {gate} |")
 
     lines += ["", "## Skater statistics", "",
               "Selection metric is validation weekly RMSE of the statistic (player-week sums).", "",
@@ -102,6 +130,27 @@ def render_markdown(report: dict[str, Any]) -> str:
                   "| Model weight | Weekly MAE | Weekly RMSE | Start/sit | Top-50 |", "|---|---|---|---|---|"]
         for weight, m in blend["validation"].items():
             lines.append(f"| {weight} | {_f(m['mae'])} | {_f(m['rmse'])} | {_f(m['startSitAccuracy'])} | {_f(m['top50Precision'])} |")
+
+    nn = skater.get("neural")
+    if nn:
+        mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
+        lines += ["", "## BenchBoss AI (neural network)", "",
+                  f"Gate basis: {'week-start backtest' if nn.get('gateBasis') == 'weekStart' else 'per-game backtest'}. Best epoch {nn['bestEpoch']} (early stopping on validation); ensemble model weight {nn['modelWeight']} vs the production baseline. "
+                  f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_AI=1`.", "",
+                  f"Rule: {nn['rule']}", "",
+                  "| Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |", "|---|---|---|---|---|---|---|---|"]
+        for name, g in nn["gate"].items():
+            c = g["checks"]
+            lines.append(f"| {name} | {mark(g['passed'])} | {mark(c['weeklyMaeImproves'])} | {mark(c['weeklyRmseImproves'])} | {mark(c['startSitNotWorse'])} | "
+                         f"{mark(c['top50NotWorse'])} | {mark(c['FMaeNotWorse'])} | {mark(c['DMaeNotWorse'])} |")
+        if nn.get("daily"):
+            lines += ["", "Daily (single-game) accuracy, per-game features as at puck drop. Poisson deviance is summed over the six stats; lower is better:", "",
+                      "| Split | Projection | Poisson deviance | FP MAE | FP ρ |", "|---|---|---|---|---|"]
+            for split_name, result in nn["daily"].items():
+                for label, m in result.items():
+                    lines.append(f"| {split_name} | {LABELS.get(label, label)} | {_f(m['poissonDevianceSum'], 4)} | {_f(m['fpMae'], 4)} | {_f(m['fpSpearman'])} |")
+        lines += ["", "Stack weights with BenchBoss AI as a component (validation NNLS):", ""]
+        lines += [f"- {t}: " + ", ".join(f"{'BenchBoss AI' if n == 'neural' else n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
 
     xg = report.get("xg") or {}
     if xg.get("available"):
