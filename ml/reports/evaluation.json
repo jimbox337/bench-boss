@@ -2,7 +2,7 @@
   "modelVersion": "bench-boss-lgbm-20261106",
   "pipelineVersion": "2026.11.0",
   "featureSchemaVersion": 1,
-  "trainedAt": "2026-11-06T04:49:47.758996+00:00",
+  "trainedAt": "2026-11-06T04:57:15.364453+00:00",
   "dataThrough": "2026-11-04",
   "split": {
     "train": [
@@ -28,20 +28,18 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "baseline": 0.23231619325634878,
-          "shrunk": 0.5344242391513748,
-          "direct": 0.15117351338461876,
-          "residualShrunk": 0.08794634179549014
+          "shrunk": 0.043511463634924384,
+          "direct": 1.0179559513946586
         },
-        "dispersion": 0.02748893063559543,
+        "dispersion": 0.0,
         "validationWeeklyRmse": {
-          "direct": 0.6858371475810325,
-          "residual": 0.6760378845501723,
-          "residualShrunk": 0.6647583529687267,
-          "residualXg": 0.6652437178758719,
-          "stack": 0.6622040093940275,
-          "baseline": 0.677924327209692,
-          "shrunk": 0.6633437367984428
+          "direct": 0.6924272338858336,
+          "residual": 0.7508477131403062,
+          "residualShrunk": 0.7114443226803557,
+          "residualXg": 0.7113846242217439,
+          "stack": 0.6914038977567967,
+          "baseline": 0.7582112479274472,
+          "shrunk": 0.7154719813692973
         },
         "shrinkK": 2.0,
         "priorWeight": 0.35,
@@ -163,17 +161,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.31450727830917125,
+                "selectedMae": 0.31543374959422843,
                 "baselineMae": 0.312176126691168,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 0.12936720911628455,
+                "selectedMae": 0.128356275822699,
                 "baselineMae": 0.12905077955427643,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 0.343006889126825,
+                "selectedMae": 0.34170779456163,
                 "baselineMae": 0.3440314466040269,
                 "n": 16163
               }
@@ -246,17 +244,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.3138896773034893,
+                "selectedMae": 0.3126138938763374,
                 "baselineMae": 0.3133632778750192,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.13682526860331992,
+                "selectedMae": 0.13333304191459316,
                 "baselineMae": 0.13741381072260128,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 0.3489352107338875,
+                "selectedMae": 0.3457070878009183,
                 "baselineMae": 0.3496504892621738,
                 "n": 15889
               }
@@ -329,17 +327,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.3250559173170209,
+                "selectedMae": 0.3275756744554296,
                 "baselineMae": 0.32133054498692276,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.13816586315037993,
+                "selectedMae": 0.1363206208695359,
                 "baselineMae": 0.14057493915414485,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 0.35916930825134624,
+                "selectedMae": 0.3568303165706425,
                 "baselineMae": 0.3635103633957649,
                 "n": 3052
               }
@@ -351,20 +349,18 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "baseline": 0.24451183737518956,
-          "shrunk": 0.11073674439568923,
-          "direct": 0.12343905002641127,
-          "residualShrunk": 0.5480804096715921
+          "direct": 0.968252347604674,
+          "residualShrunk": 0.08773728640541331
         },
-        "dispersion": 0.041455711928623205,
+        "dispersion": 0.0,
         "validationWeeklyRmse": {
-          "direct": 0.8933177744304561,
-          "residual": 0.8798039540768499,
-          "residualShrunk": 0.8642422564077508,
-          "residualXg": 0.8646709780607817,
-          "stack": 0.861307453035945,
-          "baseline": 0.8831265525039543,
-          "shrunk": 0.8641522699610045
+          "direct": 0.9024082605769178,
+          "residual": 0.9733789455811731,
+          "residualShrunk": 0.9241464639626716,
+          "residualXg": 0.9240096510261644,
+          "stack": 0.900643354863128,
+          "baseline": 0.9862840972083186,
+          "shrunk": 0.9313179718948478
         },
         "shrinkK": 2.0,
         "priorWeight": 0.35,
@@ -486,17 +482,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.40269523745977076,
+                "selectedMae": 0.4037864189289839,
                 "baselineMae": 0.4018798066074103,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 0.374306024008961,
+                "selectedMae": 0.372883452814841,
                 "baselineMae": 0.3763728040555529,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 0.397534203063173,
+                "selectedMae": 0.3991807746307699,
                 "baselineMae": 0.3986141590376441,
                 "n": 16163
               }
@@ -569,17 +565,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.40670166086125736,
+                "selectedMae": 0.40306894072951466,
                 "baselineMae": 0.40937301474641297,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.3785846204628862,
+                "selectedMae": 0.3774009213231854,
                 "baselineMae": 0.38103638090067515,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 0.4041576690244645,
+                "selectedMae": 0.40507940339891146,
                 "baselineMae": 0.40633701509346193,
                 "n": 15889
               }
@@ -652,17 +648,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.42716653567905366,
+                "selectedMae": 0.42152855252607174,
                 "baselineMae": 0.43533736134022727,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.3747692675218779,
+                "selectedMae": 0.37856523944699605,
                 "baselineMae": 0.37738817144054765,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 0.41024100878301795,
+                "selectedMae": 0.4131575952612792,
                 "baselineMae": 0.41108543411254844,
                 "n": 3052
               }
@@ -674,20 +670,18 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "shrunk": 0.36752475644577826,
-          "direct": 0.10259558454757735,
-          "residual": 0.11739622783005417,
-          "residualShrunk": 0.4075546993001053
+          "shrunk": 0.08754648377963638,
+          "direct": 0.9180075750725322
         },
-        "dispersion": 0.06868759043756448,
+        "dispersion": 0.058345800148548295,
         "validationWeeklyRmse": {
-          "direct": 2.2317615225645544,
-          "residual": 2.2153333253677268,
-          "residualShrunk": 2.168776075968391,
-          "residualXg": 2.1886581493756716,
-          "stack": 2.1661248664692137,
-          "baseline": 2.218935573347082,
-          "shrunk": 2.1751300953051462
+          "direct": 2.2974139032995504,
+          "residual": 2.4609823644238844,
+          "residualShrunk": 2.3623903168642486,
+          "residualXg": 2.342641392097233,
+          "stack": 2.2962312203422326,
+          "baseline": 2.472179439726614,
+          "shrunk": 2.3796574263712804
         },
         "shrinkK": 2.0,
         "priorWeight": 0.2,
@@ -809,17 +803,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 1.0513037192285155,
+                "selectedMae": 1.042269278438472,
                 "baselineMae": 1.0725353927852412,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 0.9322980542648412,
+                "selectedMae": 0.9187437936567346,
                 "baselineMae": 0.9539966565590606,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 1.108376372053472,
+                "selectedMae": 1.1007428253946596,
                 "baselineMae": 1.1281956159788462,
                 "n": 16163
               }
@@ -892,17 +886,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 1.052563479303205,
+                "selectedMae": 1.0385008111632876,
                 "baselineMae": 1.073701707889043,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.910060884364867,
+                "selectedMae": 0.9000439210111804,
                 "baselineMae": 0.9289535302978771,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 1.1042549822392236,
+                "selectedMae": 1.0915747290684115,
                 "baselineMae": 1.130473810138156,
                 "n": 15889
               }
@@ -975,17 +969,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 1.059625251334624,
+                "selectedMae": 1.0407928906725572,
                 "baselineMae": 1.122764840562912,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.9132134186492958,
+                "selectedMae": 0.8949002180361509,
                 "baselineMae": 0.9602601013757279,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 1.0875708434938938,
+                "selectedMae": 1.0718057849530005,
                 "baselineMae": 1.1556123775151248,
                 "n": 3052
               }
@@ -997,20 +991,18 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "baseline": 0.137036892654488,
-          "shrunk": 0.33184204774884524,
-          "direct": 0.19940405517343607,
-          "residualShrunk": 0.3471177885713028
+          "shrunk": 0.1623838925459001,
+          "direct": 0.8678653111057083
         },
-        "dispersion": 0.001962822868578571,
+        "dispersion": 0.006061316979340398,
         "validationWeeklyRmse": {
-          "direct": 0.5139696822629616,
-          "residual": 0.5040019396119203,
-          "residualShrunk": 0.4956886952684677,
-          "residualXg": 0.49584265897267243,
-          "stack": 0.49440812794803596,
-          "baseline": 0.5064136862517955,
-          "shrunk": 0.49621091760429153
+          "direct": 0.5214384130846084,
+          "residual": 0.5517906659616033,
+          "residualShrunk": 0.5381186244971169,
+          "residualXg": 0.538346989529607,
+          "stack": 0.5203447912075496,
+          "baseline": 0.5621965248440532,
+          "shrunk": 0.5419746811572667
         },
         "shrinkK": 2.0,
         "priorWeight": 0.2,
@@ -1132,17 +1124,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.1755774504675059,
+                "selectedMae": 0.17487891765180386,
                 "baselineMae": 0.17455532207117724,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 0.09791149175282256,
+                "selectedMae": 0.09760186336138366,
                 "baselineMae": 0.09685517859045442,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 0.18165607826262944,
+                "selectedMae": 0.18085392263505776,
                 "baselineMae": 0.18285898709744902,
                 "n": 16163
               }
@@ -1215,17 +1207,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.17477425272802005,
+                "selectedMae": 0.17214466881610133,
                 "baselineMae": 0.17601341294429443,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.09780678880800092,
+                "selectedMae": 0.09765334292138551,
                 "baselineMae": 0.09689007424721591,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 0.19098835309944592,
+                "selectedMae": 0.18901586488989977,
                 "baselineMae": 0.19441881471850272,
                 "n": 15889
               }
@@ -1298,17 +1290,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.19244119315754335,
+                "selectedMae": 0.193470465546641,
                 "baselineMae": 0.1889555806816779,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.10441795530221766,
+                "selectedMae": 0.10533689764252287,
                 "baselineMae": 0.10311948314993581,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 0.222011771879119,
+                "selectedMae": 0.21988977447262556,
                 "baselineMae": 0.22498256137213968,
                 "n": 3052
               }
@@ -1320,19 +1312,19 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "baseline": 0.22552448064277375,
-          "direct": 0.1577779940600511,
-          "residualShrunk": 0.6042965004510347
+          "baseline": 0.058593582637229955,
+          "direct": 0.7301079584275763,
+          "residualShrunk": 0.18583564018165696
         },
-        "dispersion": 0.1237921513245405,
+        "dispersion": 0.12174963528776225,
         "validationWeeklyRmse": {
-          "direct": 2.060742242073315,
-          "residual": 2.0241588556241346,
-          "residualShrunk": 1.9996160247430383,
-          "residualXg": 2.0021268871513187,
-          "stack": 1.9913757629355098,
-          "baseline": 2.0271222786946366,
-          "shrunk": 2.004879129988907
+          "direct": 2.179862773264432,
+          "residual": 2.267268942371659,
+          "residualShrunk": 2.2380435584257614,
+          "residualXg": 2.2418429823729706,
+          "stack": 2.171590918466933,
+          "baseline": 2.267628394785267,
+          "shrunk": 2.240670459730459
         },
         "shrinkK": 2.0,
         "priorWeight": 0.0,
@@ -1454,17 +1446,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.890520997068361,
+                "selectedMae": 0.8867844678351432,
                 "baselineMae": 0.8979832404982289,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 0.8725657245102819,
+                "selectedMae": 0.8782790322558088,
                 "baselineMae": 0.8741072901704924,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 0.9441493343230387,
+                "selectedMae": 0.9382829333891741,
                 "baselineMae": 0.9542301026584876,
                 "n": 16163
               }
@@ -1537,17 +1529,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.8648677674022219,
+                "selectedMae": 0.8619338254014024,
                 "baselineMae": 0.8718215114923665,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.804956998489476,
+                "selectedMae": 0.8068457382021363,
                 "baselineMae": 0.8077749386469103,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 0.9149808793894934,
+                "selectedMae": 0.910583205510173,
                 "baselineMae": 0.9279794295004316,
                 "n": 15889
               }
@@ -1620,17 +1612,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.9408729378828496,
+                "selectedMae": 0.927990849106844,
                 "baselineMae": 0.9856700565880095,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.8323543904414382,
+                "selectedMae": 0.8221150718867694,
                 "baselineMae": 0.854562127522088,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 0.9765690946372511,
+                "selectedMae": 0.9577900705327229,
                 "baselineMae": 1.0254110508421606,
                 "n": 3052
               }
@@ -1642,19 +1634,18 @@
         "selected": "stack",
         "selectedIncludingXg": "stack",
         "stackWeights": {
-          "direct": 0.15728605530417367,
-          "residual": 0.13299576820279246,
-          "residualShrunk": 0.6776928843654767
+          "direct": 0.9197949896019217,
+          "residualShrunk": 0.047351977751015475
         },
-        "dispersion": 0.11074029477227786,
+        "dispersion": 0.09544827115988186,
         "validationWeeklyRmse": {
-          "direct": 1.6217762997731382,
-          "residual": 1.615742059232088,
-          "residualShrunk": 1.5804610946512014,
-          "residualXg": 1.5814575849073995,
-          "stack": 1.5749023512590525,
-          "baseline": 1.6183321581246053,
-          "shrunk": 1.5795032890544218
+          "direct": 1.6703457753931064,
+          "residual": 1.8051586398176394,
+          "residualShrunk": 1.7291078602401146,
+          "residualXg": 1.7313262949631154,
+          "stack": 1.6673096621232104,
+          "baseline": 1.8076388696384602,
+          "shrunk": 1.7265605690419432
         },
         "shrinkK": 2.0,
         "priorWeight": 0.2,
@@ -1776,17 +1767,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.6479597627970003,
+                "selectedMae": 0.6473075217549195,
                 "baselineMae": 0.6544723031844841,
                 "n": 15177
               },
               "D": {
-                "selectedMae": 1.0078082543845606,
+                "selectedMae": 1.0035836317434939,
                 "baselineMae": 1.0331308733571378,
                 "n": 15884
               },
               "W": {
-                "selectedMae": 0.5852881852869016,
+                "selectedMae": 0.5863057186670713,
                 "baselineMae": 0.5891287074614106,
                 "n": 16163
               }
@@ -1859,17 +1850,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.622228531576646,
+                "selectedMae": 0.6257610460714389,
                 "baselineMae": 0.6280184022476734,
                 "n": 15480
               },
               "D": {
-                "selectedMae": 0.9724728189223314,
+                "selectedMae": 0.9727809924386496,
                 "baselineMae": 0.9904167942309581,
                 "n": 15861
               },
               "W": {
-                "selectedMae": 0.5694977860409582,
+                "selectedMae": 0.5744134840190369,
                 "baselineMae": 0.5708830867345057,
                 "n": 15889
               }
@@ -1942,17 +1933,17 @@
             },
             "byPosition": {
               "C": {
-                "selectedMae": 0.6183564593849568,
+                "selectedMae": 0.6222740541622624,
                 "baselineMae": 0.6326274373175066,
                 "n": 2902
               },
               "D": {
-                "selectedMae": 0.9742376459207798,
+                "selectedMae": 0.9601862688859758,
                 "baselineMae": 1.0420040633666647,
                 "n": 3045
               },
               "W": {
-                "selectedMae": 0.5524830363695827,
+                "selectedMae": 0.5576420480876364,
                 "baselineMae": 0.560691209196529,
                 "n": 3052
               }
@@ -1964,57 +1955,45 @@
     "calibration": {
       "validation": {
         "anyGoal_selected": {
-          "brier": 0.12012425372645721,
-          "logLoss": 0.39546519436876587,
-          "ece": 0.014961111945981487,
+          "brier": 0.11803130088021539,
+          "logLoss": 0.386328727267825,
+          "ece": 0.003977042568911081,
           "n": 47224,
           "reliability": [
             {
               "bin": "0.0-0.1",
-              "n": 19749,
-              "predicted": 0.0523,
-              "observed": 0.0716
+              "n": 18043,
+              "predicted": 0.0601,
+              "observed": 0.058
             },
             {
               "bin": "0.1-0.2",
-              "n": 14115,
-              "predicted": 0.1461,
-              "observed": 0.148
+              "n": 16479,
+              "predicted": 0.1427,
+              "observed": 0.1473
             },
             {
               "bin": "0.2-0.3",
-              "n": 8497,
-              "predicted": 0.2449,
-              "observed": 0.2363
+              "n": 8709,
+              "predicted": 0.2446,
+              "observed": 0.2504
             },
             {
               "bin": "0.3-0.4",
-              "n": 3818,
-              "predicted": 0.3416,
-              "observed": 0.3072
+              "n": 3516,
+              "predicted": 0.339,
+              "observed": 0.3427
             },
             {
               "bin": "0.4-0.5",
-              "n": 956,
-              "predicted": 0.4344,
-              "observed": 0.3577
+              "n": 475,
+              "predicted": 0.4285,
+              "observed": 0.4084
             },
             {
               "bin": "0.5-0.6",
-              "n": 73,
-              "predicted": 0.5289,
-              "observed": 0.3151
-            },
-            {
-              "bin": "0.6-0.7",
-              "n": 12,
-              "predicted": 0.6301,
-              "observed": 0.25
-            },
-            {
-              "bin": "0.7-0.8",
-              "n": 4,
-              "predicted": 0.7361,
+              "n": 2,
+              "predicted": 0.5109,
               "observed": 0.5
             }
           ]
@@ -2090,58 +2069,46 @@
       },
       "test": {
         "anyGoal_selected": {
-          "brier": 0.12208622643123947,
-          "logLoss": 0.4012659827045213,
-          "ece": 0.017766835517921034,
+          "brier": 0.11976632136065359,
+          "logLoss": 0.39155451837694943,
+          "ece": 0.0061669583254643535,
           "n": 47230,
           "reliability": [
             {
               "bin": "0.0-0.1",
-              "n": 19190,
-              "predicted": 0.0524,
-              "observed": 0.0738
+              "n": 18652,
+              "predicted": 0.0614,
+              "observed": 0.0635
             },
             {
               "bin": "0.1-0.2",
-              "n": 14822,
-              "predicted": 0.1459,
-              "observed": 0.1526
+              "n": 16191,
+              "predicted": 0.1434,
+              "observed": 0.15
             },
             {
               "bin": "0.2-0.3",
-              "n": 8316,
-              "predicted": 0.2443,
-              "observed": 0.2292
+              "n": 8623,
+              "predicted": 0.2446,
+              "observed": 0.2526
             },
             {
               "bin": "0.3-0.4",
-              "n": 3788,
-              "predicted": 0.3425,
-              "observed": 0.3139
+              "n": 3388,
+              "predicted": 0.3395,
+              "observed": 0.361
             },
             {
               "bin": "0.4-0.5",
-              "n": 1029,
-              "predicted": 0.4342,
-              "observed": 0.3547
+              "n": 371,
+              "predicted": 0.4218,
+              "observed": 0.4151
             },
             {
               "bin": "0.5-0.6",
-              "n": 77,
-              "predicted": 0.5292,
-              "observed": 0.3766
-            },
-            {
-              "bin": "0.6-0.7",
-              "n": 6,
-              "predicted": 0.6396,
-              "observed": 0.3333
-            },
-            {
-              "bin": "0.7-0.8",
-              "n": 2,
-              "predicted": 0.7439,
-              "observed": 0.5
+              "n": 5,
+              "predicted": 0.5191,
+              "observed": 0.4
             }
           ]
         },
@@ -2216,58 +2183,46 @@
       },
       "live": {
         "anyGoal_selected": {
-          "brier": 0.12539474133767325,
-          "logLoss": 0.41081922638013435,
-          "ece": 0.03501516086208393,
+          "brier": 0.12103852975271419,
+          "logLoss": 0.39511184036200625,
+          "ece": 0.0071453814829007915,
           "n": 8999,
           "reliability": [
             {
               "bin": "0.0-0.1",
-              "n": 3741,
-              "predicted": 0.0486,
-              "observed": 0.0797
+              "n": 3303,
+              "predicted": 0.0597,
+              "observed": 0.0609
             },
             {
               "bin": "0.1-0.2",
-              "n": 2697,
-              "predicted": 0.1476,
-              "observed": 0.1676
+              "n": 3207,
+              "predicted": 0.1471,
+              "observed": 0.1562
             },
             {
               "bin": "0.2-0.3",
-              "n": 1520,
-              "predicted": 0.2425,
-              "observed": 0.2059
+              "n": 1677,
+              "predicted": 0.2455,
+              "observed": 0.2314
             },
             {
               "bin": "0.3-0.4",
-              "n": 692,
-              "predicted": 0.3468,
-              "observed": 0.2861
+              "n": 680,
+              "predicted": 0.3422,
+              "observed": 0.3441
             },
             {
               "bin": "0.4-0.5",
-              "n": 281,
-              "predicted": 0.4354,
-              "observed": 0.3132
+              "n": 131,
+              "predicted": 0.4243,
+              "observed": 0.3817
             },
             {
               "bin": "0.5-0.6",
-              "n": 58,
-              "predicted": 0.541,
-              "observed": 0.3793
-            },
-            {
-              "bin": "0.6-0.7",
-              "n": 9,
-              "predicted": 0.6247,
-              "observed": 0.2222
-            },
-            {
-              "bin": "0.7-0.8",
               "n": 1,
-              "predicted": 0.7134,
-              "observed": 1.0
+              "predicted": 0.5496,
+              "observed": 0.0
             }
           ]
         },
@@ -2342,46 +2297,46 @@
       }
     },
     "blend": {
-      "chosenModelWeight": 0.75,
+      "chosenModelWeight": 1.0,
       "validation": {
         "1.0": {
-          "mae": 1.5451993872082208,
-          "rmse": 2.07917658325721,
-          "startSitAccuracy": 0.7610092170188996,
-          "top50Precision": 0.4474074074074075
+          "mae": 1.6273229466948058,
+          "rmse": 2.191090719985675,
+          "startSitAccuracy": 0.7381063215715483,
+          "top50Precision": 0.4037037037037038
         },
         "0.75": {
-          "mae": 1.5454738150821568,
-          "rmse": 2.0813254910023486,
-          "startSitAccuracy": 0.7615678242249325,
-          "top50Precision": 0.44814814814814813
+          "mae": 1.6375243343698653,
+          "rmse": 2.205100768356423,
+          "startSitAccuracy": 0.7389442323805977,
+          "top50Precision": 0.4059259259259259
         },
         "0.5": {
-          "mae": 1.5510020424855988,
-          "rmse": 2.090380663176925,
-          "startSitAccuracy": 0.7617540266269435,
-          "top50Precision": 0.44592592592592595
+          "mae": 1.6628744405451077,
+          "rmse": 2.242428945143309,
+          "startSitAccuracy": 0.7354994879433945,
+          "top50Precision": 0.39925925925925915
         }
       }
     },
     "weekly": {
       "validation": {
         "benchBossSelected": {
-          "mae": 1.5454738150821568,
-          "rmse": 2.0813254910023486,
-          "spearman": 0.7282940908741422,
-          "bias": 0.0041595515801628735,
+          "mae": 1.5900605337649782,
+          "rmse": 2.13817528763422,
+          "spearman": 0.7122907335410363,
+          "bias": -0.020535852584395234,
           "n": 16914,
-          "weeklySpearman": 0.7052634666629084,
-          "top50Precision": 0.44814814814814813,
-          "startSitAccuracy": 0.7615678242249325,
+          "weeklySpearman": 0.6894689670333612,
+          "top50Precision": 0.42222222222222217,
+          "startSitAccuracy": 0.7480681500791361,
           "startSitPairs": 10741,
           "weeks": 27,
           "byPositionMae": {
-            "D": 1.3510115510929148,
-            "F": 1.6467438594110266
+            "D": 1.3801618017725088,
+            "F": 1.6993694220674762
           },
-          "interval80Coverage": 0.7999881754759371
+          "interval80Coverage": 0.8103346340309803
         },
         "directModelOnly": {
           "mae": 1.5932856840337883,
@@ -2448,19 +2403,19 @@
           }
         },
         "withXgOffline": {
-          "mae": 1.5451993872082208,
-          "rmse": 2.07917658325721,
-          "spearman": 0.7288693768558445,
-          "bias": -0.005556639242870377,
+          "mae": 1.5900605337649782,
+          "rmse": 2.13817528763422,
+          "spearman": 0.7122907335410363,
+          "bias": -0.020535852584395234,
           "n": 16914,
-          "weeklySpearman": 0.705971004482553,
-          "top50Precision": 0.4474074074074075,
-          "startSitAccuracy": 0.7610092170188996,
+          "weeklySpearman": 0.6894689670333612,
+          "top50Precision": 0.42222222222222217,
+          "startSitAccuracy": 0.7480681500791361,
           "startSitPairs": 10741,
           "weeks": 27,
           "byPositionMae": {
-            "D": 1.3488812086185447,
-            "F": 1.6474359355260955
+            "D": 1.3801618017725088,
+            "F": 1.6993694220674762
           }
         },
         "productionBaseline": {
@@ -2512,39 +2467,39 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.545447587476683,
-          "rmse": 2.081275770412868,
-          "spearman": 0.7283149030173092,
-          "bias": 0.00423159430123484,
+          "mae": 1.5920570231336142,
+          "rmse": 2.13956287395096,
+          "spearman": 0.7117556148664357,
+          "bias": -0.009633663724871743,
           "n": 16914,
-          "weeklySpearman": 0.7052935529824406,
-          "top50Precision": 0.44814814814814813,
-          "startSitAccuracy": 0.761474723023927,
+          "weeklySpearman": 0.6888416660611051,
+          "top50Precision": 0.42666666666666664,
+          "startSitAccuracy": 0.7485336560841634,
           "startSitPairs": 10741,
           "weeks": 27,
           "byPositionMae": {
-            "D": 1.3509909597860283,
-            "F": 1.6467146965923343
+            "D": 1.3836773885569749,
+            "F": 1.700574811613015
           }
         }
       },
       "test": {
         "benchBossSelected": {
-          "mae": 1.5737106160906533,
-          "rmse": 2.1226830621770407,
-          "spearman": 0.7335967406160211,
-          "bias": 0.0005811566027897429,
+          "mae": 1.6112711934049242,
+          "rmse": 2.181374060663754,
+          "spearman": 0.719312913600663,
+          "bias": -0.04733852343510181,
           "n": 16432,
-          "weeklySpearman": 0.7139540863944481,
-          "top50Precision": 0.46615384615384614,
-          "startSitAccuracy": 0.7614375910636231,
+          "weeklySpearman": 0.6981146549592394,
+          "top50Precision": 0.44769230769230767,
+          "startSitAccuracy": 0.7573579407479359,
           "startSitPairs": 10295,
           "weeks": 26,
           "byPositionMae": {
-            "D": 1.3760426935202392,
-            "F": 1.6751842761023947
+            "D": 1.4107727903739327,
+            "F": 1.7141978924742505
           },
-          "interval80Coverage": 0.7984420642648491
+          "interval80Coverage": 0.8051363193768257
         },
         "directModelOnly": {
           "mae": 1.6154553481124099,
@@ -2611,19 +2566,19 @@
           }
         },
         "withXgOffline": {
-          "mae": 1.5718259066746372,
-          "rmse": 2.119873533219673,
-          "spearman": 0.7342243406517791,
-          "bias": -0.012627349788444738,
+          "mae": 1.6112711934049242,
+          "rmse": 2.181374060663754,
+          "spearman": 0.719312913600663,
+          "bias": -0.04733852343510181,
           "n": 16432,
-          "weeklySpearman": 0.7142720197457321,
-          "top50Precision": 0.46615384615384614,
-          "startSitAccuracy": 0.7636716852841186,
+          "weeklySpearman": 0.6981146549592394,
+          "top50Precision": 0.44769230769230767,
+          "startSitAccuracy": 0.7573579407479359,
           "startSitPairs": 10295,
           "weeks": 26,
           "byPositionMae": {
-            "D": 1.3723072239587055,
-            "F": 1.6742496621967045
+            "D": 1.4107727903739327,
+            "F": 1.7141978924742505
           }
         },
         "productionBaseline": {
@@ -2675,39 +2630,39 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.5736556494870506,
-          "rmse": 2.1226034105836744,
-          "spearman": 0.7336290047248388,
-          "bias": 0.0006026923377261165,
+          "mae": 1.6109297679908456,
+          "rmse": 2.1821023978622662,
+          "spearman": 0.7187916204477205,
+          "bias": -0.04894511095340217,
           "n": 16432,
-          "weeklySpearman": 0.713983387469538,
-          "top50Precision": 0.4646153846153846,
-          "startSitAccuracy": 0.7618261291889267,
+          "weeklySpearman": 0.697396758775316,
+          "top50Precision": 0.44461538461538463,
+          "startSitAccuracy": 0.7566779990286547,
           "startSitPairs": 10295,
           "weeks": 26,
           "byPositionMae": {
-            "D": 1.3759701885309654,
-            "F": 1.6751383129028932
+            "D": 1.4097861544118773,
+            "F": 1.7141876886105887
           }
         }
       },
       "live": {
         "benchBossSelected": {
-          "mae": 1.4247325823042083,
-          "rmse": 1.998330642974841,
-          "spearman": 0.7353865109359028,
-          "bias": -0.04791956152502142,
+          "mae": 1.4837979714544556,
+          "rmse": 2.0539999476593374,
+          "spearman": 0.7119042504159541,
+          "bias": -0.06877846836853412,
           "n": 3703,
-          "weeklySpearman": 0.68122378661205,
-          "top50Precision": 0.49,
-          "startSitAccuracy": 0.7719594594594594,
+          "weeklySpearman": 0.6541203158794159,
+          "top50Precision": 0.4633333333333333,
+          "startSitAccuracy": 0.762668918918919,
           "startSitPairs": 2368,
           "weeks": 6,
           "byPositionMae": {
-            "D": 1.1657383641934556,
-            "F": 1.5604114463597591
+            "D": 1.2227375912073641,
+            "F": 1.6205592323822524
           },
-          "interval80Coverage": 0.8123143397245477
+          "interval80Coverage": 0.8214960842560086
         },
         "directModelOnly": {
           "mae": 1.48855874933398,
@@ -2774,19 +2729,19 @@
           }
         },
         "withXgOffline": {
-          "mae": 1.4297281367456747,
-          "rmse": 1.9929838501518167,
-          "spearman": 0.733477492910671,
-          "bias": -0.06069513958267943,
+          "mae": 1.4837979714544556,
+          "rmse": 2.0539999476593374,
+          "spearman": 0.7119042504159541,
+          "bias": -0.06877846836853412,
           "n": 3703,
-          "weeklySpearman": 0.6789938144762894,
-          "top50Precision": 0.48333333333333334,
-          "startSitAccuracy": 0.769847972972973,
+          "weeklySpearman": 0.6541203158794159,
+          "top50Precision": 0.4633333333333333,
+          "startSitAccuracy": 0.762668918918919,
           "startSitPairs": 2368,
           "weeks": 6,
           "byPositionMae": {
-            "D": 1.1707894115816022,
-            "F": 1.5653779298048782
+            "D": 1.2227375912073641,
+            "F": 1.6205592323822524
           }
         },
         "productionBaseline": {
@@ -2838,40 +2793,40 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.424682831123042,
-          "rmse": 1.9983980284261922,
-          "spearman": 0.7353808921472936,
-          "bias": -0.04770739442951079,
+          "mae": 1.4840580555715543,
+          "rmse": 2.0557624567019626,
+          "spearman": 0.7099572238211903,
+          "bias": -0.07990643685469548,
           "n": 3703,
-          "weeklySpearman": 0.681329305266634,
-          "top50Precision": 0.49,
-          "startSitAccuracy": 0.7715371621621622,
+          "weeklySpearman": 0.6517738154728766,
+          "top50Precision": 0.45999999999999996,
+          "startSitAccuracy": 0.7609797297297297,
           "startSitPairs": 2368,
           "weeks": 6,
           "byPositionMae": {
-            "D": 1.1658403740694345,
-            "F": 1.5602821923696435
+            "D": 1.2247993331007754,
+            "F": 1.619875485079909
           }
         }
       }
     },
     "gate": {
       "validation": {
-        "passed": true,
+        "passed": false,
         "checks": {
-          "weeklyMaeImproves": true,
-          "weeklyRmseImproves": true,
-          "startSitNotWorse": true,
-          "top50NotWorse": true
+          "weeklyMaeImproves": false,
+          "weeklyRmseImproves": false,
+          "startSitNotWorse": false,
+          "top50NotWorse": false
         }
       },
       "test": {
-        "passed": true,
+        "passed": false,
         "checks": {
-          "weeklyMaeImproves": true,
-          "weeklyRmseImproves": true,
+          "weeklyMaeImproves": false,
+          "weeklyRmseImproves": false,
           "startSitNotWorse": true,
-          "top50NotWorse": true
+          "top50NotWorse": false
         }
       },
       "live": {
@@ -2887,20 +2842,21 @@
     "weeklyWeekStart": {
       "validation": {
         "benchBossSelected": {
-          "mae": 1.6817495278358323,
-          "rmse": 2.2716984290162587,
-          "spearman": 0.6745619345340292,
-          "bias": -0.0030659134379903163,
+          "mae": 1.6273229466948058,
+          "rmse": 2.191090719985675,
+          "spearman": 0.6953202740953437,
+          "bias": -0.030277198351144372,
           "n": 16914,
-          "weeklySpearman": 0.6502688175684562,
-          "top50Precision": 0.3896296296296296,
-          "startSitAccuracy": 0.7349408807373615,
+          "weeklySpearman": 0.6717523798554441,
+          "top50Precision": 0.4037037037037038,
+          "startSitAccuracy": 0.7381063215715483,
           "startSitPairs": 10741,
           "weeks": 27,
           "byPositionMae": {
-            "D": 1.467204770267525,
-            "F": 1.793477925231592
-          }
+            "D": 1.4172168300064143,
+            "F": 1.7367398346519325
+          },
+          "interval80Coverage": 0.7999881754759371
         },
         "shrunkBaselineOnly": {
           "mae": 1.6832501703591491,
@@ -2951,38 +2907,39 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.6815943147506311,
-          "rmse": 2.2715181426587865,
-          "spearman": 0.6746159579602842,
-          "bias": -0.003420960040222702,
+          "mae": 1.626810381673326,
+          "rmse": 2.189768601604954,
+          "spearman": 0.6958217297008924,
+          "bias": -0.028465674697582287,
           "n": 16914,
-          "weeklySpearman": 0.6503222390668653,
-          "top50Precision": 0.3888888888888889,
-          "startSitAccuracy": 0.7347546783353506,
+          "weeklySpearman": 0.6720903481277967,
+          "top50Precision": 0.4103703703703704,
+          "startSitAccuracy": 0.7395028395866307,
           "startSitPairs": 10741,
           "weeks": 27,
           "byPositionMae": {
-            "D": 1.46702233555408,
-            "F": 1.793336888344088
+            "D": 1.4180508104503502,
+            "F": 1.7355260296254458
           }
         }
       },
       "test": {
         "benchBossSelected": {
-          "mae": 1.7151067186783941,
-          "rmse": 2.3240255370355927,
-          "spearman": 0.6780359655602068,
-          "bias": -0.0036055795914026055,
+          "mae": 1.6507063670858575,
+          "rmse": 2.2376289367619093,
+          "spearman": 0.7018348744847339,
+          "bias": -0.05748442120888896,
           "n": 16432,
-          "weeklySpearman": 0.6549575630482753,
-          "top50Precision": 0.4061538461538462,
-          "startSitAccuracy": 0.7376396308887809,
+          "weeklySpearman": 0.6788892067204905,
+          "top50Precision": 0.4276923076923077,
+          "startSitAccuracy": 0.7481301602719767,
           "startSitPairs": 10295,
           "weeks": 26,
           "byPositionMae": {
-            "D": 1.4963771779784583,
-            "F": 1.8273924490027118
-          }
+            "D": 1.4462935065445688,
+            "F": 1.7556425693935698
+          },
+          "interval80Coverage": 0.7936343719571568
         },
         "shrunkBaselineOnly": {
           "mae": 1.71155295721041,
@@ -3033,38 +2990,39 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.7149285922265185,
-          "rmse": 2.323811444256416,
-          "spearman": 0.6780950915176314,
-          "bias": -0.004003269680785042,
+          "mae": 1.6476513345784694,
+          "rmse": 2.235899593612532,
+          "spearman": 0.7023017104251242,
+          "bias": -0.06839011130125654,
           "n": 16432,
-          "weeklySpearman": 0.6550263833560339,
-          "top50Precision": 0.4061538461538462,
-          "startSitAccuracy": 0.7377367654201068,
+          "weeklySpearman": 0.6793496600450583,
+          "top50Precision": 0.42923076923076925,
+          "startSitAccuracy": 0.7473530840213696,
           "startSitPairs": 10295,
           "weeks": 26,
           "byPositionMae": {
-            "D": 1.496183360571961,
-            "F": 1.8272223775684322
+            "D": 1.4436004097606014,
+            "F": 1.7524017356592205
           }
         }
       },
       "live": {
         "benchBossSelected": {
-          "mae": 1.6383913305439133,
-          "rmse": 2.3197258266406733,
-          "spearman": 0.6548505647801641,
-          "bias": -0.05577630550627604,
+          "mae": 1.5346502731118075,
+          "rmse": 2.1289530310362696,
+          "spearman": 0.6903898185876065,
+          "bias": -0.07401236907940086,
           "n": 3703,
-          "weeklySpearman": 0.5883701838108129,
-          "top50Precision": 0.37666666666666665,
-          "startSitAccuracy": 0.730152027027027,
+          "weeklySpearman": 0.6293932903054299,
+          "top50Precision": 0.4333333333333333,
+          "startSitAccuracy": 0.7521114864864865,
           "startSitPairs": 2368,
           "weeks": 6,
           "byPositionMae": {
-            "D": 1.350819528301044,
-            "F": 1.7890410853814334
-          }
+            "D": 1.2708356993416248,
+            "F": 1.6728543687535538
+          },
+          "interval80Coverage": 0.8098838779368079
         },
         "shrunkBaselineOnly": {
           "mae": 1.5938000769726093,
@@ -3115,19 +3073,19 @@
           }
         },
         "lightgbmNeuralEnsemble": {
-          "mae": 1.638351863661711,
-          "rmse": 2.3199300901340556,
-          "spearman": 0.6548668428055832,
-          "bias": -0.056205742371265834,
+          "mae": 1.5302599147906077,
+          "rmse": 2.1249157140734467,
+          "spearman": 0.6911041031455596,
+          "bias": -0.09686945126544205,
           "n": 3703,
-          "weeklySpearman": 0.5884060623839339,
-          "top50Precision": 0.37666666666666665,
-          "startSitAccuracy": 0.7297297297297297,
+          "weeklySpearman": 0.629933892916092,
+          "top50Precision": 0.4333333333333333,
+          "startSitAccuracy": 0.7538006756756757,
           "startSitPairs": 2368,
           "weeks": 6,
           "byPositionMae": {
-            "D": 1.3509322463843982,
-            "F": 1.7889218936180977
+            "D": 1.2699122582683295,
+            "F": 1.666647802343225
           }
         }
       }
@@ -3182,86 +3140,79 @@
       ],
       "stackWeights": {
         "goals": {
-          "baseline": 0.23231619325634878,
-          "shrunk": 0.5344242391513748,
-          "direct": 0.15117351338461876,
-          "residualShrunk": 0.08794634179549014
+          "direct": 0.708061033171555,
+          "neural": 0.3623238237406947
         },
         "assists": {
-          "baseline": 0.24977257986585105,
-          "shrunk": 0.09845419143615786,
-          "direct": 0.07350762410056921,
-          "residualShrunk": 0.5432742408420811,
-          "neural": 0.06337850850118375
+          "direct": 0.6237702637335206,
+          "neural": 0.44776572198610415
         },
         "shots": {
-          "shrunk": 0.36752475644577826,
-          "direct": 0.10259558454757735,
-          "residual": 0.11739622783005417,
-          "residualShrunk": 0.4075546993001053
+          "direct": 0.7673634494731962,
+          "neural": 0.2422761200273932
         },
         "ppPoints": {
-          "baseline": 0.137036892654488,
-          "shrunk": 0.33184204774884524,
-          "direct": 0.19940405517343607,
-          "residualShrunk": 0.3471177885713028
+          "shrunk": 0.14577394053468046,
+          "direct": 0.7117273579236094,
+          "neural": 0.18961207195364418
         },
         "hits": {
-          "baseline": 0.22552448064277375,
-          "direct": 0.1577779940600511,
-          "residualShrunk": 0.6042965004510347
+          "baseline": 0.02387186245757158,
+          "direct": 0.3958892025016749,
+          "residual": 0.06976898035108191,
+          "residualShrunk": 0.026431556244795457,
+          "neural": 0.45276265566865154
         },
         "blocks": {
-          "direct": 0.15728605530417367,
-          "residual": 0.13299576820279246,
-          "residualShrunk": 0.6776928843654767
+          "direct": 0.5842451046318335,
+          "neural": 0.38741311142455226
         }
       },
-      "modelWeight": 0.75,
+      "modelWeight": 1.0,
       "validationWeeklyRmse": {
         "goals": {
-          "neural": 0.6842585359096948,
-          "stackWithNeural": 0.6622040093940275
+          "neural": 0.6936091694501986,
+          "stackWithNeural": 0.6911165754273719
         },
         "assists": {
-          "neural": 0.8898340023648075,
-          "stackWithNeural": 0.8612972459900081
+          "neural": 0.9047847638232073,
+          "stackWithNeural": 0.9000775817112414
         },
         "shots": {
-          "neural": 2.212195383751608,
-          "stackWithNeural": 2.1661248664692137
+          "neural": 2.3093212553136304,
+          "stackWithNeural": 2.2956326009064894
         },
         "ppPoints": {
-          "neural": 0.5151738058473783,
-          "stackWithNeural": 0.49440812794803596
+          "neural": 0.5246161727151113,
+          "stackWithNeural": 0.5202519261618604
         },
         "hits": {
-          "neural": 2.043958504749398,
-          "stackWithNeural": 1.9913757629355098
+          "neural": 2.180662067801027,
+          "stackWithNeural": 2.1676882250588365
         },
         "blocks": {
-          "neural": 1.6128419334994417,
-          "stackWithNeural": 1.5749023512590525
+          "neural": 1.6721142814828935,
+          "stackWithNeural": 1.6651724177864267
         }
       },
       "gate": {
         "validation": {
-          "passed": false,
-          "checks": {
-            "weeklyMaeImproves": true,
-            "weeklyRmseImproves": true,
-            "startSitNotWorse": false,
-            "top50NotWorse": false,
-            "FMaeNotWorse": true,
-            "DMaeNotWorse": true
-          }
-        },
-        "test": {
           "passed": true,
           "checks": {
             "weeklyMaeImproves": true,
             "weeklyRmseImproves": true,
             "startSitNotWorse": true,
+            "top50NotWorse": true,
+            "FMaeNotWorse": true,
+            "DMaeNotWorse": true
+          }
+        },
+        "test": {
+          "passed": false,
+          "checks": {
+            "weeklyMaeImproves": true,
+            "weeklyRmseImproves": true,
+            "startSitNotWorse": false,
             "top50NotWorse": true,
             "FMaeNotWorse": true,
             "DMaeNotWorse": true
@@ -3272,9 +3223,9 @@
       "daily": {
         "validation": {
           "benchBossSelected": {
-            "poissonDevianceSum": 5.4174268902710185,
-            "fpMae": 0.9649600340539207,
-            "fpSpearman": 0.3355004527531308
+            "poissonDevianceSum": 5.257072608789707,
+            "fpMae": 0.9533889815646913,
+            "fpSpearman": 0.3575011702878959
           },
           "neuralOnly": {
             "poissonDevianceSum": 5.275282179149877,
@@ -3282,9 +3233,9 @@
             "fpSpearman": 0.3593527814149787
           },
           "lightgbmNeuralEnsemble": {
-            "poissonDevianceSum": 5.417257094500862,
-            "fpMae": 0.9649331319222556,
-            "fpSpearman": 0.33558188985375126
+            "poissonDevianceSum": 5.2543750033373104,
+            "fpMae": 0.9534637626590875,
+            "fpSpearman": 0.3581522873498897
           },
           "productionBaseline": {
             "poissonDevianceSum": 8.140550019572185,
@@ -3294,9 +3245,9 @@
         },
         "test": {
           "benchBossSelected": {
-            "poissonDevianceSum": 5.369234833719146,
-            "fpMae": 0.9679951382833276,
-            "fpSpearman": 0.3248672611372976
+            "poissonDevianceSum": 5.208345256055772,
+            "fpMae": 0.9558632577325842,
+            "fpSpearman": 0.348918218392909
           },
           "neuralOnly": {
             "poissonDevianceSum": 5.231331961140049,
@@ -3304,9 +3255,9 @@
             "fpSpearman": 0.3508828074580146
           },
           "lightgbmNeuralEnsemble": {
-            "poissonDevianceSum": 5.3690738457408544,
-            "fpMae": 0.967967981632401,
-            "fpSpearman": 0.32496340074042407
+            "poissonDevianceSum": 5.204916617169363,
+            "fpMae": 0.9551759696487487,
+            "fpSpearman": 0.34970138197622685
           },
           "productionBaseline": {
             "poissonDevianceSum": 8.072044010928751,
@@ -3316,9 +3267,9 @@
         },
         "live": {
           "benchBossSelected": {
-            "poissonDevianceSum": 5.678017153539506,
-            "fpMae": 1.0171709829491342,
-            "fpSpearman": 0.27667168702156736
+            "poissonDevianceSum": 5.312412157724067,
+            "fpMae": 0.99077154441884,
+            "fpSpearman": 0.32296105138028347
           },
           "neuralOnly": {
             "poissonDevianceSum": 5.332026886674169,
@@ -3326,9 +3277,9 @@
             "fpSpearman": 0.3246384888341384
           },
           "lightgbmNeuralEnsemble": {
-            "poissonDevianceSum": 5.677756692749144,
-            "fpMae": 1.0171850087782892,
-            "fpSpearman": 0.276684995091257
+            "poissonDevianceSum": 5.309396080093809,
+            "fpMae": 0.9885803043298806,
+            "fpSpearman": 0.32381952035221123
           },
           "productionBaseline": {
             "poissonDevianceSum": 15.822756098834782,
@@ -3340,9 +3291,10 @@
       "promoted": false,
       "rule": "The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight."
     },
+    "fitBasis": "weekStart",
     "promotion": {
-      "eligible": true,
-      "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season."
+      "eligible": false,
+      "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season, in both the per-game and the week-start weekly backtests."
     }
   },
   "goalie": {
