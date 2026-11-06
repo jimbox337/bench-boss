@@ -105,14 +105,14 @@ def _torch():
     return torch
 
 
-def build_network(n_in: int, seed: int):
+def build_network(n_in: int, seed: int, dropout: float = DROPOUT):
     torch = _torch()
     nn = torch.nn
     torch.manual_seed(seed)
     layers: list[Any] = []
     width = n_in
     for h in HIDDEN:
-        layers += [nn.Linear(width, h), nn.ReLU(), nn.Dropout(DROPOUT)]
+        layers += [nn.Linear(width, h), nn.ReLU(), nn.Dropout(dropout)]
         width = h
     head = nn.Linear(width, len(SKATER_TARGETS))
     nn.init.zeros_(head.weight)
@@ -146,7 +146,7 @@ def _dense_groups(frame: pd.DataFrame) -> np.ndarray:
 
 
 def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, epochs: int | None = None,
-                  loss: str = "game") -> dict[str, Any]:
+                  loss: str = "game", dropout: float = DROPOUT) -> dict[str, Any]:
     """Fit on `train`; with `valid`, early-stop on its loss. With `epochs`, train exactly that many.
     `loss="week"` fits player-week totals; batches then hold whole player-weeks."""
     torch = _torch()
@@ -154,7 +154,7 @@ def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, ep
     prep = Preprocess.fit(train, NEURAL_FEATURES)
     x, off, y = (torch.from_numpy(a) for a in (prep.transform(train), _offsets(train), _targets(train)))
     weights = torch.from_numpy((1.0 / np.clip(_targets(train).mean(axis=0), 1e-3, None)).astype(np.float32))
-    net = build_network(x.shape[1], seed)
+    net = build_network(x.shape[1], seed, dropout)
     optimiser = torch.optim.AdamW(net.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
     generator = torch.Generator().manual_seed(seed)
     if valid is not None:
@@ -212,7 +212,19 @@ def train_network(train: pd.DataFrame, valid: pd.DataFrame | None, seed: int, ep
         net.load_state_dict(best_state)
     net.eval()
     return {"net": net, "prep": prep, "bestEpoch": best_epoch or (epochs or MAX_EPOCHS), "validationLoss": history,
-            "lossWeights": weights.tolist(), "loss": loss}
+            "lossWeights": weights.tolist(), "loss": loss, "dropout": dropout}
+
+
+def calibrate_export(export: dict[str, Any], factors: list[float]) -> dict[str, Any]:
+    """Fold per-stat multipliers into the output bias: exp(eta + log c) = c * exp(eta), so the
+    app's forward pass needs no change. Parity samples are scaled to match."""
+    out = json.loads(json.dumps(export))
+    last = out["layers"][-1]
+    last["bias"] = [b + math.log(c) for b, c in zip(last["bias"], factors)]
+    for sample in out.get("parity", []):
+        sample["y"] = [y * c for y, c in zip(sample["y"], factors)]
+    out["calibration"] = [float(c) for c in factors]
+    return out
 
 
 def predict_network(model: dict[str, Any], frame: pd.DataFrame) -> np.ndarray:
@@ -248,7 +260,8 @@ COLUMNS = list(NEURAL_FEATURES) + list(OFFSET_COLUMNS) + list(SKATER_TARGETS)
 
 
 def run_isolated(train: pd.DataFrame, valid: pd.DataFrame, full: pd.DataFrame, frames: dict[str, pd.DataFrame],
-                 seed: int, export_sample: str = "test", loss: str = "game") -> dict[str, Any]:
+                 seed: int, export_sample: str = "test", loss: str = "game",
+                 dropout: float = DROPOUT) -> dict[str, Any]:
     """Train (early stopping on `valid`), refit on `full` for the best epoch count, predict
     every frame (live with the refit, others with the train-only fit). Returns predictions,
     the exported network and the training history."""
@@ -260,7 +273,7 @@ def run_isolated(train: pd.DataFrame, valid: pd.DataFrame, full: pd.DataFrame, f
         full[fit_columns].to_parquet(d / "full.parquet")
         for name, frame in frames.items():
             frame[COLUMNS].reset_index(drop=True).to_parquet(d / f"frame_{name}.parquet")
-        (d / "job.json").write_text(json.dumps({"seed": seed, "frames": list(frames), "exportSample": export_sample, "loss": loss}))
+        (d / "job.json").write_text(json.dumps({"seed": seed, "frames": list(frames), "exportSample": export_sample, "loss": loss, "dropout": dropout}))
         env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
         subprocess.run([sys.executable, "-m", "benchboss_ml.neural", str(d)], check=True, env=env)
         result = json.loads((d / "result.json").read_text())
@@ -273,9 +286,10 @@ def _child(directory: str) -> None:
     job = json.loads((d / "job.json").read_text())
     train, valid, full = (pd.read_parquet(d / f"{n}.parquet") for n in ("train", "valid", "full"))
     loss = job.get("loss", "game")
-    model = train_network(train, valid, job["seed"], loss=loss)
+    dropout = job.get("dropout", DROPOUT)
+    model = train_network(train, valid, job["seed"], loss=loss, dropout=dropout)
     print(f"  BenchBoss AI: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
-    export = train_network(full, None, job["seed"], epochs=model["bestEpoch"], loss=loss)
+    export = train_network(full, None, job["seed"], epochs=model["bestEpoch"], loss=loss, dropout=dropout)
     frames = {name: pd.read_parquet(d / f"frame_{name}.parquet") for name in job["frames"]}
     for name, frame in frames.items():
         preds = predict_network(export if name.startswith("live") else model, frame)
@@ -283,7 +297,7 @@ def _child(directory: str) -> None:
     sample = frames.get(job["exportSample"], full)
     (d / "result.json").write_text(json.dumps({
         "export": export_network(export, sample), "bestEpoch": int(model["bestEpoch"]),
-        "validationLoss": model["validationLoss"], "lossWeights": model["lossWeights"], "loss": loss,
+        "validationLoss": model["validationLoss"], "lossWeights": model["lossWeights"], "loss": loss, "dropout": dropout,
     }))
 
 

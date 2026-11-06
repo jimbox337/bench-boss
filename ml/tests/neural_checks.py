@@ -100,3 +100,17 @@ def test_weekly_training_learns_and_runs_isolated():
     assert result["loss"] == "week" and result["predictions"]["validation"].shape == (2000, len(SKATER_TARGETS))
     with pytest.raises(ValueError):
         neural.train_network(train, None, seed=3, epochs=1, loss="season")
+
+
+def test_calibration_is_folded_into_the_exported_bias():
+    train = frame(2000, 4)
+    model = neural.train_network(train, None, seed=9, epochs=2, dropout=0.0)
+    assert model["dropout"] == 0.0
+    export = neural.export_network(model, train, n_parity=4)
+    factors = [1.1, 0.9, 1.0, 1.25, 1.05, 0.8]
+    calibrated = neural.calibrate_export(export, factors)
+    assert calibrated["calibration"] == factors and "calibration" not in export
+    for raw, cal in zip(export["parity"], calibrated["parity"]):
+        got = numpy_forward(calibrated, cal["x"], cal["offset"])
+        for a, y, c in zip(got, raw["y"], factors):
+            assert math.isclose(a, y * c, rel_tol=1e-4)
