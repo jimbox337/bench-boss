@@ -56,7 +56,7 @@ NEURAL_LOSS = "game"
 NEURAL_DROPOUT = 0.1
 # Scale each BenchBoss AI stat so its validation total matches the actual total (fitted on the
 # same validation frame as the stack; test and live untouched). Folded into the exported bias.
-NEURAL_CALIBRATE = False
+NEURAL_CALIBRATE = True
 # A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
 NEURAL_POSITION_TOLERANCE = 0.005
 
@@ -814,8 +814,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--neural-loss", choices=("game", "week"), default="game",
                         help="BenchBoss AI loss: per game, or player-week totals on week-start frames")
     parser.add_argument("--neural-dropout", type=float, default=0.1, help="BenchBoss AI dropout rate")
-    parser.add_argument("--neural-calibrate", action="store_true",
-                        help="Scale each BenchBoss AI stat to match its validation total")
+    parser.add_argument("--neural-calibrate", action=argparse.BooleanOptionalAction, default=True,
+                        help="Scale each BenchBoss AI stat to match its validation total (default on)")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
     global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE

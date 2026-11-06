@@ -180,6 +180,16 @@ What this shows:
 - **Shipped.** The served-model gate now uses the week-start backtest only, and the model passes it on validation, test and live. The per-game weekly gate is still reported, for information only: there the model loses to the production baseline by 0.4%, but that table rewards in-week leakage.
 - **BenchBoss AI now gets real weight** (0.19–0.45 per stat). The ensemble passes the challenger gate on validation. On test it fails only start/sit, by 0.0007 (0.7474 vs 0.7481).
 - **Weekly-total loss on week-start frames** (`train --neural-loss week`; safe, because no input carries a result from the same week): week-start test bias −0.12 instead of −0.22 and RMSE 2.248 instead of 2.259, but MAE 1.651 instead of 1.642 and per-game deviance unchanged. The ensemble fails the gate on validation MAE and test start/sit and top-50, so the default stays the per-game loss.
+- **Bias fixes (2026-11-06).** Two retrains (`--neural-dropout 0`, and `--neural-calibrate`, which is now the default):
+
+  | BenchBoss AI alone, week-start test | Bias (FP/week) | MAE | RMSE | Top-50 |
+  |---|---|---|---|---|
+  | As before (dropout 0.1, uncorrected) | −0.22 | 1.642 | 2.259 | 0.436 |
+  | Dropout off, uncorrected | −0.19 | 1.647 | 2.260 | 0.433 |
+  | **Per-stat correction (default now)** | **−0.06** | 1.650 | **2.239** | 0.435 |
+  | LightGBM (served), for reference | −0.06 | 1.651 | 2.238 | 0.428 |
+
+  Dropout explains only a little of the bias. The correction factors point to the scoring trend instead: goals ×1.09, assists ×1.09, PP points ×1.15, shots ×1.02, hits ×0.95, blocks ×1.00. The training seasons scored less and hit more than recent ones. The correction is fitted on week-start validation totals and folded into the exported output bias, so the app's forward pass is unchanged. Corrected, BenchBoss AI alone matches LightGBM on MAE and RMSE and beats it on top-50; per game it is 0.2% behind (deviance 5.218 vs 5.208). The ensemble still fails the challenger gate on test start/sit alone, 0.7474 vs 0.7481, so it is not promoted.
 
 The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchBoss AI shadow) but never shown, so live evidence builds up for a future promotion.
 
