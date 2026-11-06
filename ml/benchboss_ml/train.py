@@ -54,6 +54,7 @@ FIT_WEEK_START = True
 # early-stopped on week-start frames so no input carries a result from the same week).
 NEURAL_LOSS = "game"
 NEURAL_DROPOUT = 0.1
+NEURAL_HALF_LIFE: float | None = None  # seasons; None weights every training season equally
 # Scale each BenchBoss AI stat so its validation total matches the actual total (fitted on the
 # same validation frame as the stack; test and live untouched). Folded into the exported bias.
 NEURAL_CALIBRATE = True
@@ -410,9 +411,11 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             def grouped(frame: pd.DataFrame) -> pd.DataFrame:
                 return frame.assign(**{GROUP: frame["playerId"].astype(str) + "|" + week_key(frame["gameDate"])})
             neural["run"] = run_isolated(grouped(frozen(train)), grouped(ws["validation"]), grouped(frozen(full)),
-                                         predict_frames, SEED, loss="week", dropout=NEURAL_DROPOUT)
+                                         predict_frames, SEED, loss="week", dropout=NEURAL_DROPOUT,
+                                         half_life=NEURAL_HALF_LIFE)
         else:
-            neural["run"] = run_isolated(train, frames["validation"], full, predict_frames, SEED, dropout=NEURAL_DROPOUT)
+            neural["run"] = run_isolated(train, frames["validation"], full, predict_frames, SEED, dropout=NEURAL_DROPOUT,
+                                         half_life=NEURAL_HALF_LIFE)
         for split_name, frame in [*frames.items(), *((f"{k}_ws", v) for k, v in ws.items())]:
             preds = neural["run"]["predictions"][split_name]
             for i, t in enumerate(SKATER_TARGETS):
@@ -619,7 +622,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             **neural["run"]["export"],
             "stack": neural["stacks"], "blendWithProductionBaseline": 1 - neural["alpha"], "promoted": promoted,
         }
-        report["neural"] = {"loss": NEURAL_LOSS, "dropout": NEURAL_DROPOUT, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
+        report["neural"] = {"loss": NEURAL_LOSS, "dropout": NEURAL_DROPOUT, "halfLife": NEURAL_HALF_LIFE, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
         print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
@@ -814,11 +817,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--neural-loss", choices=("game", "week"), default="game",
                         help="BenchBoss AI loss: per game, or player-week totals on week-start frames")
     parser.add_argument("--neural-dropout", type=float, default=0.1, help="BenchBoss AI dropout rate")
+    parser.add_argument("--neural-half-life", type=float, default=None,
+                        help="Weight BenchBoss AI training rows by recency, halving every N seasons")
     parser.add_argument("--neural-calibrate", action=argparse.BooleanOptionalAction, default=True,
                         help="Scale each BenchBoss AI stat to match its validation total (default on)")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
-    global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE
+    global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE, NEURAL_HALF_LIFE
+    NEURAL_HALF_LIFE = args.neural_half_life
     NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE = args.neural_loss, args.neural_dropout, args.neural_calibrate
     USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural
     FIT_WEEK_START = not args.fit_per_game

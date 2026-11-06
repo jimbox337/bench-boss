@@ -190,6 +190,16 @@ What this shows:
   | LightGBM (served), for reference | −0.06 | 1.651 | 2.238 | 0.428 |
 
   Dropout explains only a little of the bias. The correction factors point to the scoring trend instead: goals ×1.09, assists ×1.09, PP points ×1.15, shots ×1.02, hits ×0.95, blocks ×1.00. The training seasons scored less and hit more than recent ones. The correction is fitted on week-start validation totals and folded into the exported output bias, so the app's forward pass is unchanged. Corrected, BenchBoss AI alone matches LightGBM on MAE and RMSE and beats it on top-50; per game it is 0.2% behind (deviance 5.218 vs 5.208). The ensemble still fails the challenger gate on test start/sit alone, 0.7474 vs 0.7481, so it is not promoted.
+- **Recent-season weighting (`--neural-half-life`, off by default).** Older training seasons count half as much every N seasons back:
+
+  | Week-start | Half-life | Equal weights (default) | 4 seasons | 2 seasons |
+  |---|---|---|---|---|
+  | BenchBoss AI alone, test MAE / RMSE | | 1.650 / 2.239 | **1.649 / 2.235** | 1.653 / 2.239 |
+  | BenchBoss AI alone, test start/sit / top-50 | | 0.747 / 0.435 | **0.750** / 0.435 | 0.747 / **0.436** |
+  | Ensemble gate: failed checks | | test start/sit | validation MAE | validation MAE, top-50 |
+
+  With a half-life of 4, BenchBoss AI alone beats LightGBM (MAE 1.651, RMSE 2.238, start/sit 0.748, top-50 0.428) on all four test metrics. But choosing a setting by its test score would spend the untouched test season, and on validation, equal weighting is best. It barely shrinks the correction factors either (goals ×1.09, PP points ×1.11–1.15), so most of the bias is the jump to 2024-25, which no weighting of earlier seasons can learn. The default stays equal weights.
+- **Where this leaves BenchBoss AI:** level with LightGBM. Each setting fails a different single check by about 0.1%, on a different season, which is noise. The live shadow record (`neuralShadow` in the daily scoring, from 2026-11-06) will separate them better than more backtest tuning. The app artifact now carries the corrected network (equal weights, dropout 0.1) for that shadow; its LightGBM, goalie and availability parts are unchanged.
 
 The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchBoss AI shadow) but never shown, so live evidence builds up for a future promotion.
 

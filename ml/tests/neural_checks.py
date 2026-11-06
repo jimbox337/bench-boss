@@ -114,3 +114,19 @@ def test_calibration_is_folded_into_the_exported_bias():
         got = numpy_forward(calibrated, cal["x"], cal["offset"])
         for a, y, c in zip(got, raw["y"], factors):
             assert math.isclose(a, y * c, rel_tol=1e-4)
+
+
+def test_recency_weights_halve_per_season_and_train():
+    f = pd.DataFrame({"season": ["20212022", "20222023", "20232024"]})
+    np.testing.assert_allclose(neural.recency_weights(f, 1.0), [0.25, 0.5, 1.0])
+    assert neural.recency_weights(f, None) is None
+    train, valid = frame(4000, 1), frame(1000, 2)
+    train["season"] = np.where(np.arange(len(train)) < 2000, "20222023", "20232024")
+    model = neural.train_network(train, valid, seed=3, half_life=2.0)
+    assert model["halfLife"] == 2.0 and min(model["validationLoss"]) < model["validationLoss"][0] + 1e-9
+    log_rate, y = torch.zeros(4, 1), torch.tensor([[0.0], [2.0], [1.0], [1.0]])
+    rw = torch.tensor([1.0, 1.0, 0.5, 0.5])
+    group = torch.tensor([0, 0, 1, 1])
+    got = float(neural._week_loss(torch, log_rate, y, torch.ones(1), group, 2, rw))
+    want = (1.0 * (2 - 2 * math.log(2)) + 0.5 * (2 - 2 * math.log(2))) / 1.5
+    assert math.isclose(got, want, rel_tol=1e-6)
