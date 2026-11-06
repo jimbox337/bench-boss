@@ -1,0 +1,54 @@
+.wv-list { display: grid; gap: 0.6rem; }
+
+.wv-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem 0.75rem 0.75rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 1.1rem;
+  background: var(--color-paper-2);
+}
+@media (min-width: 900px) { .wv-item { grid-template-columns: auto minmax(0, 1fr) auto; } }
+
+.wv-rank {
+  display: inline-flex;
+  width: 2.4rem;
+  height: 2.4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  background: var(--color-paper-3);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-2);
+}
+.wv-rank.is-top { background: linear-gradient(140deg, #0f8a5c, #34c58a); color: #fff; }
+
+.wv-main { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; min-width: 0; }
+.wv-main .tk-chip { flex: 1 1 17rem; max-width: 26rem; border: 0; background: transparent; padding: 0; }
+.wv-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.wv-tags span { padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--color-paper-3); font-size: 0.7rem; font-weight: 600; color: var(--color-ink-2); }
+
+.wv-side { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; grid-column: 1 / -1; }
+@media (min-width: 900px) { .wv-side { grid-column: auto; } }
+.wv-drop { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem; font-size: 0.78rem; color: var(--color-ink-2); }
+.wv-drop span { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-muted); }
+.wv-drop em { font-style: normal; font-weight: 800; color: var(--tk-win); }
+
+.wv-add {
+  display: inline-flex;
+  min-height: 2.3rem;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background: var(--tk-win);
+  color: #06210f;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.wv-add:hover:not(:disabled) { filter: brightness(1.08); }
+.wv-add:disabled { background: var(--color-paper-3); color: var(--color-muted); cursor: default; }

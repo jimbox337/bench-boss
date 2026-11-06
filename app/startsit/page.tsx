@@ -1,232 +1,129 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { CheckCircle2 } from 'lucide-react';
-import { calculateFantasyPoints, calculateFantasyRange } from '@/lib/calculator';
-import { pointsScoring } from '@/components/gamecenter/shared';
-import { useData } from '@/lib/DataContext';
+import { useMemo, useState } from 'react';
+import { Crown, X } from 'lucide-react';
+import { usePlayerCard } from '@/components/player/PlayerCardProvider';
+import { Headshot, PlayerSearch, PosBadge, ScoringNote, ToolHeader, primaryPosition, useToolData, type ToolPlayer } from '@/components/tools/toolkit';
+import { startSitCall } from '@/lib/toolVerdicts';
+import './startsit.css';
 
-export default function StartSit() {
-  const { players, projections, leagueSettings } = useData();
-  const scoring = pointsScoring(leagueSettings);
-  const [player1Name, setPlayer1Name] = useState('');
-  const [player2Name, setPlayer2Name] = useState('');
-  const [timeframe, setTimeframe] = useState('next_7');
-  const [showPlayer1Suggestions, setShowPlayer1Suggestions] = useState(false);
-  const [showPlayer2Suggestions, setShowPlayer2Suggestions] = useState(false);
+const MAX_PLAYERS = 4;
 
-  // Filter players based on search input
-  const player1Suggestions = useMemo(() => {
-    if (!player1Name || player1Name.length < 2) return [];
-    return players
-      .filter(p => p.name?.toLowerCase().includes(player1Name.toLowerCase()))
-      .slice(0, 10);
-  }, [player1Name, players]);
-
-  const player2Suggestions = useMemo(() => {
-    if (!player2Name || player2Name.length < 2) return [];
-    return players
-      .filter(p => p.name?.toLowerCase().includes(player2Name.toLowerCase()))
-      .slice(0, 10);
-  }, [player2Name, players]);
-
-  // Find exact matches
-  const player1 = players.find(p => p.name.toLowerCase() === player1Name.toLowerCase());
-  const player2 = players.find(p => p.name.toLowerCase() === player2Name.toLowerCase());
-
-  const proj1 = player1 ? projections.find(p => p.playerId === player1.id) : undefined;
-  const proj2 = player2 ? projections.find(p => p.playerId === player2.id) : undefined;
-
-  const points1 = proj1 ? calculateFantasyPoints(proj1, scoring.settings) : 0;
-  const points2 = proj2 ? calculateFantasyPoints(proj2, scoring.settings) : 0;
-
-  const winner = points1 > points2 ? player1 : player2;
-  const winnerProj = points1 > points2 ? proj1 : proj2;
+function CompareCard({ row, verdict, scaleMax, onRemove }: {
+  row: ToolPlayer;
+  verdict: 'start' | 'sit' | null;
+  scaleMax: number;
+  onRemove: () => void;
+}) {
+  const { openPlayer } = usePlayerCard();
+  const { player, projection, fpts, range, posRank } = row;
+  const s = projection?.skaterStats;
+  const g = projection?.goalieStats;
+  const pct = (v: number) => `${Math.max(0, Math.min(100, (v / scaleMax) * 100))}%`;
+  const opponents = projection?.context?.opponents ?? [];
 
   return (
-    <>
+    <article className={`ss-card${verdict ? ` is-${verdict}` : ''}`}>
+      {verdict && <span className={`ss-flag ss-flag-${verdict}`}>{verdict === 'start' ? <><Crown size={13} aria-hidden="true" /> Start</> : 'Sit'}</span>}
+      <button type="button" className="ss-remove" onClick={onRemove} aria-label={`Remove ${player.name}`}><X size={16} aria-hidden="true" /></button>
+
+      <div className="ss-top">
+        <Headshot player={player} size={88} />
+        <button type="button" className="ss-name" onClick={() => openPlayer(player.id)}>{player.name}</button>
+        <div className="ss-tags"><PosBadge position={primaryPosition(player)} rank={posRank} /><span className="tk-team">{player.nhlTeam}</span></div>
+      </div>
+
+      <div className="ss-points">
+        <strong>{fpts === null ? '–' : fpts.toFixed(1)}</strong>
+        <span>projected pts, next 7 days</span>
+      </div>
+
+      {range && fpts !== null && (
+        <div className="ss-range" aria-label={`Likely range ${range.low.toFixed(1)} to ${range.high.toFixed(1)} points`}>
+          <div className="ss-range-track">
+            <span className="ss-range-band" style={{ left: pct(range.low), width: `calc(${pct(range.high)} - ${pct(range.low)})` }} />
+            <span className="ss-range-dot" style={{ left: pct(fpts) }} />
+          </div>
+          <div className="ss-range-labels"><span>{range.low.toFixed(1)}</span><span>likely range</span><span>{range.high.toFixed(1)}</span></div>
+        </div>
+      )}
+
+      <dl className="ss-stats">
+        <div><dt>Games</dt><dd>{projection ? Math.round(projection.gamesPlayed) : '–'}</dd></div>
+        {g ? (
+          <>
+            <div><dt>W</dt><dd>{g.W.toFixed(1)}</dd></div>
+            <div><dt>SV</dt><dd>{g.SV.toFixed(0)}</dd></div>
+            <div><dt>GA</dt><dd>{g.GA.toFixed(1)}</dd></div>
+          </>
+        ) : (
+          <>
+            <div><dt>G</dt><dd>{s ? s.G.toFixed(1) : '–'}</dd></div>
+            <div><dt>A</dt><dd>{s ? s.A.toFixed(1) : '–'}</dd></div>
+            <div><dt>SOG</dt><dd>{s ? s.SOG.toFixed(1) : '–'}</dd></div>
+          </>
+        )}
+      </dl>
+
+      {opponents.length > 0 && <p className="ss-opps"><span>Schedule</span> {opponents.join(' · ')}</p>}
+    </article>
+  );
+}
+
+export default function StartSit() {
+  const { byId, scoring } = useToolData();
+  const [ids, setIds] = useState<string[]>([]);
+  const pool = useMemo(() => [...byId.values()], [byId]);
+
+  const rows = ids.map((id) => byId.get(id)).filter((r): r is ToolPlayer => Boolean(r));
+  const call = startSitCall(rows.map((r) => ({ id: r.player.id, fpts: r.fpts })));
+  const winner = call ? byId.get(call.winnerId) : null;
+  const scaleMax = Math.max(1, ...rows.map((r) => r.range?.high ?? r.fpts ?? 0)) * 1.05;
+
+  return (
     <div className="bb-page">
-      <header className="bb-page-header"><div><h1>Start / Sit Tool</h1><p>Put two players side by side before making the call.</p></div></header>
+      <ToolHeader accent="startsit" eyebrow="Start / sit" title="Who do I start?" blurb="Compare up to four players. We show each one's projected points, likely range and schedule, then make the call." />
 
-      {/* Controls */}
-      <div className="bb-toolbar mb-6">
-        <h3 className="text-lg font-medium text-ink mb-4">Compare Players</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <label className="block text-sm font-medium text-ink-2 mb-2">Player 1</label>
-            <input aria-label="Player 1"
-              type="text"
-              className="bb-field w-full"
-              placeholder="Enter player name..."
-              value={player1Name}
-              onChange={(e) => {
-                setPlayer1Name(e.target.value);
-                setShowPlayer1Suggestions(true);
-              }}
-              onFocus={() => setShowPlayer1Suggestions(true)}
-              onBlur={() => setTimeout(() => setShowPlayer1Suggestions(false), 200)}
+      <section className="tk-card tk-verdict mb-5" aria-live="polite">
+        {winner && call ? (
+          <>
+            <p className="tk-verdict-title is-win">Start {winner.player.name}</p>
+            <p className="tk-verdict-sub">
+              <span className={`ss-confidence ss-confidence-${call.confidence.replace(' ', '-').toLowerCase()}`}>{call.confidence}</span>
+              {' '}Projects {call.gap.toFixed(1)} more points than the next option this week.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="tk-verdict-title">Pick two players</p>
+            <p className="tk-verdict-sub">Search below to add the players you&apos;re choosing between.</p>
+          </>
+        )}
+      </section>
+
+      {ids.length < MAX_PLAYERS && (
+        <div className="mb-5 max-w-xl">
+          <PlayerSearch rows={pool} exclude={ids} onPick={(row) => setIds((list) => [...list, row.player.id])} placeholder={ids.length ? 'Add another player to compare' : 'Search for a player'} />
+        </div>
+      )}
+
+      {rows.length > 0 ? (
+        <div className="ss-grid">
+          {rows.map((row) => (
+            <CompareCard
+              key={row.player.id}
+              row={row}
+              verdict={call ? (row.player.id === call.winnerId ? 'start' : 'sit') : null}
+              scaleMax={scaleMax}
+              onRemove={() => setIds((list) => list.filter((id) => id !== row.player.id))}
             />
-            {showPlayer1Suggestions && player1Suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-paper-3 border border-rule max-h-60 overflow-y-auto">
-                {player1Suggestions.map(p => (
-                  <button type="button"
-                    key={p.id}
-                    className="block w-full px-4 py-3 text-left hover:bg-paper-2 text-ink"
-                    onClick={() => {
-                      setPlayer1Name(p.name);
-                      setShowPlayer1Suggestions(false);
-                    }}
-                  >
-                    {p.name} <span className="text-muted text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-ink-2 mb-2">Player 2</label>
-            <input aria-label="Player 2"
-              type="text"
-              className="bb-field w-full"
-              placeholder="Enter player name..."
-              value={player2Name}
-              onChange={(e) => {
-                setPlayer2Name(e.target.value);
-                setShowPlayer2Suggestions(true);
-              }}
-              onFocus={() => setShowPlayer2Suggestions(true)}
-              onBlur={() => setTimeout(() => setShowPlayer2Suggestions(false), 200)}
-            />
-            {showPlayer2Suggestions && player2Suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-paper-3 border border-rule max-h-60 overflow-y-auto">
-                {player2Suggestions.map(p => (
-                  <button type="button"
-                    key={p.id}
-                    className="block w-full px-4 py-3 text-left hover:bg-paper-2 text-ink"
-                    onClick={() => {
-                      setPlayer2Name(p.name);
-                      setShowPlayer2Suggestions(false);
-                    }}
-                  >
-                    {p.name} <span className="text-muted text-sm">({p.nhlTeam} - {p.positions?.join('/') ?? ''})</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink-2 mb-2">Timeframe</label>
-            <select aria-label="Timeframe"
-              className="bb-field w-full"
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-            >
-              <option value="today">Today</option>
-              <option value="next_7">This Week</option>
-              <option value="next_14">Next 2 Weeks</option>
-              <option value="rest_of_season">Rest of Season</option>
-            </select>
-          </div>
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="tk-empty">No players yet. Try two forwards you&apos;re deciding between this week.</div>
+      )}
 
-      {player1 && player2 ? <>
-      {/* Recommendation */}
-      <div className="border-l-2 border-success bg-paper-2 p-6 mb-6">
-        <div className="flex items-start">
-          <CheckCircle2 className="mr-4 h-6 w-6 shrink-0 text-success" aria-hidden="true" />
-          <div>
-            <h3 className="text-lg font-medium text-success">Start {winner?.name}</h3>
-            <p className="text-sm text-success mt-1">
-              {winner?.name} has {winnerProj?.gamesPlayed?.toFixed(1)} games vs {points1 > points2 ? player2?.name : player1?.name}’s {(points1 > points2 ? proj2?.gamesPlayed : proj1?.gamesPlayed)?.toFixed(1)},
-              and projects {Math.abs(points1 - points2).toFixed(1)} more fantasy points this week.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Comparison Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-px border border-rule bg-rule">
-        {/* Player 1 Card */}
-        <div className={`bg-paper-2   overflow-hidden ${points1 > points2 ? 'border-t-2 border-success' : 'border-t-2 border-rule'}`}>
-          <div className={`p-4 border-b ${points1 > points2 ? 'bg-success/10 border-success' : 'bg-paper-3 border-rule'}`}>
-            <h4 className={`font-medium ${points1 > points2 ? 'text-success' : 'text-ink'}`}>
-              {player1?.name}
-            </h4>
-            <p className={`text-sm ${points1 > points2 ? 'text-success' : 'text-muted'}`}>
-              {player1?.nhlTeam} / {player1?.positions?.join('/') ?? ''} / {proj1?.gamesPlayed?.toFixed(1)} games this week{proj1?.source === 'model' ? ' · model estimate' : ''}
-            </p>
-          </div>
-          <div className="p-6 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted">Projected Points</span>
-              <span className={`font-medium ${points1 > points2 ? 'text-success' : 'text-ink'}`}>
-                {points1.toFixed(1)}
-              </span>
-            </div>
-            {proj1 && calculateFantasyRange(proj1, scoring.settings) && (() => { const r = calculateFantasyRange(proj1, scoring.settings)!; return (
-              <div className="flex justify-between text-sm"><span className="text-muted">80% range</span><span className="tabular-nums text-ink-2">{r.low.toFixed(1)} – {r.high.toFixed(1)}</span></div>
-            ); })()}
-            <div className="flex justify-between">
-              <span className="text-muted">Goals</span>
-              <span className="font-medium text-ink">{proj1?.skaterStats?.G.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Assists</span>
-              <span className="font-medium text-ink">{proj1?.skaterStats?.A.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Shots on Goal</span>
-              <span className="font-medium text-ink">{proj1?.skaterStats?.SOG.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">PPP</span>
-              <span className="font-medium text-ink">{proj1?.skaterStats?.PPP.toFixed(1) || '-'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Player 2 Card */}
-        <div className={`bg-paper-2   overflow-hidden ${points2 > points1 ? 'border-t-2 border-success' : 'border-t-2 border-rule'}`}>
-          <div className={`p-4 border-b ${points2 > points1 ? 'bg-success/10 border-success' : 'bg-paper-3 border-rule'}`}>
-            <h4 className={`font-medium ${points2 > points1 ? 'text-success' : 'text-ink'}`}>
-              {player2?.name}
-            </h4>
-            <p className={`text-sm ${points2 > points1 ? 'text-success' : 'text-muted'}`}>
-              {player2?.nhlTeam} / {player2?.positions?.join('/') ?? ''} / {proj2?.gamesPlayed?.toFixed(1)} games this week{proj2?.source === 'model' ? ' · model estimate' : ''}
-            </p>
-          </div>
-          <div className="p-6 space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted">Projected Points</span>
-              <span className={`font-medium ${points2 > points1 ? 'text-success' : 'text-ink'}`}>
-                {points2.toFixed(1)}
-              </span>
-            </div>
-            {proj2 && calculateFantasyRange(proj2, scoring.settings) && (() => { const r = calculateFantasyRange(proj2, scoring.settings)!; return (
-              <div className="flex justify-between text-sm"><span className="text-muted">80% range</span><span className="tabular-nums text-ink-2">{r.low.toFixed(1)} – {r.high.toFixed(1)}</span></div>
-            ); })()}
-            <div className="flex justify-between">
-              <span className="text-muted">Goals</span>
-              <span className="font-medium text-ink">{proj2?.skaterStats?.G.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Assists</span>
-              <span className="font-medium text-ink">{proj2?.skaterStats?.A.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">Shots on Goal</span>
-              <span className="font-medium text-ink">{proj2?.skaterStats?.SOG.toFixed(1) || '-'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted">PPP</span>
-              <span className="font-medium text-ink">{proj2?.skaterStats?.PPP.toFixed(1) || '-'}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      </> : <div className="bb-empty"><h2>Select two players</h2><p>Search for a player in each field to compare their projections.</p></div>}
+      <ScoringNote label={scoring.label} />
     </div>
-    </>
   );
 }

@@ -6,6 +6,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useData } from '@/lib/DataContext';
 import { PlayerLink, usePlayerCard } from '@/components/player/PlayerCardProvider';
+import { hasPosition } from '@/lib/positions';
 
 export default function MyTeam() {
   const router = useRouter();
@@ -44,10 +45,10 @@ export default function MyTeam() {
   );
 
   const groupedByPosition = {
-    C: myTeam.filter(p => p.positions?.includes('C')),
-    LW: myTeam.filter(p => p.positions?.includes('LW')),
-    RW: myTeam.filter(p => p.positions?.includes('RW')),
-    D: myTeam.filter(p => p.positions?.includes('D')),
+    C: myTeam.filter(p => hasPosition(p, 'C')),
+    LW: myTeam.filter(p => hasPosition(p, 'LW')),
+    RW: myTeam.filter(p => hasPosition(p, 'RW')),
+    D: myTeam.filter(p => hasPosition(p, 'D')),
     G: myTeam.filter(p => p.isGoalie),
   };
 
