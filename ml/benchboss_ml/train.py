@@ -41,7 +41,7 @@ from .features import (GOALIE_FEATURES, PRIOR_WEIGHT_GRID, RESIDUAL_FEATURES, XG
                        season_average_baseline, shrinkage_reference, shrunk_baseline, skater_baseline, skater_features)
 from .paths import ARTIFACT_DIR, MANIFEST_PATH, REPORTS_DIR
 
-# Neural challenger (benchboss_ml.neural). On by default when PyTorch is installed; it only
+# BenchBoss AI, the neural challenger (benchboss_ml.neural). On by default when PyTorch is installed; it only
 # ships to the app if it passes NEURAL_GATE below, and even then stays behind a feature flag.
 # PyTorch is only imported in a child process (see neural.run_isolated).
 import importlib.util
@@ -293,9 +293,9 @@ def choose_blend(valid: pd.DataFrame, prefix: str, actual_cols: dict[str, str]) 
     return max(eligible, key=lambda a: (eligible[a]["startSitAccuracy"] + eligible[a][f"top{TOP_K}Precision"], a)), scores
 
 
-NEURAL_RULE = ("The LightGBM + neural ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, "
+NEURAL_RULE = ("The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, "
                f"not reduce start/sit accuracy or top-{TOP_K} precision, and not raise forward or defence weekly MAE by more than "
-               f"{NEURAL_POSITION_TOLERANCE:.1%}, on both the validation and the untouched test season; and validation must give the network a non-zero weight.")
+               f"{NEURAL_POSITION_TOLERANCE:.1%}, on both the validation and the untouched test season; and validation must give BenchBoss AI a non-zero weight.")
 
 
 def neural_gate(candidate: dict[str, Any], incumbent: dict[str, Any]) -> dict[str, Any]:
@@ -351,7 +351,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     neural: dict[str, Any] = {}
     if USE_NEURAL:
         from .neural import run_isolated
-        print("  neural: training on train seasons, early stopping on validation (separate process)...", flush=True)
+        print("  BenchBoss AI: training on train seasons, early stopping on validation (separate process)...", flush=True)
         neural["run"] = run_isolated(train, frames["validation"], full, frames, SEED)
         for split_name, frame in frames.items():
             preds = neural["run"]["predictions"][split_name]
@@ -506,7 +506,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
         report["neural"] = {"bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "promoted": promoted, "rule": NEURAL_RULE}
-        print(f"  neural challenger: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
+        print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
               + " ".join(f"{t}={neural['stacks'][t].get('neural', 0):.2f}" for t in SKATER_TARGETS))
     LAST_SKATER_FRAMES.clear(); LAST_SKATER_FRAMES.update(frames)  # for offline experiments
     gate = report["gate"]
@@ -688,7 +688,7 @@ def train_availability(rows: pd.DataFrame, skater_feats: pd.DataFrame, split: Sp
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--today", help="Override today's date (YYYY-MM-DD) for reproducible splits")
-    parser.add_argument("--no-neural", action="store_true", help="Skip the neural challenger")
+    parser.add_argument("--no-neural", action="store_true", help="Skip BenchBoss AI (the neural challenger)")
     args = parser.parse_args(argv)
     global USE_NEURAL
     USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural

@@ -35,7 +35,7 @@ describe('tree evaluator matches LightGBM', () => {
   });
 });
 
-describe('neural challenger matches PyTorch', () => {
+describe('BenchBoss AI matches PyTorch', () => {
   const net = artifact.skater.neural;
   it.skipIf(!net)('reproduces the exported parity samples', () => {
     expect(net!.parity?.length).toBeGreaterThan(0);

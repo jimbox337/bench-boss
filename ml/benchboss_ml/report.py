@@ -24,6 +24,10 @@ def _delta(model: float, base: float, lower_is_better: bool = True) -> str:
     return f"{change:+.1f}% {'✓' if better else '✗'}"
 
 
+# Display names for report keys (keys stay stable so older evaluation.json files still render).
+LABELS = {"neuralOnly": "benchBossAiOnly", "lightgbmNeuralEnsemble": "lightgbmPlusBenchBossAi"}
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     split = report["split"]
     skater = report["skater"]
@@ -63,8 +67,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "- **shrunkBaselineOnly** — the production blend with empirical-Bayes shrinkage toward last season and a TOI-based prior (k tuned on validation).",
         "- **residualOnShrunkOnly** — LightGBM context/usage multipliers on top of the shrunk baseline.",
         "- **benchBossSelected** — the served LightGBM projection: per-stat NNLS stack of baselines and boosters, blended with the production baseline.",
-        "- **neuralOnly** — the neural challenger alone (one shared network, six Poisson outputs on top of the shrunk baseline).",
-        "- **lightgbmNeuralEnsemble** — the same stack with the network as one more component; validation picks its weight.",
+        "- **benchBossAiOnly** — BenchBoss AI alone (one shared neural network, six Poisson outputs on top of the shrunk baseline).",
+        "- **lightgbmPlusBenchBossAi** — the same stack with BenchBoss AI as one more component; validation picks its weight.",
         "",
         "## Weekly fantasy points (default Bench Boss scoring; games actually played)",
         "",
@@ -76,12 +80,12 @@ def render_markdown(report: dict[str, Any]) -> str:
         for label, m in result.items():
             delta = "" if label == "productionBaseline" else f" ({_delta(m['mae'], base['mae'])})"
             lines.append(
-                f"| {split_name} | {label} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | {_f(m['weeklySpearman'])} | "
+                f"| {split_name} | {LABELS.get(label, label)} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | {_f(m['weeklySpearman'])} | "
                 f"{_f(m['top50Precision'])} | {_f(m['startSitAccuracy'])} | {_f(m.get('interval80Coverage'))} |"
             )
     lines += ["", "Weekly fantasy-point MAE by position group (F = forwards, D = defence):", ""]
     for split_name, result in skater["weekly"].items():
-        parts = "; ".join(f"{label} " + " / ".join(f"{g} {_f(v, 3)}" for g, v in m["byPositionMae"].items()) for label, m in result.items()
+        parts = "; ".join(f"{LABELS.get(label, label)} " + " / ".join(f"{g} {_f(v, 3)}" for g, v in m["byPositionMae"].items()) for label, m in result.items()
                           if label in ("benchBossSelected", "productionBaseline", "neuralOnly", "lightgbmNeuralEnsemble"))
         lines.append(f"- {split_name}: {parts}")
 
@@ -108,17 +112,17 @@ def render_markdown(report: dict[str, Any]) -> str:
     nn = skater.get("neural")
     if nn:
         mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
-        lines += ["", "## Neural challenger", "",
+        lines += ["", "## BenchBoss AI (neural network)", "",
                   f"Best epoch {nn['bestEpoch']} (early stopping on validation); ensemble model weight {nn['modelWeight']} vs the production baseline. "
-                  f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_NEURAL=1`.", "",
+                  f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_AI=1`.", "",
                   f"Rule: {nn['rule']}", "",
                   "| Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |", "|---|---|---|---|---|---|---|---|"]
         for name, g in nn["gate"].items():
             c = g["checks"]
             lines.append(f"| {name} | {mark(g['passed'])} | {mark(c['weeklyMaeImproves'])} | {mark(c['weeklyRmseImproves'])} | {mark(c['startSitNotWorse'])} | "
                          f"{mark(c['top50NotWorse'])} | {mark(c['FMaeNotWorse'])} | {mark(c['DMaeNotWorse'])} |")
-        lines += ["", "Network weight in each stat's stack (validation NNLS):", ""]
-        lines += [f"- {t}: " + ", ".join(f"{n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
+        lines += ["", "Stack weights with BenchBoss AI as a component (validation NNLS):", ""]
+        lines += [f"- {t}: " + ", ".join(f"{'BenchBoss AI' if n == 'neural' else n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
 
     xg = report.get("xg") or {}
     if xg.get("available"):

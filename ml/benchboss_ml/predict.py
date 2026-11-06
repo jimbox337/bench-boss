@@ -25,12 +25,12 @@ from .paths import ML_ROOT, REPORTS_DIR
 from .train import DEFAULT_SKATER_SCORING, SKATER_CANDIDATES, fit, predict, prediction_column
 
 PREDICTIONS_DIR = ML_ROOT / "predictions"
-# Committed app artifact: the neural challenger's weights for shadow predictions.
+# Committed app artifact: BenchBoss AI's weights for shadow predictions.
 APP_ARTIFACT = ML_ROOT.parent / "lib" / "model" / "artifacts" / "bench-boss-model.json"
 
 
 def shadow_predictions(out: pd.DataFrame, report: dict[str, Any]) -> dict[str, pd.Series] | None:
-    """Neural ensemble per stat from the committed artifact, or None when it has no network."""
+    """BenchBoss AI ensemble per stat from the committed artifact, or None when it has no network."""
     if not APP_ARTIFACT.exists():
         return None
     net = json.loads(APP_ARTIFACT.read_text()).get("skater", {}).get("neural")
@@ -130,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     model_weight = report["skater"].get("blend", {}).get("chosenModelWeight", 1.0)
     for stat in SKATER_TARGETS:
         out[f"model_{stat}"] = model_weight * out[f"model_{stat}"] + (1 - model_weight) * out[f"base_{stat}"]
-    # Shadow: the neural challenger ensemble, recorded for live tracking but never shown.
+    # Shadow: the BenchBoss AI ensemble, recorded for live tracking but never shown.
     shadow = shadow_predictions(out, report)
     if shadow is not None:
         for stat in SKATER_TARGETS:

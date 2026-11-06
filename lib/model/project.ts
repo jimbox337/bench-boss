@@ -37,7 +37,7 @@ export type ModelArtifact = {
     positionFallback: Record<Target, Record<string, number>>;
     intervalScale: number;
     blendWithProductionBaseline?: number;
-    /** Neural challenger; served only when promoted and the feature flag is on. */
+    /** BenchBoss AI (neural network); served only when promoted and the feature flag is on. */
     neural?: NeuralArtifact;
   };
   availability?: { features: string[]; booster: CompactBooster } | null;
@@ -53,7 +53,7 @@ export const INACTIVE_PLAY_PROBABILITY = 0.3;
 
 export type ProjectOptions = { neural?: boolean };
 
-/** Whether the neural challenger is served: it must have passed its gate and be flagged on. */
+/** Whether BenchBoss AI is served: it must have passed its gate and be flagged on. */
 export const neuralActive = (artifact: ModelArtifact, options?: ProjectOptions) => Boolean(options?.neural && artifact.skater.neural?.promoted);
 
 const neuralCache = new WeakMap<Record<string, number>, number[]>();
@@ -152,7 +152,7 @@ export function projectPlayer(player: Player, artifact: ModelArtifact, data: Run
     variance,
     intervalScale: artifact.skater.intervalScale,
     confidence: Math.round(Math.min(90, 40 + Math.min(sample, 30) + (minP > 0.8 ? 15 : minP > 0.5 ? 5 : 0))),
-    modelVersion: neuralActive(artifact, options) ? `${artifact.modelVersion}+neural` : artifact.modelVersion,
+    modelVersion: neuralActive(artifact, options) ? `${artifact.modelVersion}+benchboss-ai` : artifact.modelVersion,
     source: 'model',
     context: {
       opponents,

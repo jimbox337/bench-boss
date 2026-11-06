@@ -1,4 +1,4 @@
-"""Neural challenger: one small multi-output network for the six skater stats.
+"""BenchBoss AI: one small multi-output neural network for the six skater stats.
 
 Design (kept deliberately small so it trains on a laptop CPU and runs in the website):
   * inputs: the LightGBM skater features plus log(shrunk baseline) per stat; missing values
@@ -231,7 +231,7 @@ def _child(directory: str) -> None:
     job = json.loads((d / "job.json").read_text())
     train, valid, full = (pd.read_parquet(d / f"{n}.parquet") for n in ("train", "valid", "full"))
     model = train_network(train, valid, job["seed"])
-    print(f"  neural: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
+    print(f"  BenchBoss AI: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
     export = train_network(full, None, job["seed"], epochs=model["bestEpoch"])
     frames = {name: pd.read_parquet(d / f"frame_{name}.parquet") for name in job["frames"]}
     for name, frame in frames.items():

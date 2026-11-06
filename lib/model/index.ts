@@ -40,7 +40,7 @@ export function projectionCacheKey(players: Player[]): string {
 
 /** Server-side model projections from the committed artifact (if it passed the promotion gate). */
 export async function modelProjections(players: Player[]): Promise<Projection[]> {
-  const key = `${process.env.BENCHBOSS_NEURAL === '1' ? 'nn|' : ''}${projectionCacheKey(players)}`;
+  const key = `${process.env.BENCHBOSS_AI === '1' ? 'ai|' : ''}${projectionCacheKey(players)}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
   const [{ default: artifact }, { loadRuntimeData }, { projectAll }, { getCurrentNHLSeason }] = await Promise.all([
@@ -52,8 +52,8 @@ export async function modelProjections(players: Player[]): Promise<Projection[]>
   const typed = artifact as unknown as import('./project').ModelArtifact;
   if (!typed.promotion?.eligible) throw new Error(`Artifact ${typed.modelVersion} did not pass the promotion gate`);
   const data = await loadRuntimeData(await getCurrentNHLSeason());
-  // Feature flag for the neural challenger; it is used only if its artifact also passed the gate.
-  const neural = process.env.BENCHBOSS_NEURAL === '1';
+  // Feature flag for BenchBoss AI; it is used only if its artifact also passed the gate.
+  const neural = process.env.BENCHBOSS_AI === '1';
   const value = projectAll(players, typed, data, { neural });
   if (value.length === 0) throw new Error('Model produced no projections');
   cache.delete(key);

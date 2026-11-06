@@ -1,5 +1,5 @@
 /**
- * Forward pass of the neural challenger (ml/benchboss_ml/neural.py) from exported weights.
+ * Forward pass of BenchBoss AI, the neural network in ml/benchboss_ml/neural.py, from exported weights.
  * Plain arithmetic, no ML runtime: impute → standardise → clip → missing flags → dense
  * ReLU layers → six log-rates, each offset by log(shrunk baseline). Parity samples in the
  * artifact check this against PyTorch.
@@ -13,7 +13,7 @@ export type NeuralArtifact = {
   /** Per stat: stack weights over 'baseline', 'shrunk', booster components and 'neural'. */
   stack: Record<string, Record<string, number>>;
   blendWithProductionBaseline: number;
-  /** True only if the challenger passed its promotion gate on validation and test. */
+  /** True only if BenchBoss AI passed its promotion gate on validation and test. */
   promoted: boolean;
   bestEpoch?: number;
   parity?: { x: (number | null)[]; offset: (number | null)[]; y: number[] }[];
