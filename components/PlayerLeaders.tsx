@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { BarChart3, ExternalLink, HeartPulse, Newspaper, Repeat2, Trophy } from 'lucide-react';
+import { BarChart3, ExternalLink } from 'lucide-react';
 import { useData } from '@/lib/DataContext';
 import { usePlayerCard } from '@/components/player/PlayerCardProvider';
 
@@ -59,23 +59,3 @@ export default function PlayerLeaders() {
   );
 }
 
-export function LeagueResources() {
-  const links = [
-    [Newspaper, 'Latest NHL news', 'https://www.nhl.com/news'],
-    [HeartPulse, 'Injury reports', 'https://www.nhl.com/news/injuries'],
-    [Repeat2, 'Trades and roster moves', 'https://www.nhl.com/news/trades'],
-    [Trophy, 'Standings and league updates', 'https://www.nhl.com'],
-  ] as const;
-
-  return (
-    <section className="bb-panel bb-dashboard-resources overflow-hidden" aria-labelledby="league-resources-title">
-      <div className="bb-dashboard-panel-heading border-b border-rule px-5 py-4"><h2 id="league-resources-title" className="text-lg">Around the NHL</h2></div>
-      <ul className="divide-y divide-rule">
-        {links.map(([Icon, title, href]) => (
-          <li key={href}><a href={href} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center gap-3 px-5 py-3 text-sm text-ink-2 hover:bg-paper-3"><Icon size={17} className="shrink-0 text-muted" aria-hidden="true" /><span className="flex-1">{title}</span><ExternalLink size={13} className="shrink-0 text-muted" aria-hidden="true" /></a></li>
-        ))}
-      </ul>
-      <p className="border-t border-rule px-5 py-3 text-xs text-muted">News and reports from NHL.com</p>
-    </section>
-  );
-}
