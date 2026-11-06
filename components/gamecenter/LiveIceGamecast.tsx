@@ -48,17 +48,12 @@ function PlayerRail({ detail, team, settings, onIce, play }: { detail: GameDetai
   );
 }
 
-function IceSurface({ play, replay, away, home }: { play?: PlayEvent; replay: number; away: string; home: string }) {
+function IceSurface({ play, replay, away }: { play?: PlayEvent; replay: number; away: string }) {
   const rinkRef = useRef<HTMLDivElement>(null);
   const puckRef = useRef<HTMLSpanElement>(null);
   const previous = useRef({ x: 50, y: 50 });
   const x = Math.max(6, Math.min(94, ((play?.x ?? 0) + 100) / 2));
   const y = Math.max(9, Math.min(91, ((play?.y ?? 0) + 42.5) / 0.85));
-  const dots = [
-    [19, 31, away], [31, 65, away], [43, 39, away],
-    [57, 61, home], [69, 35, home], [81, 69, home],
-  ] as const;
-
   useEffect(() => {
     const rink = rinkRef.current;
     const puck = puckRef.current;
@@ -72,13 +67,6 @@ function IceSurface({ play, replay, away, home }: { play?: PlayEvent; replay: nu
       { transform: `translate(-50%, -50%) translate3d(${dx}px, ${dy}px, 0) scale(.72)`, opacity: .45 },
       { transform: 'translate(-50%, -50%) translate3d(0, 0, 0) scale(1)', opacity: 1 },
     ], { duration: 720, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
-    rink.querySelectorAll<HTMLElement>('.icecast-skater').forEach((skater, index) => {
-      const drift = (index % 2 ? 1 : -1) * Math.min(18, Math.abs(dx) * .08 + 5);
-      skater.animate([
-        { transform: `translate(-50%, -50%) translate3d(${drift}px, ${-drift * .35}px, 0)`, opacity: .65 },
-        { transform: 'translate(-50%, -50%) translate3d(0, 0, 0)', opacity: 1 },
-      ], { duration: 520 + index * 35, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
-    });
     previous.current = { x, y };
   }, [play?.id, replay, x, y]);
 
@@ -94,7 +82,6 @@ function IceSurface({ play, replay, away, home }: { play?: PlayEvent; replay: nu
       <span className="icecast-circle icecast-circle--four" aria-hidden />
       <span className="icecast-crease icecast-crease--left" aria-hidden />
       <span className="icecast-crease icecast-crease--right" aria-hidden />
-      {dots.map(([left, top, club], index) => <span key={`${replay}-${left}`} className="icecast-skater" style={{ left: `${left}%`, top: `${top}%`, '--club': teamColor(club), '--delay': `${index * 45}ms` } as React.CSSProperties} aria-hidden />)}
       <span ref={puckRef} className="icecast-puck" style={{ left: `${x}%`, top: `${y}%` } as React.CSSProperties} aria-hidden />
       {play && <span key={`signal-${replay}`} className="icecast-signal" style={{ left: `${x}%`, top: `${y}%`, '--club': teamColor(play.team || away) } as React.CSSProperties} aria-hidden />}
     </div>
@@ -127,7 +114,7 @@ export default function LiveIceGamecast({ detail, settings }: { detail: GameDeta
             <strong>{play?.text || 'The rink activates when play begins.'}</strong>
             <small>{play ? `${play.time} · ${play.period === 'SO' ? 'Shootout' : `Period ${play.period}`}` : 'Waiting for NHL play data'}</small>
           </div>
-          <IceSurface play={play} replay={replay} away={game.away.abbrev} home={game.home.abbrev} />
+          <IceSurface play={play} replay={replay} away={game.away.abbrev} />
           <div className="icecast-controls">
             <button type="button" onClick={() => setOffset(value => Math.min(events.length - 1, value + 1))} disabled={!events.length || offset >= events.length - 1} aria-label="Previous play"><ChevronLeft aria-hidden /></button>
             <button type="button" onClick={() => setReplay(value => value + 1)} disabled={!play}><RotateCcw aria-hidden />Replay play</button>
