@@ -6,7 +6,7 @@ import { useSession } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PlayerLeaders from '@/components/PlayerLeaders';
-import NhlNewsTicker from '@/components/NhlNewsTicker';
+import NhlNewsCarousel from '@/components/NhlNewsCarousel';
 import NoTeamDashboard from '@/components/NoTeamDashboard';
 import FeaturedGame from '@/components/gamecenter/FeaturedGame';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
@@ -403,8 +403,10 @@ export default function Dashboard() {
               <a href="/trades" className="px-5 py-5 hover:bg-paper-3"><h3 className="text-sm text-accent">Trade analyzer</h3><p className="mt-2 text-xs leading-5 text-muted">Compare both sides of a roster move.</p></a>
             </div>
           </section>
+
+          <NhlNewsCarousel />
         </div>
-        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><NhlNewsTicker /></aside>
+        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /></aside>
       </div>
     </div>
   );
