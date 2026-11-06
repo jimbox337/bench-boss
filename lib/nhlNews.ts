@@ -138,18 +138,18 @@ export function mergeNews(lists: NewsItem[][], limit = 24): NewsItem[] {
 }
 
 // ESPN rejects user agents that contain a URL.
-const get = (url: string) => fetch(url, {
+const get = (url: string, fresh = false) => fetch(url, {
   headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BenchBoss/1.0)' },
-  next: { revalidate: 600 },
+  ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: 600 } }),
   signal: AbortSignal.timeout(8_000),
 });
 
-async function allSources(): Promise<NewsItem[][]> {
-  const espn = get(ESPN_NEWS_API)
+async function allSources(fresh = false): Promise<NewsItem[][]> {
+  const espn = get(ESPN_NEWS_API, fresh)
     .then((response) => (response.ok ? response.json() : {}))
     .then(parseEspn)
     .catch(() => [] as NewsItem[]);
-  const feeds = NEWS_FEEDS.map(({ source, url }) => get(url)
+  const feeds = NEWS_FEEDS.map(({ source, url }) => get(url, fresh)
     .then((response) => (response.ok ? response.text() : ''))
     .then((xml) => parseFeed(xml, source))
     .catch(() => [] as NewsItem[]));
@@ -166,8 +166,13 @@ export async function getNhlNews(limit = 24): Promise<NewsItem[]> {
 
 /** One story by id from anything currently in the feeds (not just the carousel's 24). */
 export async function findNhlStory(id: string): Promise<{ story: NewsItem; more: NewsItem[] } | null> {
-  const all = mergeNews(await allSources(), 200);
-  const story = all.find((item) => item.id === id);
+  let all = mergeNews(await allSources(), 200);
+  let story = all.find((item) => item.id === id);
+  // The carousel's copy of the feeds can be newer than this one; check the publishers again.
+  if (!story) {
+    all = mergeNews(await allSources(true), 200);
+    story = all.find((item) => item.id === id);
+  }
   if (!story) return null;
   return { story, more: all.filter((item) => item.id !== id).slice(0, 6) };
 }

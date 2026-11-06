@@ -6,7 +6,8 @@ import StoryPlayers from '@/components/news/StoryPlayers';
 import '@/components/news/news-story.css';
 import { formatPacific } from '@/lib/time';
 
-export const revalidate = 600;
+// Rendered per request (the feed fetches are still cached) so a "not found" is never cached.
+export const dynamic = 'force-dynamic';
 
 type Props = { params: Promise<{ id: string }> };
 
