@@ -1,4 +1,4 @@
-"""BenchBoss AI: one small multi-output neural network for the six skater stats.
+"""BenchSniper: one small multi-output neural network for the six skater stats.
 
 Design (kept deliberately small so it trains on a laptop CPU and runs in the website):
   * inputs: the LightGBM skater features plus log(shrunk baseline) per stat; missing values
@@ -307,7 +307,7 @@ def _child(directory: str) -> None:
     dropout = job.get("dropout", DROPOUT)
     half_life = job.get("halfLife")
     model = train_network(train, valid, job["seed"], loss=loss, dropout=dropout, half_life=half_life)
-    print(f"  BenchBoss AI: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
+    print(f"  BenchSniper: best epoch {model['bestEpoch']}; refitting on all completed seasons for export...", flush=True)
     export = train_network(full, None, job["seed"], epochs=model["bestEpoch"], loss=loss, dropout=dropout, half_life=half_life)
     frames = {name: pd.read_parquet(d / f"frame_{name}.parquet") for name in job["frames"]}
     for name, frame in frames.items():

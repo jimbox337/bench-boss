@@ -79,14 +79,14 @@ Each player-game uses only games **strictly before it**, plus the published sche
 
 ### Promotion gate
 
-On **both** validation and test of the **week-start weekly backtest** (see BenchBoss AI below), the combined weekly fantasy-point projection must:
+On **both** validation and test of the **week-start weekly backtest** (see BenchSniper below), the combined weekly fantasy-point projection must:
 
 1. beat the production baseline on weekly MAE **and** RMSE, and
 2. not lose more than 0.005 in start/sit accuracy or top-50 precision.
 
 ### Results (`bench-boss-lgbm-20261106`, 12 seasons)
 
-These weekly numbers update features before every game, which is optimistic. The serving-faithful week-start backtest is under BenchBoss AI below.
+These weekly numbers update features before every game, which is optimistic. The serving-faithful week-start backtest is under BenchSniper below.
 
 | Weekly fantasy points, 2025-26 test | Production baseline | Previous model (20261105) | Bench Boss model |
 |---|---|---|---|
@@ -109,22 +109,22 @@ On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1
   - Skater fantasy-point MAE: 0.972 for v2, versus 1.006 for the baseline.
   - Starting goalies: 1 of 8 correct, before the rotation features existed.
 
-## BenchBoss AI: the neural challenger (experiment, not served)
+## BenchSniper: the neural challenger (experiment, not served)
 
-BenchBoss AI (`benchboss_ml/neural.py`) is one small shared neural network for all six skater stats: two hidden ReLU layers (128, 64), dropout and weight decay, and six Poisson outputs, each offset by log(shrunk baseline). It uses the same features, the same chronological split and early stopping on the validation season. It trains on a laptop CPU in a few minutes (`pip install -r requirements-neural.txt`; `train --no-neural` skips it). It runs in a child process, because PyTorch and LightGBM deadlock in one process on macOS (OpenMP).
+BenchSniper (`benchboss_ml/neural.py`) is one small shared neural network for all six skater stats: two hidden ReLU layers (128, 64), dropout and weight decay, and six Poisson outputs, each offset by log(shrunk baseline). It uses the same features, the same chronological split and early stopping on the validation season. It trains on a laptop CPU in a few minutes (`pip install -r requirements-neural.txt`; `train --no-neural` skips it). It runs in a child process, because PyTorch and LightGBM deadlock in one process on macOS (OpenMP).
 
-It competes rather than replaces. It joins the LightGBM stack as one more NNLS component, so validation chooses its weight. It reaches the app only if the ensemble passes a stricter gate: better weekly MAE and RMSE than the current model, no loss in start/sit or top-50, at most 0.5% worse MAE for forwards or defence, on validation **and** test. Even then it stays behind `BENCHBOSS_AI=1`.
+It competes rather than replaces. It joins the LightGBM stack as one more NNLS component, so validation chooses its weight. It reaches the app only if the ensemble passes a stricter gate: better weekly MAE and RMSE than the current model, no loss in start/sit or top-50, at most 0.5% worse MAE for forwards or defence, on validation **and** test. Even then it stays behind `BENCHSNIPER=1`.
 
 **First result (20261106): not promoted.**
 
-| Weekly FP, 2025-26 test | Baseline | LightGBM (served) | BenchBoss AI alone | LightGBM + BenchBoss AI |
+| Weekly FP, 2025-26 test | Baseline | LightGBM (served) | BenchSniper alone | LightGBM + BenchSniper |
 |---|---|---|---|---|
 | MAE | 1.604 | **1.574** | 1.603 | **1.574** |
 | RMSE | 2.170 | 2.123 | 2.200 | 2.123 |
 | Start/sit | 0.760 | 0.761 | 0.758 | 0.762 |
 | Top-50 | 0.459 | **0.466** | 0.448 | 0.465 |
 
-On its own BenchBoss AI is about baseline quality. It is biased low (−0.19 FP per week on test) and ranks players worse than the shrunk baseline it starts from. Validation gave it weight only for assists (0.06), so the ensemble is the current model to three decimals, and it fails the start/sit (validation) and top-50 (test) checks by about 0.001. As expected, better inputs (injuries, lines, roles) matter more than the model family.
+On its own BenchSniper is about baseline quality. It is biased low (−0.19 FP per week on test) and ranks players worse than the shrunk baseline it starts from. Validation gave it weight only for assists (0.06), so the ensemble is the current model to three decimals, and it fails the start/sit (validation) and top-50 (test) checks by about 0.001. As expected, better inputs (injuries, lines, roles) matter more than the model family.
 
 **Follow-up experiments (2026-11-06), none promoted.** These were run with the real stack, blend and gate on dumped LightGBM frames:
 
@@ -147,7 +147,7 @@ The weekly tables above update features before every game, so a week's later gam
 
 Baselines are recomputed on the frozen features, and the same fitted models, stack weights and blend are applied (`weeklyWeekStart` in `reports/evaluation.json`).
 
-| Weekly FP, week-start | Production baseline | Shrunk baseline | LightGBM (served) | BenchBoss AI alone |
+| Weekly FP, week-start | Production baseline | Shrunk baseline | LightGBM (served) | BenchSniper alone |
 |---|---|---|---|---|
 | Test MAE | 1.790 | 1.712 | 1.715 | **1.642** (−4.2% vs served) |
 | Test RMSE | 2.443 | 2.308 | 2.324 | **2.259** (−2.8%) |
@@ -158,16 +158,16 @@ Baselines are recomputed on the frozen features, and the same fitted models, sta
 
 What this shows:
 
-- **Weekly error is higher than the per-game tables suggest**: about 9% for the served model, 12% for the production baseline and only 2% for BenchBoss AI. These are the honest numbers for what the app shows.
+- **Weekly error is higher than the per-game tables suggest**: about 9% for the served model, 12% for the production baseline and only 2% for BenchSniper. These are the honest numbers for what the app shows.
 - **The served model still passes its promotion gate** against the production baseline on validation, test and live. But it no longer beats the shrunk baseline: it is about equal on validation and test, and worse on live. Its edge in the per-game tables came partly from reacting to in-week results.
-- **BenchBoss AI alone wins on every weekly metric**, on validation, test and live, including ranking metrics, which don't reward its low bias (−0.22 FP per week). It also wins per game: Poisson deviance is 5.231 vs 5.369 on test, and the single-game FP rank correlation is 0.351 vs 0.325.
-- **It is still not promoted.** The stack weights and blend are fitted on per-game validation sums, where the leak favours LightGBM, so BenchBoss AI gets almost no weight (assists 0.06) and the ensemble is just the served model. The challenger gate now uses the week-start backtest, and the ensemble fails it on validation start/sit and top-50.
+- **BenchSniper alone wins on every weekly metric**, on validation, test and live, including ranking metrics, which don't reward its low bias (−0.22 FP per week). It also wins per game: Poisson deviance is 5.231 vs 5.369 on test, and the single-game FP rank correlation is 0.351 vs 0.325.
+- **It is still not promoted.** The stack weights and blend are fitted on per-game validation sums, where the leak favours LightGBM, so BenchSniper gets almost no weight (assists 0.06) and the ensemble is just the served model. The challenger gate now uses the week-start backtest, and the ensemble fails it on validation start/sit and top-50.
 
 ### Refit on week-start validation (shipped as `bench-boss-lgbm-20261106-ws`)
 
 `train.py` now fits on the week-start validation frame by default (`--fit-per-game` restores the old behaviour). That covers the stack weights, the per-stat selection, the baseline blend and the interval scale. The boosters themselves are unchanged. Test and live stay untouched.
 
-| Weekly FP, week-start, 2025-26 test | Shrunk baseline | LightGBM, per-game fit (previous) | LightGBM, week-start fit (served) | BenchBoss AI alone | LightGBM + BenchBoss AI, week-start fit |
+| Weekly FP, week-start, 2025-26 test | Shrunk baseline | LightGBM, per-game fit (previous) | LightGBM, week-start fit (served) | BenchSniper alone | LightGBM + BenchSniper, week-start fit |
 |---|---|---|---|---|---|
 | MAE | 1.712 | 1.715 | 1.651 (−3.8%) | **1.642** | 1.648 |
 | RMSE | 2.308 | 2.324 | 2.238 (−3.7%) | 2.259 | **2.236** |
@@ -178,30 +178,30 @@ What this shows:
 - **The stack now leans on the direct booster** (weights 0.73–1.02), not the baseline-anchored components, and the blend keeps 100% model. The direct model was already the best single-game ranker. Per-game fitting under-weighted it because the leak rewarded components that chase in-week results.
 - **It is better per game too:** Poisson deviance is 5.208 vs 5.369 on test, and single-game FP rank correlation is 0.349 vs 0.325. 80% intervals cover 79–81% of week-start weeks.
 - **Shipped.** The served-model gate now uses the week-start backtest only, and the model passes it on validation, test and live. The per-game weekly gate is still reported, for information only: there the model loses to the production baseline by 0.4%, but that table rewards in-week leakage.
-- **BenchBoss AI now gets real weight** (0.19–0.45 per stat). The ensemble passes the challenger gate on validation. On test it fails only start/sit, by 0.0007 (0.7474 vs 0.7481).
+- **BenchSniper now gets real weight** (0.19–0.45 per stat). The ensemble passes the challenger gate on validation. On test it fails only start/sit, by 0.0007 (0.7474 vs 0.7481).
 - **Weekly-total loss on week-start frames** (`train --neural-loss week`; safe, because no input carries a result from the same week): week-start test bias −0.12 instead of −0.22 and RMSE 2.248 instead of 2.259, but MAE 1.651 instead of 1.642 and per-game deviance unchanged. The ensemble fails the gate on validation MAE and test start/sit and top-50, so the default stays the per-game loss.
 - **Bias fixes (2026-11-06).** Two retrains (`--neural-dropout 0`, and `--neural-calibrate`, which is now the default):
 
-  | BenchBoss AI alone, week-start test | Bias (FP/week) | MAE | RMSE | Top-50 |
+  | BenchSniper alone, week-start test | Bias (FP/week) | MAE | RMSE | Top-50 |
   |---|---|---|---|---|
   | As before (dropout 0.1, uncorrected) | −0.22 | 1.642 | 2.259 | 0.436 |
   | Dropout off, uncorrected | −0.19 | 1.647 | 2.260 | 0.433 |
   | **Per-stat correction (default now)** | **−0.06** | 1.650 | **2.239** | 0.435 |
   | LightGBM (served), for reference | −0.06 | 1.651 | 2.238 | 0.428 |
 
-  Dropout explains only a little of the bias. The correction factors point to the scoring trend instead: goals ×1.09, assists ×1.09, PP points ×1.15, shots ×1.02, hits ×0.95, blocks ×1.00. The training seasons scored less and hit more than recent ones. The correction is fitted on week-start validation totals and folded into the exported output bias, so the app's forward pass is unchanged. Corrected, BenchBoss AI alone matches LightGBM on MAE and RMSE and beats it on top-50; per game it is 0.2% behind (deviance 5.218 vs 5.208). The ensemble still fails the challenger gate on test start/sit alone, 0.7474 vs 0.7481, so it is not promoted.
+  Dropout explains only a little of the bias. The correction factors point to the scoring trend instead: goals ×1.09, assists ×1.09, PP points ×1.15, shots ×1.02, hits ×0.95, blocks ×1.00. The training seasons scored less and hit more than recent ones. The correction is fitted on week-start validation totals and folded into the exported output bias, so the app's forward pass is unchanged. Corrected, BenchSniper alone matches LightGBM on MAE and RMSE and beats it on top-50; per game it is 0.2% behind (deviance 5.218 vs 5.208). The ensemble still fails the challenger gate on test start/sit alone, 0.7474 vs 0.7481, so it is not promoted.
 - **Recent-season weighting (`--neural-half-life`, off by default).** Older training seasons count half as much every N seasons back:
 
   | Week-start | Half-life | Equal weights (default) | 4 seasons | 2 seasons |
   |---|---|---|---|---|
-  | BenchBoss AI alone, test MAE / RMSE | | 1.650 / 2.239 | **1.649 / 2.235** | 1.653 / 2.239 |
-  | BenchBoss AI alone, test start/sit / top-50 | | 0.747 / 0.435 | **0.750** / 0.435 | 0.747 / **0.436** |
+  | BenchSniper alone, test MAE / RMSE | | 1.650 / 2.239 | **1.649 / 2.235** | 1.653 / 2.239 |
+  | BenchSniper alone, test start/sit / top-50 | | 0.747 / 0.435 | **0.750** / 0.435 | 0.747 / **0.436** |
   | Ensemble gate: failed checks | | test start/sit | validation MAE | validation MAE, top-50 |
 
-  With a half-life of 4, BenchBoss AI alone beats LightGBM (MAE 1.651, RMSE 2.238, start/sit 0.748, top-50 0.428) on all four test metrics. But choosing a setting by its test score would spend the untouched test season, and on validation, equal weighting is best. It barely shrinks the correction factors either (goals ×1.09, PP points ×1.11–1.15), so most of the bias is the jump to 2024-25, which no weighting of earlier seasons can learn. The default stays equal weights.
-- **Where this leaves BenchBoss AI:** level with LightGBM. Each setting fails a different single check by about 0.1%, on a different season, which is noise. The live shadow record (`neuralShadow` in the daily scoring, from 2026-11-06) will separate them better than more backtest tuning. The app artifact now carries the corrected network (equal weights, dropout 0.1) for that shadow; its LightGBM, goalie and availability parts are unchanged.
+  With a half-life of 4, BenchSniper alone beats LightGBM (MAE 1.651, RMSE 2.238, start/sit 0.748, top-50 0.428) on all four test metrics. But choosing a setting by its test score would spend the untouched test season, and on validation, equal weighting is best. It barely shrinks the correction factors either (goals ×1.09, PP points ×1.11–1.15), so most of the bias is the jump to 2024-25, which no weighting of earlier seasons can learn. The default stays equal weights.
+- **Where this leaves BenchSniper:** level with LightGBM. Each setting fails a different single check by about 0.1%, on a different season, which is noise. The live shadow record (`neuralShadow` in the daily scoring, from 2026-11-06) will separate them better than more backtest tuning. The app artifact now carries the corrected network (equal weights, dropout 0.1) for that shadow; its LightGBM, goalie and availability parts are unchanged.
 
-The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchBoss AI shadow) but never shown, so live evidence builds up for a future promotion.
+The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchSniper shadow) but never shown, so live evidence builds up for a future promotion.
 
 ## Daily track record
 
