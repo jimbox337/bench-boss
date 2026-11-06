@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getStartingGoalies } from '@/lib/goalieStarters';
-import { isIsoDate } from '@/lib/nhlGameCenter';
+import { isIsoDate, slateDate } from '@/lib/nhlGameCenter';
 
 const NHL_API = 'https://api-web.nhle.com/v1';
 
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const date = new URL(request.url).searchParams.get('date');
   try {
-    const response = await fetch(`${NHL_API}/score/${isIsoDate(date) ? date : 'now'}`, { next: { revalidate: 30 }, signal: AbortSignal.timeout(10_000) });
+    const response = await fetch(`${NHL_API}/score/${isIsoDate(date) ? date : slateDate()}`, { next: { revalidate: 30 }, signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error('NHL live feed unavailable');
     const score = await response.json();
     const starters = await getStartingGoalies(score.games || []);

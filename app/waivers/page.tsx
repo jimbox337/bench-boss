@@ -1,20 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { rankWaiverTargets, defaultLeagueSettings, Player } from '@/lib/calculator';
+import { rankWaiverTargets } from '@/lib/calculator';
+import { pointsScoring } from '@/components/gamecenter/shared';
 import { useData } from '@/lib/DataContext';
-import PlayerDetailModal from '@/components/PlayerDetailModal';
+import { usePlayerCard } from '@/components/player/PlayerCardProvider';
 
 export default function WaiverWire() {
-  const { players, projections, myTeam, addToMyTeam } = useData();
+  const { players, projections, myTeam, addToMyTeam, leagueSettings } = useData();
+  const scoring = pointsScoring(leagueSettings);
   const [timeframe, setTimeframe] = useState('next_7');
   const [sortBy, setSortBy] = useState('best_overall');
   const [position, setPosition] = useState('all');
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { openPlayer } = usePlayerCard();
 
   // Free agents are all players not on my team
   const freeAgents = players.filter(p => !myTeam.some(tp => tp.id === p.id));
-  const targets = rankWaiverTargets(freeAgents, projections, defaultLeagueSettings);
+  const targets = rankWaiverTargets(freeAgents, projections, scoring.settings);
 
   return (
     <>
@@ -81,8 +83,8 @@ export default function WaiverWire() {
               className="bg-paper-2 transition-colors cursor-pointer hover:bg-paper-3"
               tabIndex={0}
               aria-label={`View ${target.player.name}`}
-              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelectedPlayer(target.player); } }}
-              onClick={() => setSelectedPlayer(target.player)}
+              onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPlayer(target.player.id); } }}
+              onClick={() => openPlayer(target.player.id)}
             >
               <div className="p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4">
@@ -156,13 +158,6 @@ export default function WaiverWire() {
       </div>
 
       {/* Player Detail Modal */}
-      {selectedPlayer && (
-        <PlayerDetailModal
-          player={selectedPlayer}
-          isOpen={!!selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
-        />
-      )}
     </div>
     </>
   );

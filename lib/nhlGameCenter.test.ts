@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LeagueSettings } from './calculator';
 import {
+  slateDate,
   attachRecords,
   pickFeatured,
   normalizePlayByPlay,
@@ -158,5 +159,14 @@ describe('pickFeatured', () => {
     expect(pickFeatured(later, new Set(['LAK']))).toMatchObject({ reason: 'Your players next' });
     expect(pickFeatured([make(4, 'NYR', 'STL', 'OFF')], new Set())).toMatchObject({ reason: 'Final' });
     expect(pickFeatured([], new Set())).toBeNull();
+  });
+});
+
+describe('slateDate', () => {
+  it('keeps last night until 10am Pacific, then shows today', () => {
+    expect(slateDate(new Date('2026-11-05T16:59:00Z'))).toBe('2026-11-04'); // 08:59 PST
+    expect(slateDate(new Date('2026-11-05T18:00:00Z'))).toBe('2026-11-05'); // 10:00 PST
+    expect(slateDate(new Date('2026-07-01T17:00:00Z'))).toBe('2026-07-01'); // 10:00 PDT
+    expect(slateDate(new Date('2026-03-01T07:30:00Z'))).toBe('2026-02-28'); // 23:30 PST, month edge
   });
 });

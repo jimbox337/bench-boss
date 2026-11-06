@@ -282,7 +282,7 @@ export type GameDetail = {
   game: ScoreboardGame;
   scoring: GoalEvent[];
   penalties: { period: PeriodKey; time: string; team: string; player: string; type: string; minutes: number; drawnBy?: string }[];
-  threeStars: { star: number; playerId: number; name: string; team: string; line?: string }[];
+  threeStars: { star: number; playerId: number; name: string; team: string; position?: string; number?: number; headshot?: string; line?: string }[];
   shotsByPeriod: { periods: PeriodKey[]; away: number[]; home: number[] };
   teamStats: { category: string; away: string | number; home: string | number }[];
   skaters: SkaterLine[];
@@ -307,7 +307,7 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
     summary?: {
       scoring?: { periodDescriptor: { number?: number; periodType?: string }; goals: RawGoal[] }[];
       penalties?: { periodDescriptor: { number?: number; periodType?: string }; penalties: { timeInPeriod: string; type: string; duration: number; committedByPlayer?: { firstName?: Localized; lastName?: Localized } | string; teamAbbrev: Localized; descKey: string; drawnBy?: { firstName?: Localized; lastName?: Localized } }[] }[];
-      threeStars?: { star: number; playerId: number; name?: Localized; teamAbbrev?: string; goals?: number; assists?: number; points?: number; savePctg?: number }[];
+      threeStars?: { star: number; playerId: number; name?: Localized; teamAbbrev?: string; position?: string; sweaterNo?: number; headshot?: string; goals?: number; assists?: number; points?: number; savePctg?: number; goalsAgainstAverage?: number }[];
     };
   };
   const scoring = (l.summary?.scoring || []).flatMap(period => period.goals.map(goal => normalizeGoal(goal, period.periodDescriptor)));
@@ -358,8 +358,8 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
       player: person(p.committedByPlayer) || 'Team', type: p.descKey.replace(/-/g, ' '), minutes: p.duration, drawnBy: person(p.drawnBy) || undefined,
     }))),
     threeStars: (l.summary?.threeStars || []).map(s => ({
-      star: s.star, playerId: s.playerId, name: text(s.name), team: s.teamAbbrev || '',
-      line: s.savePctg !== undefined ? `${(s.savePctg * 100).toFixed(1)} SV%` : `${s.goals || 0}G ${s.assists || 0}A`,
+      star: s.star, playerId: s.playerId, name: text(s.name), team: s.teamAbbrev || '', position: s.position, number: s.sweaterNo, headshot: s.headshot,
+      line: s.savePctg !== undefined ? `${s.savePctg.toFixed(3).replace(/^0/, '')} SV%${s.goalsAgainstAverage !== undefined ? ` · ${s.goalsAgainstAverage.toFixed(2)} GAA` : ''}` : `${s.goals || 0} G · ${s.assists || 0} A · ${s.points ?? (s.goals || 0) + (s.assists || 0)} PTS`,
     })),
     shotsByPeriod: {
       periods: shots.map(s => periodLabel(s.periodDescriptor.number, s.periodDescriptor.periodType)),
@@ -478,13 +478,27 @@ export function attachRecords(games: ScoreboardGame[], standings: StandingRow[])
   return games.map(game => ({ ...game, away: enrich(game.away), home: enrich(game.home) }));
 }
 
+/**
+ * The slate the site shows by default: today's games from 10:00 Pacific, otherwise
+ * yesterday's (so last night's finals stay up through the morning).
+ */
+export function slateDate(now: Date = new Date()): string {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).map(part => [part.type, part.value]));
+  const day = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
+  if (Number(parts.hour) < 10) day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
 export async function fetchScoreboard(date?: string) {
+  const day = isIsoDate(date) ? date : slateDate();
   const [payload, standings] = await Promise.all([
-    nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${isIsoDate(date) ? date : 'now'}`, 20),
+    nhl<{ currentDate?: string; prevDate?: string; nextDate?: string; games?: RawScoreGame[] }>(`/score/${day}`, 20),
     fetchStandings().catch(() => [] as StandingRow[]),
   ]);
   return {
-    date: payload.currentDate || date || '',
+    date: payload.currentDate || day,
     prevDate: payload.prevDate,
     nextDate: payload.nextDate,
     games: attachRecords((payload.games || []).map(normalizeScoreGame), standings),

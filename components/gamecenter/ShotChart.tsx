@@ -14,15 +14,15 @@ const TYPES: { key: ShotType; label: string }[] = [
 
 /** NHL rink in feet (x -100..100, y -42.5..42.5) with shots at their recorded coordinates. */
 function Rink({ children }: { children: React.ReactNode }) {
-  const red = '#C8102E';
-  const blue = '#1D4ED8';
+  const red = '#E5485F';
+  const blue = '#5B8CFF';
   return (
     <svg viewBox="-101 -43.5 202 87" className="h-auto w-full" role="img" aria-label="Shot locations on the rink">
-      <rect x="-100" y="-42.5" width="200" height="85" rx="28" fill="#fff" stroke="#94A3B8" strokeWidth="0.8" />
+      <rect x="-100" y="-42.5" width="200" height="85" rx="28" fill="oklch(24% 0.022 252)" stroke="oklch(46% 0.02 255)" strokeWidth="0.8" />
       <line x1="0" y1="-42.5" x2="0" y2="42.5" stroke={red} strokeWidth="1" strokeDasharray="2 1.2" />
       {[-25, 25].map(x => <line key={x} x1={x} y1="-42.5" x2={x} y2="42.5" stroke={blue} strokeWidth="1" />)}
       {[-89, 89].map(x => <line key={x} x1={x} y1="-39.5" x2={x} y2="39.5" stroke={red} strokeWidth="0.4" />)}
-      {[-89, 89].map(x => <path key={`c${x}`} d={x < 0 ? 'M -89 -4 A 6 6 0 0 1 -89 4' : 'M 89 -4 A 6 6 0 0 0 89 4'} fill="#DBEAFE" stroke={red} strokeWidth="0.4" />)}
+      {[-89, 89].map(x => <path key={`c${x}`} d={x < 0 ? 'M -89 -4 A 6 6 0 0 1 -89 4' : 'M 89 -4 A 6 6 0 0 0 89 4'} fill="oklch(36% 0.07 250)" stroke={red} strokeWidth="0.4" />)}
       <circle cx="0" cy="0" r="15" fill="none" stroke={blue} strokeWidth="0.5" />
       <circle cx="0" cy="0" r="0.8" fill={blue} />
       {[-69, 69].flatMap(x => [-22, 22].map(y => (
@@ -68,7 +68,7 @@ export default function ShotChart({ plays, away, home }: { plays: PlayEvent[]; a
             <label key={type.key} className="flex cursor-pointer items-center justify-between gap-2">
               <span className="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden>
-                  {type.key === 'goal' ? <circle r="5.5" fill="#0F172A" stroke="#fff" strokeWidth="1" /> : type.key === 'shot' ? <circle r="5" fill="#fff" stroke="#0F172A" strokeWidth="1.6" /> : <circle r="3.5" fill="#0F172A" opacity="0.35" />}
+                  {type.key === 'goal' ? <circle r="5.5" fill="currentColor" stroke="var(--color-paper-2)" strokeWidth="1" /> : type.key === 'shot' ? <circle r="5" fill="var(--color-paper-2)" stroke="currentColor" strokeWidth="1.6" /> : <circle r="3.5" fill="currentColor" opacity="0.4" />}
                 </svg>
                 {type.label}
               </span>

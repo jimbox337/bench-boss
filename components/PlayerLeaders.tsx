@@ -1,15 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { BarChart3, ExternalLink, HeartPulse, Newspaper, Repeat2, Trophy } from 'lucide-react';
 import { useData } from '@/lib/DataContext';
-import type { Player } from '@/lib/calculator';
-import PlayerDetailModal from '@/components/PlayerDetailModal';
+import { usePlayerCard } from '@/components/player/PlayerCardProvider';
 
 export default function PlayerLeaders() {
   const { players, isLoading, isLiveData } = useData();
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { openPlayer } = usePlayerCard();
   const leaders = useMemo(() => players
     .filter((player) => !player.isGoalie && player.seasonStats && Number.isFinite(player.seasonStats.PTS))
     .sort((a, b) => (b.seasonStats?.PTS ?? 0) - (a.seasonStats?.PTS ?? 0) || a.name.localeCompare(b.name))
@@ -36,11 +35,12 @@ export default function PlayerLeaders() {
         <ol className="divide-y divide-rule">
           {leaders.map((player, index) => (
             <li key={player.id}>
-              <button onClick={() => setSelectedPlayer(player)} className="flex w-full items-center gap-3 px-5 py-2 text-left hover:bg-paper-3" aria-label={`View ${player.name}, ${player.seasonStats?.PTS} points`}>
+              <button onClick={() => openPlayer(player.id)} className="flex w-full items-center gap-3 px-5 py-2 text-left hover:bg-paper-3" aria-label={`View ${player.name}, ${player.seasonStats?.PTS} points`}>
                 <span className="w-4 shrink-0 text-xs tabular-nums text-muted">{index + 1}</span>
                 <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-paper-3 text-xs font-medium text-muted">
-                  {player.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}
-                  {player.headshotUrl && <img src={player.headshotUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}
+                  {/* Initials only when there is no photo (NHL headshots are transparent PNGs). */}
+                  <span className={player.headshotUrl ? 'hidden' : undefined}>{player.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</span>
+                  {player.headshotUrl && <img src={player.headshotUrl} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; event.currentTarget.previousElementSibling?.classList.remove('hidden'); }} />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm leading-5 font-semibold text-accent">{player.name}</span>
@@ -55,7 +55,6 @@ export default function PlayerLeaders() {
       <div className="border-t border-rule px-5 py-2">
         <Link href="/players" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:underline">View player explorer</Link>
       </div>
-      {selectedPlayer && <PlayerDetailModal player={selectedPlayer} isOpen={true} onClose={() => setSelectedPlayer(null)} />}
     </section>
   );
 }

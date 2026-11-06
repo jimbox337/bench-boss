@@ -5,8 +5,7 @@ import { useSession } from '@/lib/AuthContext';
 import { TriangleAlert } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useData } from '@/lib/DataContext';
-import PlayerDetailModal from '@/components/PlayerDetailModal';
-import { Player } from '@/lib/calculator';
+import { PlayerLink, usePlayerCard } from '@/components/player/PlayerCardProvider';
 
 export default function MyTeam() {
   const router = useRouter();
@@ -14,7 +13,7 @@ export default function MyTeam() {
   const { players, myTeam, addToMyTeam, removeFromMyTeam, setMyTeam, refreshTeam, setESPNConfig } = useData();
   const [search, setSearch] = useState('');
   const [showAddPlayer, setShowAddPlayer] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { openPlayer } = usePlayerCard();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -133,7 +132,7 @@ export default function MyTeam() {
                 {filteredAvailable.slice(0, 50).map((player) => (
                   <tr key={player.id} className="hover:bg-paper-3 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-ink">
-                      {player.name}
+                      <PlayerLink id={player.id} className="bb-player-link">{player.name}</PlayerLink>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-ink-2">
                       {player.nhlTeam}
@@ -206,7 +205,7 @@ export default function MyTeam() {
                   </thead>
                   <tbody className="divide-y divide-rule">
                     {posPlayers.map((player) => (
-                      <tr key={player.id} tabIndex={0} aria-label={`View ${player.name}`} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelectedPlayer(player); } }} className="hover:bg-paper-3 transition-colors cursor-pointer" onClick={() => setSelectedPlayer(player)}>
+                      <tr key={player.id} tabIndex={0} aria-label={`View ${player.name}`} onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPlayer(player.id); } }} className="hover:bg-paper-3 transition-colors cursor-pointer" onClick={() => openPlayer(player.id)}>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="font-medium text-ink hover:text-accent-2 transition-colors">{player.name}</div>
                           <div className="text-xs text-muted">{player.positions?.join('/') ?? ''}</div>
@@ -251,13 +250,6 @@ export default function MyTeam() {
       </div>
 
       {/* Player Detail Modal */}
-      {selectedPlayer && (
-        <PlayerDetailModal
-          player={selectedPlayer}
-          isOpen={!!selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
-        />
-      )}
     </div>
     </>
   );

@@ -15,7 +15,7 @@ function cardStatus(game: ScoreboardGame): string {
   return new Date(game.startTimeUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toUpperCase();
 }
 
-/** Live NHL score cards shown under the top bar on every page. */
+/** Compact live NHL score cards, shown under the top bar on the home page. */
 export default function ScoreStrip() {
   const { myTeam } = useData();
   const [games, setGames] = useState<ScoreboardGame[] | null>(null);
@@ -59,11 +59,11 @@ export default function ScoreStrip() {
                 </span>
                 <span className="bb-card-meta">
                   <span className={game.isLive ? 'bb-card-live' : ''}>{cardStatus(game)}</span>
-                  <span className="bb-card-network">{mine ? <span className="bb-card-mine">Your players</span> : game.broadcasts[0]?.toUpperCase()}</span>
+                  {mine ? <span className="bb-card-mine" title="Has your players">Yours</span> : <span className="bb-card-network">{game.broadcasts[0]?.toUpperCase()}</span>}
                 </span>
                 {(['away', 'home'] as const).map(side => (
                   <span key={side} className="bb-card-row" data-dim={winner && winner !== side ? true : undefined}>
-                    <TeamLogo team={game[side]} size={18} />
+                    <TeamLogo team={game[side]} size={20} />
                     <span className="bb-card-abbrev">{game[side].abbrev}</span>
                     {started ? <span className="bb-card-score">{game[side].score ?? 0}</span> : <span className="bb-card-record">{game[side].record}</span>}
                   </span>

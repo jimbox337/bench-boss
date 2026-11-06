@@ -42,3 +42,10 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# Bench Boss ML pipeline (local venv, downloaded datasets, caches)
+/ml/.venv/
+/ml/data/
+/ml/artifacts/
+/ml/**/__pycache__/
+/ml/.pytest_cache/

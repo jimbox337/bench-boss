@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Player Analysis feature provides comprehensive, AI-powered insights for every player in your fantasy hockey roster. Powered by **Groq's FREE API** using Meta's Llama 3.1 70B model, this feature analyzes player statistics, trends, and context to deliver actionable recommendations at **absolutely no cost**!
+The AI Player Analysis feature provides comprehensive, AI-powered insights for every player in your fantasy hockey roster. Powered by **Groq's free tier** using the `openai/gpt-oss-120b` model (default in `lib/aiModel.ts`, overridable with the server-side `GROQ_MODEL` variable), this feature analyzes player statistics, trends, and context to deliver actionable recommendations at **absolutely no cost**!
 
 ## What It Does
 
@@ -57,9 +57,9 @@ When you click on any player in your "My Team" roster, you get:
 The feature uses the **FREE** Groq API:
 
 ```typescript
-Model: 'llama-3.1-70b-versatile'
+Model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b'  // lib/aiModel.ts
 Max Tokens: 1500
-Temperature: 0.7
+Temperature: 0.25  // player outlook route
 Provider: Groq (ultra-fast inference)
 ```
 

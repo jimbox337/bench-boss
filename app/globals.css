@@ -9,6 +9,7 @@
 @import "./tokens.css";
 @import "./base.css" layer(base);
 @import "./shell.css" layer(components);
+@import "./player-card.css" layer(components);
 
 :root {
   --background: var(--color-paper);
@@ -44,16 +45,16 @@ button:active:not(:disabled), a:active { transform: translateY(1px); }
 :focus-visible { outline: 2px solid var(--color-focus) !important; outline-offset: 3px; }
 input, select, textarea { accent-color: var(--color-accent); caret-color: var(--color-accent); }
 input::placeholder, textarea::placeholder { color: var(--color-muted); }
-h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; overflow-wrap: break-word; }
+h1, h2, h3 { font-family: var(--font-display); font-stretch: var(--stretch-display); letter-spacing: var(--tracking-display); font-weight: 700; min-width: 0; overflow-wrap: break-word; }
 
 @layer components {
   .fantasy-app-shell { background: var(--color-paper); color: var(--color-ink); }
   .fantasy-main { background: var(--color-paper); color: var(--color-ink); scrollbar-gutter: stable; }
   .fantasy-nav { background: var(--color-paper-2); border-color: var(--color-rule); }
   .fantasy-card, .bb-panel { background: var(--color-paper-2); color: var(--color-ink); border: 1px solid var(--color-rule); box-shadow: var(--shadow-card); border-radius: var(--radius-card); }
-  .fantasy-card h2, .bb-panel h2 { text-transform: uppercase; letter-spacing: 0.03em; font-size: 20px; font-weight: 700; }
+  .fantasy-card h2, .bb-panel h2 { letter-spacing: -0.01em; font-size: 19px; font-weight: 750; }
   .fantasy-card-command { background: transparent; color: var(--color-ink); border: 0; }
-  .fantasy-stat-card { background: var(--color-paper-2); border: 1px solid var(--color-rule); }
+  .fantasy-stat-card { background: var(--color-paper-2); border: 1px solid var(--color-rule); box-shadow: var(--shadow-card); }
   .fantasy-card-hover { transition: border-color var(--dur-micro) var(--ease-out); }
   a.fantasy-card-hover:hover, button.fantasy-card-hover:hover { border-color: var(--color-accent); }
   .fantasy-button, .fantasy-button-gold, .bb-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); min-height: 44px; padding: var(--space-sm) 20px; border: 1px solid var(--color-accent); background: var(--color-accent); color: var(--color-accent-ink); font-size: var(--text-sm); font-weight: 600; white-space: nowrap; border-radius: var(--radius-pill); transition: background-color var(--dur-micro) var(--ease-out); }
@@ -64,18 +65,22 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; o
   .rink-divider { height: 1px; background: var(--color-rule); }
   .bb-page { max-width: var(--container); margin-inline: auto; padding: 28px 32px var(--space-xl); }
   .bb-page-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); margin-bottom: var(--space-lg); }
-  .bb-page-header h1, .bb-page-header h2 { font-size: 36px; font-weight: 700; line-height: 1.1; letter-spacing: 0.01em; text-transform: uppercase; }
+  .bb-page-header h1, .bb-page-header h2 { font-size: 34px; font-weight: 800; line-height: 1.05; letter-spacing: 0; text-transform: uppercase; }
+  /* Goal-line rule under page titles: red line with a blue line beside it. */
+  .bb-page-header h1::after { content: ""; display: block; width: 72px; height: 4px; margin-top: 10px; border-radius: 2px; background: linear-gradient(90deg, var(--color-goal-red) 0 62%, transparent 62% 70%, var(--color-accent) 70%); }
   .bb-page-header p { color: var(--color-muted); font-size: var(--text-sm); line-height: 1.6; margin-top: var(--space-xs); max-width: 65ch; }
-  .bb-toolbar { padding: 20px var(--space-lg); background: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-card); margin-bottom: var(--space-lg); }
+  .bb-toolbar { padding: 20px var(--space-lg); background: var(--color-paper-2); border: 1px solid var(--color-rule); box-shadow: var(--shadow-card); border-radius: var(--radius-card); margin-bottom: var(--space-lg); }
   .bb-field { min-height: 44px; width: 100%; padding: var(--space-sm); border: 1px solid var(--color-field-border); border-radius: var(--radius-pill); background: var(--color-paper-2); color: var(--color-ink); font-size: var(--text-sm); }
-  .bb-empty { padding: 48px var(--space-lg); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper-2); text-align: center; }
-  .bb-stat-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border: 1px solid var(--color-rule); border-radius: var(--radius-card); background: var(--color-paper-2); margin-block: var(--space-lg); }
-  .bb-stat-strip > * { padding: 20px var(--space-lg); border-right: 1px solid var(--color-rule); }
+  .bb-empty { padding: 48px var(--space-lg); border: 1px solid var(--color-rule); box-shadow: var(--shadow-card); border-radius: var(--radius-card); background: var(--color-paper-2); text-align: center; }
+  .bb-stat-strip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); overflow: hidden; border: 1px solid oklch(0% 0 0 / 0.6); border-radius: var(--radius-card); background: oklch(11% 0.012 258); box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.05), inset 0 -2px 8px oklch(0% 0 0 / 0.5); margin-block: var(--space-lg); }
+  .bb-stat-strip p:first-child { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); }
+  .bb-stat-strip .text-4xl, .bb-stat-strip .text-3xl { font-family: var(--font-display); font-stretch: 112%; font-weight: 800; color: var(--color-ink); }
+  .bb-stat-strip > * { padding: 20px var(--space-lg); border-right: 1px solid oklch(100% 0 0 / 0.06); }
   .bb-stat-strip > :last-child { border-right: 0; }
   .bb-table, .ice-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-  .bb-table thead, .ice-table thead { background: var(--color-brand-navy); color: var(--color-on-brand); }
-  .bb-table th, .ice-table th { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--color-on-brand); text-transform: none; letter-spacing: 0.02em; white-space: nowrap; border-bottom: 0; }
-  .bb-table tbody tr:nth-child(even), .ice-table tbody tr:nth-child(even) { background: var(--color-paper); }
+  .bb-table thead, .ice-table thead { background: var(--color-table-head); color: var(--color-ink-2); }
+  .bb-table th, .ice-table th { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-ink-2); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; border-bottom: 0; }
+  .bb-table tbody tr:nth-child(even), .ice-table tbody tr:nth-child(even) { background: oklch(100% 0 0 / 0.018); }
   .bb-table td, .ice-table td { border-bottom: 1px solid var(--color-rule-2); font-variant-numeric: tabular-nums; }
   .bb-table tbody tr:hover, .ice-table tbody tr:hover { background: var(--color-selection); }
 }
@@ -105,7 +110,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; o
 .bb-masthead-links a:first-child { color: var(--color-on-brand); border-bottom-color: var(--color-accent); font-weight: 600; }
 .bb-masthead-links a:hover { color: var(--color-on-brand); }
 .bb-topbar :focus-visible, .bg-brand-navy :focus-visible { outline-color: var(--color-on-brand) !important; }
-.bb-main > div { max-width: var(--container); margin-inline: auto; }
+.bb-main > div:not(.bb-strip, .bb-connect) { max-width: var(--container); margin-inline: auto; }
 .bb-mobile-nav { background: var(--color-paper-2); border-top: 1px solid var(--color-rule); bottom: 0; inset-inline: 0; box-shadow: none; padding-bottom: max(var(--space-xs),env(safe-area-inset-bottom)); }
 .bb-mobile-nav a { border-radius: var(--radius-pill); }
 .bb-mobile-nav a[aria-current="page"] { background: var(--color-selection); color: var(--color-accent); }
@@ -131,7 +136,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; o
   .bb-stat-strip p:first-child { min-height: 42px; font-size: var(--text-xs); }
   .bb-stat-strip p { overflow-wrap: break-word; }
   .bb-table th:first-child, .bb-table td:first-child, .ice-table th:first-child, .ice-table td:first-child { position: sticky; left: 0; z-index: var(--z-base); background: var(--color-paper-2); }
-  .bb-table th:first-child, .ice-table th:first-child { background: var(--color-brand-navy); }
+  .bb-table th:first-child, .ice-table th:first-child { background: var(--color-table-head); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -149,13 +154,6 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; min-width: 0; o
   .bb-dashboard-summary p:first-child { min-height: 32px; }
 }
 
-/* Yahoo-style shared components (applies app-wide: tools, team setup, profile, admin) */
-@layer components {
-  .fantasy-card, .bb-panel, .bb-toolbar, .bb-empty, .bb-stat-strip { border-radius: 16px; }
-  .fantasy-button, .fantasy-button-gold, .bb-button { border-radius: 999px; padding-inline: 22px; font-weight: 600; }
-  .bb-button-secondary { border-radius: 999px; padding-inline: 22px; border: 1.5px solid var(--color-ink); background: transparent; color: var(--color-ink); font-weight: 600; }
-  .bb-button-secondary:hover { background: var(--color-ink); color: var(--color-on-brand); }
-  .bb-field { border-radius: 12px; }
-  .bb-stat-strip .text-4xl, .bb-stat-strip .text-3xl, .bb-dashboard-summary .text-3xl { font-family: var(--font-display); font-weight: 700; }
-  .bb-panel > .bb-dashboard-panel-heading, .fantasy-card > .bb-dashboard-panel-heading { border-bottom-color: var(--color-rule); }
-}
+/* Player names open the player card. */
+.bb-player-link { color: inherit; text-decoration-line: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: color var(--dur-micro), text-decoration-color var(--dur-micro); }
+.bb-player-link:hover { color: var(--color-accent); text-decoration-color: currentColor; }

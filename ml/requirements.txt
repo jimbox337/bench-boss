@@ -1,0 +1,10 @@
+# Install into the project-local venv only (never the global interpreter):
+#   python3 -m venv ml/.venv && ml/.venv/bin/pip install -r ml/requirements.txt
+lightgbm==4.7.0
+numpy==2.5.4
+pandas==3.1.1
+pyarrow==26.0.1
+scikit-learn==1.9.1
+scipy==1.18.1
+requests==2.34.2
+pytest==9.2.0

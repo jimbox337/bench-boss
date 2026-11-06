@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { calculateFantasyPoints, defaultLeagueSettings, optimizeLineup } from '@/lib/calculator';
+import { calculateFantasyPoints, optimizeLineup } from '@/lib/calculator';
+import { pointsScoring } from '@/components/gamecenter/shared';
 import { useData } from '@/lib/DataContext';
 
 export default function LineupOptimizer() {
-  const { projections, myTeam } = useData();
+  const { projections, myTeam, leagueSettings } = useData();
+  const scoring = pointsScoring(leagueSettings);
+  const modelShare = projections.length ? projections.filter(p => p.source === 'model').length / projections.length : 0;
   const [timeframe, setTimeframe] = useState('next_7');
   const [optimized, setOptimized] = useState(false);
 
@@ -13,7 +16,7 @@ export default function LineupOptimizer() {
     setOptimized(true);
   };
 
-  const lineup = optimizeLineup(myTeam, projections, defaultLeagueSettings);
+  const lineup = optimizeLineup(myTeam, projections, scoring.settings);
 
   return (
     <>
@@ -61,7 +64,7 @@ export default function LineupOptimizer() {
           <div className="p-6 border-b border-rule">
             <h3 className="text-xl font-medium text-ink">Recommended Lineup</h3>
             <p className="text-sm text-muted mt-1">
-              Projected: <strong className="text-accent-2">{lineup.totalProjectedPoints?.toFixed(1)} pts</strong> this week
+              Projected: <strong className="text-accent-2">{lineup.totalProjectedPoints?.toFixed(1)} pts</strong> this week · {modelShare > 0.5 ? 'Bench Boss model estimates' : 'schedule-aware averages'}, {scoring.label}
             </p>
           </div>
 
@@ -84,7 +87,7 @@ export default function LineupOptimizer() {
               <tbody className="divide-y divide-rule">
                 {lineup.activeRoster.map((slot, idx) => {
                   const proj = slot.projection;
-                  const points = proj ? calculateFantasyPoints(proj, defaultLeagueSettings) : 0;
+                  const points = proj ? calculateFantasyPoints(proj, scoring.settings) : 0;
 
                   return (
                     <tr key={idx} className="hover:bg-paper-3">
@@ -110,7 +113,7 @@ export default function LineupOptimizer() {
                     </tr>
                     {lineup.bench.map((slot, idx) => {
                       const proj = slot.projection;
-                      const points = proj ? calculateFantasyPoints(proj, defaultLeagueSettings) : 0;
+                      const points = proj ? calculateFantasyPoints(proj, scoring.settings) : 0;
 
                       return (
                         <tr key={`bench-${idx}`} className="bg-paper-3 opacity-75">

@@ -1,6 +1,7 @@
 import { getCurrentNHLSeason } from './nhlSeason';
 import { Player, Projection, SkaterStats } from './calculator';
 import { generateScheduleAwareProjections } from './projectionEngine';
+import { combineProjections, modelProjections } from './model';
 
 // NHL Stats API - Much faster bulk endpoints
 const NHL_STATS_API = 'https://api.nhle.com/stats/rest/en';
@@ -175,7 +176,11 @@ export async function generateSimpleProjections(players: Player[]): Promise<Proj
  */
 export async function loadFastNHLData() {
   const players = await fetchAllPlayersWithStats();
-  const projections = await generateScheduleAwareProjections(players);
+  const projections = await combineProjections(players, {
+    model: modelProjections,
+    baseline: generateScheduleAwareProjections,
+    log: (message, error) => console.warn(message, error instanceof Error ? error.message : error),
+  });
 
   return { players, projections };
 }
