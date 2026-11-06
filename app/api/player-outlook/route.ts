@@ -7,14 +7,17 @@ const client = new Groq({
   apiKey: process.env.GROQ_API_KEY || '',
 });
 
+type RawGameLog = { gameDate: string; opponentAbbrev: string; goals?: number; assists?: number; points?: number; shots?: number; powerPlayPoints?: number; toi?: string };
+type RawScheduleGame = { gameDate: string; homeTeam?: { abbrev?: string }; awayTeam?: { abbrev?: string } };
+
 async function getVerifiedPlayerContext(player: Player) {
   const [gameLogResult, scheduleResult] = await Promise.allSettled([
     fetch(`https://api-web.nhle.com/v1/player/${player.id}/game-log/now`, { next: { revalidate: 900 } }).then(response => response.ok ? response.json() : null),
     fetch(`https://api-web.nhle.com/v1/club-schedule/${player.nhlTeam}/week/now`, { next: { revalidate: 900 } }).then(response => response.ok ? response.json() : null),
   ]);
-  const gameLog = gameLogResult.status === 'fulfilled' ? gameLogResult.value?.gameLog || [] : [];
-  const schedule = scheduleResult.status === 'fulfilled' ? scheduleResult.value?.games || [] : [];
-  const recent = gameLog.slice(0, 10).map((game: any) => ({
+  const gameLog: RawGameLog[] = gameLogResult.status === 'fulfilled' ? gameLogResult.value?.gameLog || [] : [];
+  const schedule: RawScheduleGame[] = scheduleResult.status === 'fulfilled' ? scheduleResult.value?.games || [] : [];
+  const recent = gameLog.slice(0, 10).map(game => ({
     date: game.gameDate,
     opponent: game.opponentAbbrev,
     goals: game.goals || 0,
@@ -25,7 +28,7 @@ async function getVerifiedPlayerContext(player: Player) {
     toi: game.toi || null,
   }));
   const now = Date.now();
-  const upcoming = schedule.filter((game: any) => new Date(`${game.gameDate}T23:59:59Z`).getTime() >= now).slice(0, 7).map((game: any) => ({
+  const upcoming = schedule.filter(game => new Date(`${game.gameDate}T23:59:59Z`).getTime() >= now).slice(0, 7).map(game => ({
     date: game.gameDate,
     opponent: game.homeTeam?.abbrev === player.nhlTeam ? game.awayTeam?.abbrev : game.homeTeam?.abbrev,
     venue: game.homeTeam?.abbrev === player.nhlTeam ? 'home' : 'away',

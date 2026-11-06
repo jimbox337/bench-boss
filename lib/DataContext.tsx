@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useSession } from '@/lib/AuthContext';
 import { Player, Projection, LeagueSettings, defaultLeagueSettings } from './calculator';
-import { ESPNLeagueConfig, ESPNLeagueInfo } from './espnFantasyApi';
+import { ESPNLeagueConfig, ESPNLeagueInfo, ESPNTeam } from './espnFantasyApi';
 
 interface DataContextType {
   players: Player[];
@@ -20,7 +20,7 @@ interface DataContextType {
   refreshTeam: () => Promise<void>;
   espnConfig: ESPNLeagueConfig | null;
   espnLeagueInfo: ESPNLeagueInfo | null;
-  espnTeams: any[];
+  espnTeams: ESPNTeam[];
   setESPNConfig: (config: ESPNLeagueConfig | null) => void;
   syncESPNLeague: (config: ESPNLeagueConfig) => Promise<void>;
   selectESPNTeam: (teamId: number) => void;
@@ -66,14 +66,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [espnConfig, setESPNConfigState] = useState<ESPNLeagueConfig | null>(null);
 
   const [espnLeagueInfo, setESPNLeagueInfo] = useState<ESPNLeagueInfo | null>(null);
-  const [espnTeams, setESPNTeams] = useState<any[]>([]);
+  const [espnTeams, setESPNTeams] = useState<ESPNTeam[]>([]);
 
   // League settings state - load from default calculator settings
-  const [leagueSettings, setLeagueSettingsState] = useState<LeagueSettings>(() => {
-    // Import default settings from calculator
-    const { defaultLeagueSettings } = require('./calculator');
-    return defaultLeagueSettings;
-  });
+  const [leagueSettings, setLeagueSettingsState] = useState<LeagueSettings>(defaultLeagueSettings);
 
   // Keep guest rosters separate from account data, including across sign-in changes.
   useEffect(() => {
@@ -270,7 +266,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           : null;
 
         if (savedTeamId) {
-          const savedTeam = data.teams.find((t: any) => t.id === parseInt(savedTeamId));
+          const savedTeam = (data.teams as ESPNTeam[]).find(t => t.id === parseInt(savedTeamId));
           if (savedTeam) {
             const { mapESPNPlayersToNHL } = await import('./espnFantasyApi');
             const mappedPlayers = mapESPNPlayersToNHL(savedTeam.roster, players);

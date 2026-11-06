@@ -57,7 +57,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
       const realtimeData = await realtimeRes.json();
       const realtimeStats = realtimeData.data || [];
 
-      realtimeStats.forEach((stat: any) => {
+      realtimeStats.forEach((stat: { playerId: number; hits?: number; blockedShots?: number }) => {
         realtimeMap.set(stat.playerId, {
           hits: stat.hits || 0,
           blockedShots: stat.blockedShots || 0
@@ -108,7 +108,7 @@ export async function fetchAllPlayersWithStats(): Promise<Player[]> {
 
       console.log(`✅ Fetched ${goalies.length} goalies`);
 
-      goalies.forEach((g: any) => {
+      goalies.forEach((g: { playerId: number; goalieFullName: string; teamAbbrevs: string; gamesPlayed: number }) => {
         const teamAbbrev = g.teamAbbrevs.split(',').at(-1) || 'UNK';
         players.push({
           id: g.playerId.toString(),

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { availabilityFeatures, buildIndexes, skaterFeatures, type FeatureInputs, type Position, type SeasonTotals, type TeamTotals } from './features';
+import { availabilityFeatures, buildIndexes, goalieFeatures, skaterFeatures, type FeatureInputs, type GoalieGameRow, type GoalieSeasonTotals, type Position, type SeasonTotals, type TeamTotals } from './features';
 
 type Fixture = {
   date: string;
@@ -13,6 +13,9 @@ type Fixture = {
   schedule: FeatureInputs['schedule'];
   expectedSkaters: { playerId: number; team: string; opp: string; home: number; position: Position; features: Record<string, number | null> }[];
   expectedAvailability: { playerId: number; team: string; home: number; position: Position; features: Record<string, number | null> }[];
+  goalieRows: GoalieGameRow[];
+  prevGoalieTotals: Record<string, GoalieSeasonTotals>;
+  expectedGoalies: { playerId: number; team: string; opp: string; home: number; features: Record<string, number | null> }[];
 };
 
 const fixture: Fixture = JSON.parse(readFileSync(join(__dirname, '__fixtures__', 'parity.json'), 'utf8'));
@@ -24,6 +27,8 @@ const inputs: FeatureInputs = {
   prevSeasonTotals: toMap(fixture.prevSeasonTotals),
   teamTotals: new Map(Object.entries(fixture.teamTotals)),
   schedule: fixture.schedule,
+  goalieRows: fixture.goalieRows,
+  prevGoalieTotals: toMap(fixture.prevGoalieTotals),
 };
 const index = buildIndexes(inputs);
 
@@ -49,6 +54,23 @@ describe('runtime features match Python training features', () => {
       const actual = availabilityFeatures(row.playerId, row.position, row.team, row.home, fixture.date, inputs, index);
       expect(actual, `player ${row.playerId} should be a candidate`).not.toBeNull();
       expectSame(actual!, row.features, `availability ${row.playerId}`);
+    }
+  });
+
+  it(`goalie features for ${fixture.expectedGoalies.length} starting-goalie candidates`, () => {
+    expect(fixture.expectedGoalies.length).toBeGreaterThan(5);
+    for (const row of fixture.expectedGoalies) {
+      const candidates = goalieFeatures(row.team, row.opp, row.home, fixture.date, inputs, index);
+      const actual = candidates.find(c => c.playerId === row.playerId);
+      expect(actual, `goalie ${row.playerId} should be a candidate for ${row.team}`).toBeDefined();
+      expectSame(actual!.features, row.features, `goalie ${row.playerId}`);
+    }
+    // Same candidate set as training, no extras.
+    const teams = new Set(fixture.expectedGoalies.map(r => r.team));
+    for (const team of teams) {
+      const row = fixture.expectedGoalies.find(r => r.team === team)!;
+      const ids = goalieFeatures(team, row.opp, row.home, fixture.date, inputs, index).map(c => c.playerId).sort();
+      expect(ids).toEqual(fixture.expectedGoalies.filter(r => r.team === team).map(r => r.playerId).sort());
     }
   });
 });

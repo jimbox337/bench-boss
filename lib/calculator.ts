@@ -425,7 +425,7 @@ export function rankWaiverTargets(
       const proj = projMap.get(player.id);
       if (!proj) return null;
 
-      let value = settings.scoringType === 'H2H_Points'
+      const value = settings.scoringType === 'H2H_Points'
         ? calculateFantasyPoints(proj, settings)
         : calculateCategoryScore(proj, projections, settings);
 

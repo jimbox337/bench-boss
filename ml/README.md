@@ -24,13 +24,13 @@ Run from the `ml/` directory:
 
 ```bash
 cd ml
-.venv/bin/python -m benchboss_ml.collect --seasons 20222023 20232024 20242025 20252026 20262027
+.venv/bin/python -m benchboss_ml.collect --seasons 20152016 20162017 20172018 20182019 20192020 20202021 20212022 20222023 20232024 20242025 20252026 20262027
 .venv/bin/python -m benchboss_ml.dataset
 .venv/bin/python -m benchboss_ml.train
 .venv/bin/python -m pytest -q tests
 ```
 
-- **collect**: downloads regular-season player-game rows in 10-day windows (each NHL query is capped at 10,000 rows). It throttles to about 2.5 requests per second. A full five-season pull is about 485 requests and 7 MB compressed.
+- **collect**: downloads regular-season player-game rows in 10-day windows (each NHL query is capped at 10,000 rows). It throttles to about 2.5 requests per second. Each season is roughly 100 requests and 1.5 MB compressed, so the full 12-season pull takes several minutes.
 - **Incremental runs**: any window that ended more than 3 days ago is marked final in `data/manifest.json` and skipped next time (`--force` re-fetches it). A typical refresh is about 10 requests. Rows are de-duplicated on `gameId + playerId` (or `gameId + team side`), so re-runs never create duplicate games.
 - **dataset**: normalizes the raw files into `data/processed/{skater,goalie,team}_games.parquet`.
 - **train**: builds features, trains, evaluates, and writes:
@@ -61,16 +61,19 @@ Each player-game uses only games **strictly before it**, plus the published sche
 
 ## Models (Phase 3)
 
-- **Skaters**: one LightGBM Poisson model per stat for goals, assists, shots, PP points, hits and blocks. Two candidates per stat:
+- **Skaters**: LightGBM Poisson models per stat for goals, assists, shots, PP points, hits and blocks. Three booster candidates per stat:
   - *direct*: all features
   - *residual*: starts from log(production baseline) and learns only context and usage multipliers
+  - *residual on shrunk*: the same, starting from log(shrunk baseline)
+
+  The served projection per stat is a stack of these and the two baselines (see Results).
 - **Goalies**: start probability (binary), and conditional on starting: saves, goals against (Poisson), win and shutout (binary).
 - **Uncertainty**: a per-stat negative-binomial dispersion is fitted on validation. Weekly fantasy-point variance is combined from it, and the 80% interval is rescaled on validation so its coverage is right (test coverage is reported).
-- **Baselines**: the app's current blend (45% season, 25% L20, 20% L10, 10% L5), plus a plain season average. Goalies are compared with a usage-share and shrunk per-start average baseline, because the app has no goalie projection today.
+- **Baselines**: the app's current blend (45% season, 25% L20, 20% L10, 10% L5), plus a plain season average. Goalies are compared with a usage-share and shrunk per-start average baseline.
 
 ## Evaluation (Phase 4)
 
-- **Chronological split**: train on 2022-23 and 2023-24, validate on 2024-25, test on 2025-26. The in-progress 2026-27 season is a "live" holdout scored with the exported fit.
+- **Chronological split**: train on every completed season except the last two (2015-16 through 2023-24), validate on 2024-25, test on 2025-26. The in-progress 2026-27 season is a "live" holdout scored with the exported fit. `choose_split` in `train.py` rolls this forward automatically as seasons complete.
 - **Selection**: per stat, uses validation weekly RMSE (player-week sums), because the app projects weeks.
 - **Metrics reported**: MAE, RMSE, bias, Spearman ρ, top-50 weekly precision, same-position start/sit pair accuracy, goal-probability and goalie-probability calibration (Brier, log loss, ECE, reliability bins), per-position breakdowns, and 80% interval coverage.
 
@@ -98,6 +101,7 @@ On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1
 - **What helps:** empirical-Bayes shrinkage of player rates toward last season and ice time, plus small context multipliers (opponent, rest, usage) for shots, PP points and hits. These are now combined by the stack above.
 - **Goalie starts:** the model picks the actual starter 73–76% of the time, versus 59–62% for recent usage. That's after adding the rotation features (back-to-back after starting, streaks, rough last start, workload rank).
 - **Expected goals:** the xG model is good on its own (test AUC 0.737 vs 0.695 for distance only). Its player features barely move weekly fantasy accuracy (test MAE 1.577 vs 1.579), and serving them would need per-game play-by-play, so xG stays offline.
+- **Goalies in the app:** the start, saves, goals-against, win and shutout boosters are served too. Each goalie's week is the sum over his team's games of P(start) × per-start estimates; start probabilities are normalised per team game, and for a back-to-back inside the week "started the previous game" is that game's start probability. Starts are labelled projected, not confirmed. `lib/model/features.test.ts` checks the runtime goalie features against Python on a fixture day. The previous-season save % at runtime comes from the season aggregate (including relief appearances), while training uses starts only.
 - **Availability:** P(dress) has validation log loss 0.209, versus 0.483 for recent play share. It weights each game in the app's weekly projection.
 - **First live night (2026-11-04, locked before puck drop):**
   - Skater fantasy-point MAE: 0.972 for v2, versus 1.006 for the baseline.
@@ -118,8 +122,8 @@ Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` 
 ## Limitations
 
 - The weekly skater tables cover games actually played. Missed games are scored separately in the availability section.
-- There is no injury, line-combination or confirmed-starter data; the public endpoints don't provide it reliably.
-- Only four completed seasons are used, and 2022-23 has no previous-season features.
+- There is no injury, line-combination, power-play-unit or confirmed-starter data; the free public endpoints don't provide it reliably before puck drop. These are probably the biggest remaining source of error, and they would need a free, licensed source; news text from an LLM is not used as a data source.
+- The first collected season (2015-16) has no previous-season features, and the 2019-20 and 2020-21 seasons were shortened.
 - Intervals ignore covariance between stats.
 - Goalie start candidates must have appeared for the team in its last 20 games.
 
@@ -127,5 +131,4 @@ Commits that only touch `ml/predictions` don't redeploy the site (`vercel.json` 
 
 - Add a de-biasing step for the top of the distribution
 - Use a weekly-sum objective
-- Add more seasons
 - Score availability with team-game rows that include missed games

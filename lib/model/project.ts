@@ -5,7 +5,7 @@
  */
 import type { Player, Projection, SkaterStats } from '../calculator';
 import { productionBaseline, shrunkBaseline, type ShrinkParams } from './baselines';
-import { availabilityFeatures, buildIndexes, skaterFeatures, type Indexes } from './features';
+import { availabilityFeatures, buildIndexes, goalieFeatures, skaterFeatures, type Indexes, type ScheduledGame } from './features';
 import { predict, rawScore, toVector, type CompactBooster } from './gbdt';
 import type { RuntimeData } from './runtimeData';
 
@@ -38,7 +38,12 @@ export type ModelArtifact = {
     blendWithProductionBaseline?: number;
   };
   availability?: { features: string[]; booster: CompactBooster } | null;
+  /** Start probability, and per-start saves, goals against, win and shutout. */
+  goalie?: { features: string[]; targets: Record<GoalieTarget, { booster: CompactBooster }> };
 };
+
+export const GOALIE_TARGETS = ['started', 'saves', 'ga', 'win', 'shutout'] as const;
+type GoalieTarget = (typeof GOALIE_TARGETS)[number];
 
 /** Probability of dressing for a player who has not appeared in the team's last 10 games. */
 export const INACTIVE_PLAY_PROBABILITY = 0.3;
@@ -136,10 +141,91 @@ export function projectPlayer(player: Player, artifact: ModelArtifact, data: Run
   };
 }
 
+export type GoalieGameEstimate = { gameId: number; date: string; opp: string; home: number; startProb: number; saves: number; ga: number; win: number; shutout: number };
+
+/**
+ * Per-game goalie estimates for one team's next 7 days. Start probabilities are normalised
+ * across the team's candidates (as in predict.py). For a game whose previous team game is
+ * also in the window, "started the previous game" is that game's start probability.
+ */
+export function projectTeamGoalies(team: string, artifact: ModelArtifact, data: RuntimeData, index: Indexes): Map<number, GoalieGameEstimate[]> {
+  const out = new Map<number, GoalieGameEstimate[]>();
+  const g = artifact.goalie;
+  if (!g || !data.goalieRows?.length) return out;
+  const end = new Date(`${data.today}T12:00:00Z`).getTime() + 7 * 86_400_000;
+  const games: ScheduledGame[] = data.schedule
+    .filter(x => (x.home === team || x.away === team) && x.date >= data.today && new Date(`${x.date}T12:00:00Z`).getTime() < end)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let previous: Map<number, number> | undefined;
+  for (const game of games) {
+    const home = game.home === team ? 1 : 0;
+    const opp = home ? game.away : game.home;
+    const candidates = goalieFeatures(team, opp, home, game.date, data, index, previous);
+    const vectors = candidates.map(c => toVector(g.features, c.features));
+    const raw = vectors.map(x => predict(g.targets.started.booster, x));
+    const total = raw.reduce((a, b) => a + b, 0);
+    previous = new Map();
+    candidates.forEach((c, i) => {
+      const startProb = total > 0 ? raw[i] / total : 0;
+      previous!.set(c.playerId, startProb);
+      const x = vectors[i];
+      const estimate: GoalieGameEstimate = {
+        gameId: game.gameId, date: game.date, opp, home, startProb,
+        saves: predict(g.targets.saves.booster, x), ga: predict(g.targets.ga.booster, x),
+        win: predict(g.targets.win.booster, x), shutout: predict(g.targets.shutout.booster, x),
+      };
+      (out.get(c.playerId) ?? out.set(c.playerId, []).get(c.playerId)!).push(estimate);
+    });
+  }
+  return out;
+}
+
+/** Weekly goalie projection: expected starts times per-start estimates. */
+export function goalieProjection(player: Player, games: GoalieGameEstimate[], artifact: ModelArtifact): Projection | null {
+  if (!games.length) return null;
+  const starts = games.reduce((a, x) => a + x.startProb, 0);
+  const sum = (f: (x: GoalieGameEstimate) => number) => games.reduce((a, x) => a + x.startProb * f(x), 0);
+  const SV = sum(x => x.saves);
+  const GA = sum(x => x.ga);
+  const likely = games.filter(x => x.startProb >= 0.5).length;
+  return {
+    playerId: player.id,
+    timeframe: 'next_7',
+    gamesPlayed: Math.round(starts * 100) / 100,
+    goalieStats: {
+      W: sum(x => x.win), SV, GA, SO: sum(x => x.shutout),
+      // Starts are treated as 60 minutes, so GAA is goals against per expected start.
+      GAA: starts > 0 ? GA / starts : 0,
+      SV_PCT: SV + GA > 0 ? SV / (SV + GA) : 0,
+    },
+    confidence: Math.round(40 + 40 * Math.max(...games.map(x => Math.abs(x.startProb - 0.5) * 2))),
+    modelVersion: artifact.modelVersion,
+    source: 'model',
+    context: {
+      opponents: games.map(x => (x.home ? x.opp : `@${x.opp}`)),
+      homeGames: games.filter(x => x.home).length,
+      awayGames: games.filter(x => !x.home).length,
+      backToBacks: 0,
+      seasonWeight: 0,
+      recentWeight: 0,
+      notes: [
+        `Model estimate (${artifact.modelVersion}): ${starts.toFixed(1)} expected starts in ${games.length} team games`,
+        ...games.map(x => `${x.date} ${x.home ? 'vs' : '@'} ${x.opp}: ${Math.round(x.startProb * 100)}% to start (projected, not confirmed)`),
+        likely ? `Likely starter in ${likely} of ${games.length}` : 'Not the likely starter in any game this week',
+      ],
+    },
+  };
+}
+
 export function projectAll(players: Player[], artifact: ModelArtifact, data: RuntimeData): Projection[] {
   const index = buildIndexes(data);
+  const goalieTeams = new Map<string, Map<number, GoalieGameEstimate[]>>();
   return players.flatMap(player => {
-    if (player.isGoalie) return [];
+    if (player.isGoalie) {
+      if (!goalieTeams.has(player.nhlTeam)) goalieTeams.set(player.nhlTeam, projectTeamGoalies(player.nhlTeam, artifact, data, index));
+      const projection = goalieProjection(player, goalieTeams.get(player.nhlTeam)!.get(Number(player.id)) || [], artifact);
+      return projection ? [projection] : [];
+    }
     const projection = projectPlayer(player, artifact, data, index);
     return projection ? [projection] : [];
   });

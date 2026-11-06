@@ -5,7 +5,7 @@
  * Note: ESPN's Fantasy API is unofficial and undocumented.
  */
 
-import { LeagueSettings, Player, SkaterStats } from './calculator';
+import { GoalieStats, LeagueSettings, Player, SkaterStats } from './calculator';
 
 // Base URL for ESPN Fantasy API (as of April 2024)
 const ESPN_API_BASE = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games';
@@ -44,6 +44,38 @@ export interface ESPNRosterEntry {
   acquisitionType: string;
 }
 
+/** The parts of ESPN's undocumented league payload that we read. */
+type RawScoringItems = Record<string, unknown> | undefined;
+type RawLeague = {
+  settings: {
+    name?: string;
+    size?: number;
+    scoringSettings: { scoringType?: string; scoringItems?: RawScoringItems };
+    rosterSettings?: { lineupSlotCounts?: Record<string, number> };
+  };
+  teams?: RawTeam[];
+};
+type RawTeam = {
+  id: number;
+  name?: string;
+  location?: string;
+  nickname?: string;
+  teamLocation?: string;
+  teamNickname?: string;
+  abbrev?: string;
+  teamAbbrev?: string;
+  logo?: string;
+  logoUrl?: string;
+  primaryOwner?: string;
+  roster?: {
+    entries?: {
+      lineupSlotId: number;
+      acquisitionType?: string;
+      playerPoolEntry?: { player?: { id: number; fullName: string; defaultPositionId?: number } };
+    }[];
+  };
+};
+
 /**
  * Build the base URL for ESPN Fantasy API calls
  */
@@ -57,7 +89,7 @@ function buildLeagueUrl(config: ESPNLeagueConfig, views: string | string[]): str
 /**
  * Fetch data from ESPN API with optional authentication
  */
-async function fetchESPN(url: string, config: ESPNLeagueConfig): Promise<any> {
+async function fetchESPN(url: string, config: ESPNLeagueConfig): Promise<RawLeague> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -135,8 +167,8 @@ export async function fetchESPNLeagueInfo(config: ESPNLeagueConfig): Promise<ESP
 /**
  * Parse ESPN roster slot configuration
  */
-function parseRosterSlots(rosterSettings: any): LeagueSettings['rosterSlots'] {
-  const lineupSlotCounts = rosterSettings.lineupSlotCounts || {};
+function parseRosterSlots(rosterSettings: RawLeague['settings']['rosterSettings']): LeagueSettings['rosterSlots'] {
+  const lineupSlotCounts = rosterSettings?.lineupSlotCounts || {};
 
   // ESPN lineup slot IDs for hockey:
   // 0 = C, 1 = LW, 2 = RW, 3 = D, 4 = G, 5 = UTIL, 20 = BN, 21 = IR
@@ -155,7 +187,7 @@ function parseRosterSlots(rosterSettings: any): LeagueSettings['rosterSlots'] {
 /**
  * Parse ESPN scoring items to our points format
  */
-function parseScoringItems(scoringItems: any): { [key: string]: number } {
+function parseScoringItems(scoringItems: RawScoringItems): { [key: string]: number } {
   const pointsPerStat: { [key: string]: number } = {};
 
   // ESPN stat IDs mapping (these are common hockey stats)
@@ -191,8 +223,10 @@ function parseScoringItems(scoringItems: any): { [key: string]: number } {
 /**
  * Parse ESPN stat categories for category leagues
  */
-function parseStatCategories(scoringItems: any, isGoalie: boolean): any[] {
-  const categories: any[] = [];
+function parseStatCategories(scoringItems: RawScoringItems, isGoalie: true): (keyof GoalieStats)[];
+function parseStatCategories(scoringItems: RawScoringItems, isGoalie: false): (keyof SkaterStats)[];
+function parseStatCategories(scoringItems: RawScoringItems, isGoalie: boolean): string[] {
+  const categories: string[] = [];
 
   const skaterStats = ['G', 'A', 'PTS', 'plusMinus', 'PPP', 'SOG', 'HIT', 'BLK', 'PIM'];
   const goalieStats = ['W', 'SV', 'GA', 'GAA', 'SO', 'SV_PCT'];
@@ -207,7 +241,7 @@ function parseStatCategories(scoringItems: any, isGoalie: boolean): any[] {
   };
 
   if (scoringItems) {
-    for (const [statId, _] of Object.entries(scoringItems)) {
+    for (const statId of Object.keys(scoringItems)) {
       const statName = statIdMap[statId];
       if (statName && statList.includes(statName)) {
         categories.push(statName);
