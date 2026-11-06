@@ -36,10 +36,25 @@ export async function GET() {
     createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ]);
   if (authUsers.error) throw authUsers.error;
-  const authEmails = new Set(authUsers.data.users.map(user => user.email?.toLowerCase()).filter(Boolean));
+  // Only non-secret auth facts are exposed: the Supabase uid, sign-in providers and timestamps.
+  const authByEmail = new Map(
+    authUsers.data.users
+      .filter(user => user.email)
+      .map(user => [user.email!.toLowerCase(), {
+        authId: user.id,
+        lastSignInAt: user.last_sign_in_at ?? null,
+        emailConfirmedAt: user.email_confirmed_at ?? null,
+        providers: Array.isArray(user.app_metadata?.providers)
+          ? (user.app_metadata.providers as unknown[]).filter((value): value is string => typeof value === 'string')
+          : user.app_metadata?.provider ? [String(user.app_metadata.provider)] : [],
+      }]),
+  );
 
   return NextResponse.json({
-    users: users.map(user => ({ ...user, authLinked: authEmails.has(user.email.toLowerCase()) })),
+    users: users.map(user => {
+      const auth = authByEmail.get(user.email.toLowerCase());
+      return { ...user, authLinked: Boolean(auth), auth: auth ?? null };
+    }),
     currentUserId: admin.id,
   });
 }

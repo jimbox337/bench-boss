@@ -122,7 +122,8 @@ export default function Layout({ children }: { children: ReactNode }) {
     fetchUserData();
   }, [session]);
 
-  if (publicRoutes.includes(pathname)) return <>{children}</>;
+  // Public pages and the admin console bring their own chrome.
+  if (publicRoutes.includes(pathname) || pathname === '/admin' || pathname.startsWith('/admin/')) return <>{children}</>;
 
   if (isLoading) {
     return (
