@@ -5,7 +5,8 @@ import { useData } from '@/lib/DataContext';
 import { useSession } from '@/lib/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
+import PlayerLeaders from '@/components/PlayerLeaders';
+import NhlNewsTicker from '@/components/NhlNewsTicker';
 import NoTeamDashboard from '@/components/NoTeamDashboard';
 import FeaturedGame from '@/components/gamecenter/FeaturedGame';
 import { PlayerLink } from '@/components/player/PlayerCardProvider';
@@ -403,7 +404,7 @@ export default function Dashboard() {
             </div>
           </section>
         </div>
-        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><LeagueResources /></aside>
+        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><NhlNewsTicker /></aside>
       </div>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { BarChart3, CheckCircle2, Crosshair, Repeat2, ShieldCheck, Shirt, Swords, Zap } from 'lucide-react';
-import PlayerLeaders, { LeagueResources } from '@/components/PlayerLeaders';
+import PlayerLeaders from '@/components/PlayerLeaders';
+import NhlNewsTicker from '@/components/NhlNewsTicker';
 import FeaturedGame from '@/components/gamecenter/FeaturedGame';
 
 type NoTeamDashboardProps = {
@@ -66,7 +67,7 @@ export default function NoTeamDashboard({ onAddTeam, onBrowsePlayers }: NoTeamDa
             <div className="mt-5 flex items-center gap-2 border-t border-rule pt-4 text-xs text-muted"><ShieldCheck size={15} className="shrink-0" aria-hidden="true" /><span>Your team is private to your account. Edit your roster any time.</span><CheckCircle2 size={15} className="ml-auto shrink-0 text-success" aria-hidden="true" /></div>
           </section>
         </div>
-        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><LeagueResources /></aside>
+        <aside className="min-w-0 space-y-6" aria-label="Player research"><PlayerLeaders /><NhlNewsTicker /></aside>
       </div>
     </div>
   );
