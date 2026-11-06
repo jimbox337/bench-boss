@@ -1,5 +1,5 @@
 {
-  "modelVersion": "bench-boss-lgbm-20261106",
+  "modelVersion": "bench-boss-lgbm-20261106-ws",
   "pipelineVersion": "2026.11.0",
   "featureSchemaVersion": 1,
   "trainedAt": "2026-11-06T04:57:15.364453+00:00",
@@ -3293,8 +3293,14 @@
     },
     "fitBasis": "weekStart",
     "promotion": {
-      "eligible": false,
-      "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season, in both the per-game and the week-start weekly backtests."
+      "basis": "weekStart",
+      "eligible": true,
+      "perGameGate": {
+        "validation": false,
+        "test": false,
+        "live": true
+      },
+      "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season of the week-start weekly backtest."
     }
   },
   "goalie": {

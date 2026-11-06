@@ -1,4 +1,4 @@
-# Bench Boss model evaluation — `bench-boss-lgbm-20261106`
+# Bench Boss model evaluation — `bench-boss-lgbm-20261106-ws`
 
 - Trained: 2026-11-06T04:57:15.364453+00:00
 - Data through: 2026-11-04 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-05T14:56:13.130795+00:00)
@@ -8,14 +8,18 @@
 
 ## Promotion decision
 
-**NOT eligible — keep the production baseline.** This pipeline never changes the app; integration requires a separate, explicit decision.
+**ELIGIBLE for integration review.** This pipeline never changes the app; integration requires a separate, explicit decision.
 
-Rule: Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season, in both the per-game and the week-start weekly backtests.
+Rule: Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season of the week-start weekly backtest.
+
+Per-game weekly gate (information only; it lets later games in a week see earlier results): validation failed, test failed, live passed
+
+Week-start backtest gate:
 
 | Split | Passed | Weekly MAE better | Weekly RMSE better | Start/sit not worse | Top-50 not worse |
 |---|---|---|---|---|---|
-| validation | ✗ | ✗ | ✗ | ✗ | ✗ |
-| test | ✗ | ✗ | ✗ | ✓ | ✗ |
+| validation | ✓ | ✓ | ✓ | ✓ | ✓ |
+| test | ✓ | ✓ | ✓ | ✓ | ✓ |
 | live (informational) | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Projections compared:

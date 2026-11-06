@@ -49,10 +49,15 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"Rule: {promotion['rule']}",
         "",
+        *([f"Per-game weekly gate (information only; it lets later games in a week see earlier results): "
+           + ", ".join(f"{k} {'passed' if v else 'failed'}" for k, v in promotion["perGameGate"].items()), ""]
+          if promotion.get("perGameGate") else []),
+        "Week-start backtest gate:",
+        "",
         "| Split | Passed | Weekly MAE better | Weekly RMSE better | Start/sit not worse | Top-50 not worse |",
         "|---|---|---|---|---|---|",
     ]
-    for name, gate in skater["gate"].items():
+    for name, gate in skater.get("gateWeekStart", skater["gate"]).items():
         c = gate["checks"]
         mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
         lines.append(f"| {name}{' (informational)' if name == 'live' else ''} | {mark(gate['passed'])} | {mark(c['weeklyMaeImproves'])} | "

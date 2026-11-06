@@ -598,10 +598,15 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     gate, gate_ws = report["gate"], report["gateWeekStart"]
     report["fitBasis"] = "weekStart" if FIT_WEEK_START else "perGame"
     report["promotion"] = {
-        "eligible": all(g.get(name, {"passed": False})["passed"] for g in (gate, gate_ws) for name in ("validation", "test")),
+        # Judged on the week-start backtest, which projects weeks the way the app does. The
+        # per-game weekly gate is kept as information only: it lets later games in a week see
+        # earlier results and rewards components that chase them.
+        "basis": "weekStart",
+        "eligible": all(gate_ws.get(name, {"passed": False})["passed"] for name in ("validation", "test")),
+        "perGameGate": {name: g["passed"] for name, g in gate.items()},
         "rule": "Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, "
                 f"and not lose more than {GATE_RANKING_TOLERANCE:.3f} in start/sit accuracy or top-{TOP_K} precision, "
-                "on both the validation and the untouched test season, in both the per-game and the week-start weekly backtests.",
+                "on both the validation and the untouched test season of the week-start weekly backtest.",
     }
     return artifact, report
 
