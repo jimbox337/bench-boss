@@ -1,6 +1,6 @@
 # Bench Boss model evaluation — `bench-boss-lgbm-20261106`
 
-- Trained: 2026-11-06T04:14:18.655136+00:00
+- Trained: 2026-11-06T04:49:47.758996+00:00
 - Data through: 2026-11-04 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-05T14:56:13.130795+00:00)
 - Pipeline 2026.11.0, feature schema v1
 - Time-based split — train: 20152016, 20162017, 20172018, 20182019, 20192020, 20202021, 20212022, 20222023, 20232024; validation: 20242025; test: 20252026; live (in-progress, unseen by every fit): 20262027
@@ -69,6 +69,28 @@ Weekly fantasy-point MAE by position group (F = forwards, D = defence):
 - test: benchBossSelected D 1.376 / F 1.675; productionBaseline D 1.410 / F 1.703; benchBossAiOnly D 1.406 / F 1.705; lightgbmPlusBenchBossAi D 1.376 / F 1.675
 - live: benchBossSelected D 1.166 / F 1.560; productionBaseline D 1.229 / F 1.621; benchBossAiOnly D 1.226 / F 1.612; lightgbmPlusBenchBossAi D 1.166 / F 1.560
 
+## Week-start backtest (how the app projects a week)
+
+The per-game table above updates features before every game, so a later game in a week benefits from earlier results of that week. The app projects the whole week once, from data through the day before. Here each player's history and own-team features are frozen at his first game of the calendar week (days since last game advance; home, rest, back-to-back, schedule and opponent stay per game), and the same models and weights are re-scored.
+
+| Split | Projection | MAE | RMSE | Bias | Weekly ρ | Top-50 precision | Start/sit accuracy | Gate vs baseline |
+|---|---|---|---|---|---|---|---|---|
+| validation | benchBossSelected | 1.682 (-4.1% ✓) | 2.272 | -0.003 | 0.650 | 0.390 | 0.735 | ✓ |
+| validation | shrunkBaselineOnly | 1.683 (-4.0% ✓) | 2.263 | 0.053 | 0.651 | 0.384 | 0.734 |  |
+| validation | productionBaseline | 1.753 | 2.382 | 0.029 | 0.629 | 0.376 | 0.727 |  |
+| validation | benchBossAiOnly | 1.623 (-7.5% ✓) | 2.205 | -0.159 | 0.670 | 0.404 | 0.739 |  |
+| validation | lightgbmPlusBenchBossAi | 1.682 (-4.1% ✓) | 2.272 | -0.003 | 0.650 | 0.389 | 0.735 |  |
+| test | benchBossSelected | 1.715 (-4.2% ✓) | 2.324 | -0.004 | 0.655 | 0.406 | 0.738 | ✓ |
+| test | shrunkBaselineOnly | 1.712 (-4.4% ✓) | 2.307 | 0.045 | 0.657 | 0.409 | 0.740 |  |
+| test | productionBaseline | 1.790 | 2.443 | 0.043 | 0.634 | 0.393 | 0.730 |  |
+| test | benchBossAiOnly | 1.642 (-8.3% ✓) | 2.259 | -0.222 | 0.678 | 0.436 | 0.748 |  |
+| test | lightgbmPlusBenchBossAi | 1.715 (-4.2% ✓) | 2.324 | -0.004 | 0.655 | 0.406 | 0.738 |  |
+| live | benchBossSelected | 1.638 (-9.2% ✓) | 2.320 | -0.056 | 0.588 | 0.377 | 0.730 | ✓ |
+| live | shrunkBaselineOnly | 1.594 (-11.6% ✓) | 2.230 | -0.016 | 0.605 | 0.390 | 0.738 |  |
+| live | productionBaseline | 1.804 | 2.630 | -0.022 | 0.536 | 0.350 | 0.712 |  |
+| live | benchBossAiOnly | 1.522 (-15.6% ✓) | 2.145 | -0.253 | 0.629 | 0.440 | 0.747 |  |
+| live | lightgbmPlusBenchBossAi | 1.638 (-9.2% ✓) | 2.320 | -0.056 | 0.588 | 0.377 | 0.730 |  |
+
 ## Skater statistics
 
 Selection metric is validation weekly RMSE of the statistic (player-week sums).
@@ -101,14 +123,31 @@ Rank-aware blend: model weight **0.75** (rest production baseline), chosen on va
 
 ## BenchBoss AI (neural network)
 
-Best epoch 11 (early stopping on validation); ensemble model weight 0.75 vs the production baseline. **Not promoted** — even when promoted it is served only with `BENCHBOSS_AI=1`.
+Gate basis: week-start backtest. Best epoch 11 (early stopping on validation); ensemble model weight 0.75 vs the production baseline. **Not promoted** — even when promoted it is served only with `BENCHBOSS_AI=1`.
 
-Rule: The LightGBM + neural ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season; and validation must give the network a non-zero weight.
+Rule: The LightGBM + BenchBoss AI ensemble must beat the current LightGBM projection on weekly fantasy-point MAE and RMSE, not reduce start/sit accuracy or top-50 precision, and not raise forward or defence weekly MAE by more than 0.5%, on both the validation and the untouched test season of the week-start backtest; and validation must give BenchBoss AI a non-zero weight.
 
 | Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |
 |---|---|---|---|---|---|---|---|
-| validation | ✗ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ |
-| test | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ |
+| validation | ✗ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ |
+| test | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Daily (single-game) accuracy, per-game features as at puck drop. Poisson deviance is summed over the six stats; lower is better:
+
+| Split | Projection | Poisson deviance | FP MAE | FP ρ |
+|---|---|---|---|---|
+| validation | benchBossSelected | 5.4174 | 0.9650 | 0.336 |
+| validation | benchBossAiOnly | 5.2753 | 0.9459 | 0.359 |
+| validation | lightgbmPlusBenchBossAi | 5.4173 | 0.9649 | 0.336 |
+| validation | productionBaseline | 8.1406 | 0.9827 | 0.317 |
+| test | benchBossSelected | 5.3692 | 0.9680 | 0.325 |
+| test | benchBossAiOnly | 5.2313 | 0.9474 | 0.351 |
+| test | lightgbmPlusBenchBossAi | 5.3691 | 0.9680 | 0.325 |
+| test | productionBaseline | 8.0720 | 0.9852 | 0.306 |
+| live | benchBossSelected | 5.6780 | 1.0172 | 0.277 |
+| live | benchBossAiOnly | 5.3320 | 0.9788 | 0.325 |
+| live | lightgbmPlusBenchBossAi | 5.6778 | 1.0172 | 0.277 |
+| live | productionBaseline | 15.8228 | 1.0695 | 0.232 |
 
 Stack weights with BenchBoss AI as a component (validation NNLS):
 

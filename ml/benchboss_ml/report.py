@@ -89,6 +89,23 @@ def render_markdown(report: dict[str, Any]) -> str:
                           if label in ("benchBossSelected", "productionBaseline", "neuralOnly", "lightgbmNeuralEnsemble"))
         lines.append(f"- {split_name}: {parts}")
 
+    if skater.get("weeklyWeekStart"):
+        lines += ["", "## Week-start backtest (how the app projects a week)", "",
+                  "The per-game table above updates features before every game, so a later game in a week benefits from earlier results "
+                  "of that week. The app projects the whole week once, from data through the day before. Here each player's history and "
+                  "own-team features are frozen at his first game of the calendar week (days since last game advance; home, rest, "
+                  "back-to-back, schedule and opponent stay per game), and the same models and weights are re-scored.", "",
+                  "| Split | Projection | MAE | RMSE | Bias | Weekly ρ | Top-50 precision | Start/sit accuracy | Gate vs baseline |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
+        for split_name, result in skater["weeklyWeekStart"].items():
+            base = result["productionBaseline"]
+            for label, m in result.items():
+                delta = "" if label == "productionBaseline" else f" ({_delta(m['mae'], base['mae'])})"
+                gate = mark(skater["gateWeekStart"][split_name]["passed"]) if label == "benchBossSelected" else ""
+                lines.append(f"| {split_name} | {LABELS.get(label, label)} | {_f(m['mae'])}{delta} | {_f(m['rmse'])} | {_f(m['bias'])} | "
+                             f"{_f(m['weeklySpearman'])} | {_f(m['top50Precision'])} | {_f(m['startSitAccuracy'])} | {gate} |")
+
     lines += ["", "## Skater statistics", "",
               "Selection metric is validation weekly RMSE of the statistic (player-week sums).", "",
               "| Target | Selected (servable) | Best incl. xG | Shrink k / prior weight | baseline | shrunk | direct | residual | residualShrunk | residualXg | stack |", "|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -113,7 +130,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     if nn:
         mark = lambda ok: "✓" if ok else "✗"  # noqa: E731
         lines += ["", "## BenchBoss AI (neural network)", "",
-                  f"Best epoch {nn['bestEpoch']} (early stopping on validation); ensemble model weight {nn['modelWeight']} vs the production baseline. "
+                  f"Gate basis: {'week-start backtest' if nn.get('gateBasis') == 'weekStart' else 'per-game backtest'}. Best epoch {nn['bestEpoch']} (early stopping on validation); ensemble model weight {nn['modelWeight']} vs the production baseline. "
                   f"**{'Promoted' if nn['promoted'] else 'Not promoted'}** — even when promoted it is served only with `BENCHBOSS_AI=1`.", "",
                   f"Rule: {nn['rule']}", "",
                   "| Split | Passed | MAE | RMSE | Start/sit | Top-50 | F MAE | D MAE |", "|---|---|---|---|---|---|---|---|"]
@@ -121,6 +138,12 @@ def render_markdown(report: dict[str, Any]) -> str:
             c = g["checks"]
             lines.append(f"| {name} | {mark(g['passed'])} | {mark(c['weeklyMaeImproves'])} | {mark(c['weeklyRmseImproves'])} | {mark(c['startSitNotWorse'])} | "
                          f"{mark(c['top50NotWorse'])} | {mark(c['FMaeNotWorse'])} | {mark(c['DMaeNotWorse'])} |")
+        if nn.get("daily"):
+            lines += ["", "Daily (single-game) accuracy, per-game features as at puck drop. Poisson deviance is summed over the six stats; lower is better:", "",
+                      "| Split | Projection | Poisson deviance | FP MAE | FP ρ |", "|---|---|---|---|---|"]
+            for split_name, result in nn["daily"].items():
+                for label, m in result.items():
+                    lines.append(f"| {split_name} | {LABELS.get(label, label)} | {_f(m['poissonDevianceSum'], 4)} | {_f(m['fpMae'], 4)} | {_f(m['fpSpearman'])} |")
         lines += ["", "Stack weights with BenchBoss AI as a component (validation NNLS):", ""]
         lines += [f"- {t}: " + ", ".join(f"{'BenchBoss AI' if n == 'neural' else n} {w:.3f}" for n, w in sorted(ws.items(), key=lambda kv: -kv[1])) for t, ws in nn["stackWeights"].items()]
 

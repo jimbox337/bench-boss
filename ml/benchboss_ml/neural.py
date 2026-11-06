@@ -235,7 +235,7 @@ def _child(directory: str) -> None:
     export = train_network(full, None, job["seed"], epochs=model["bestEpoch"])
     frames = {name: pd.read_parquet(d / f"frame_{name}.parquet") for name in job["frames"]}
     for name, frame in frames.items():
-        preds = predict_network(export if name == "live" else model, frame)
+        preds = predict_network(export if name.startswith("live") else model, frame)
         pd.DataFrame(preds, columns=list(SKATER_TARGETS)).to_parquet(d / f"pred_{name}.parquet")
     sample = frames.get(job["exportSample"], full)
     (d / "result.json").write_text(json.dumps({
