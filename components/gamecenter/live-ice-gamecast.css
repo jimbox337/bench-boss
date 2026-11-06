@@ -62,7 +62,7 @@
 .icecast-crease--left { left: -4px; border-radius: 0 42px 42px 0; }
 .icecast-crease--right { right: -4px; border-radius: 42px 0 0 42px; }
 .icecast-skater { position: absolute; z-index: 2; width: 19px; aspect-ratio: 1; transform: translate(-50%,-50%); border: 3px solid var(--icecast-white); border-radius: 50%; background: var(--club); box-shadow: 0 4px 10px var(--icecast-shadow); animation: icecast-player-in var(--dur-long) var(--ease-out) both; animation-delay: var(--delay); }
-.icecast-puck { position: absolute; z-index: 4; width: 11px; aspect-ratio: 1; transform: translate(-50%,-50%); border-radius: 50%; background: var(--icecast-puck); box-shadow: 0 4px 9px var(--icecast-shadow); animation: icecast-puck-in 900ms var(--ease-out) both; }
+.icecast-puck { position: absolute; z-index: 4; width: 11px; aspect-ratio: 1; transform: translate(-50%,-50%); border-radius: 50%; background: var(--icecast-puck); box-shadow: 0 4px 9px var(--icecast-shadow); will-change: transform,opacity; }
 .icecast-signal { position: absolute; z-index: 3; width: 42px; aspect-ratio: 1; transform: translate(-50%,-50%); border: 3px solid var(--club); border-radius: 50%; animation: icecast-signal 900ms var(--ease-out) both; }
 
 .icecast-controls { display: flex; min-height: 58px; align-items: center; justify-content: center; gap: var(--space-xs); padding: var(--space-xs) var(--space-md); border-top: 1px solid var(--color-rule); background: var(--icecast-stage); }
@@ -74,7 +74,6 @@
 .icecast-controls svg { width: 17px; height: 17px; }
 .icecast-controls > span { margin-inline-start: var(--space-xs); color: var(--color-muted); font-size: var(--text-xs); white-space: nowrap; }
 
-@keyframes icecast-puck-in { from { opacity: .2; transform: translate(-50%,-50%) scale(.4); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 @keyframes icecast-signal { from { opacity: 0; transform: translate(-50%,-50%) scale(.3); } 60% { opacity: .8; } to { opacity: 0; transform: translate(-50%,-50%) scale(1.8); } }
 @keyframes icecast-player-in { from { opacity: 0; transform: translate(-50%,-50%) scale(.65); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
 

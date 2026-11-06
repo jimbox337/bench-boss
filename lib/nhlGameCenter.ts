@@ -231,6 +231,51 @@ export type ShotInfo = {
 };
 export type PlayEvent = { id: number; period: PeriodKey; time: string; kind: PlayKind; team?: string; text: string; score?: string; x?: number; y?: number; shot?: ShotInfo };
 
+export type PlayerShift = {
+  playerId: number;
+  team: string;
+  period: number;
+  start: string;
+  end: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+type RawShift = {
+  playerId?: number;
+  teamAbbrev?: string;
+  period?: number;
+  startTime?: string;
+  endTime?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+export function normalizeShifts(rows: RawShift[]): PlayerShift[] {
+  return rows.flatMap(row => row.playerId && row.teamAbbrev && row.period && row.startTime && row.endTime ? [{
+    playerId: row.playerId,
+    team: row.teamAbbrev,
+    period: row.period,
+    start: row.startTime,
+    end: row.endTime,
+    firstName: row.firstName,
+    lastName: row.lastName,
+  }] : []);
+}
+
+function elapsedSeconds(value: string): number {
+  const [minutes = '0', seconds = '0'] = value.split(':');
+  return Number(minutes) * 60 + Number(seconds);
+}
+
+/** Official shift-chart players whose shift contains this play timestamp. */
+export function onIceAtPlay(shifts: PlayerShift[], play: Pick<PlayEvent, 'period' | 'time'>): PlayerShift[] {
+  const period = Number(play.period);
+  if (!Number.isFinite(period)) return [];
+  const at = elapsedSeconds(play.time);
+  return shifts.filter(shift => shift.period === period && elapsedSeconds(shift.start) <= at && elapsedSeconds(shift.end) >= at);
+}
+
 /** Strength for the shooting side from the NHL situation code (away goalie, away skaters, home skaters, home goalie). */
 export function shotStrength(code: string | undefined, shooterIsHome: boolean): ShotStrength {
   if (!code || !/^\d{4}$/.test(code)) return 'EV';
@@ -340,6 +385,7 @@ export type GameDetail = {
   seasonSeries: { away: number; home: number };
   records: { away?: { overall: string; split: string }; home?: { overall: string; split: string } };
   plays: PlayEvent[];
+  shifts: PlayerShift[];
   starters?: { away: TeamStarter; home: TeamStarter };
   schedules?: { away: TeamScheduleGame[]; home: TeamScheduleGame[] };
   updatedAt: string;
@@ -424,6 +470,7 @@ export function buildGameDetail(landing: Record<string, unknown>, rail: Record<s
     seasonSeries: { away: r.seasonSeriesWins?.awayTeamWins || 0, home: r.seasonSeriesWins?.homeTeamWins || 0 },
     records: {},
     plays: [],
+    shifts: [],
     updatedAt: new Date().toISOString(),
   };
 }
@@ -514,6 +561,14 @@ async function nhl<T>(path: string, revalidate: number): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function fetchShifts(gameId: number): Promise<PlayerShift[]> {
+  const url = `https://api.nhle.com/stats/rest/en/shiftcharts?cayenneExp=gameId=${gameId}&limit=-1`;
+  const response = await fetch(url, { next: { revalidate: 15 }, signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) throw new Error(`NHL shift chart failed: ${response.status}`);
+  const payload = await response.json() as { data?: RawShift[] };
+  return normalizeShifts(payload.data || []);
+}
+
 export const isIsoDate = (value: string | null | undefined): value is string => !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
 
 /** Attach "W-L-OTL" records from standings (one cached request) to each scoreboard team. */
@@ -554,12 +609,13 @@ export async function fetchScoreboard(date?: string) {
 }
 
 export async function fetchGameDetail(gameId: number): Promise<GameDetail> {
-  const [landing, rail, box, pbp, standings] = await Promise.all([
+  const [landing, rail, box, pbp, standings, shifts] = await Promise.all([
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/landing`, 15),
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/right-rail`, 15),
     nhl<Record<string, unknown>>(`/gamecenter/${gameId}/boxscore`, 15),
     nhl<{ plays?: RawPlay[]; rosterSpots?: RawRosterSpot[] }>(`/gamecenter/${gameId}/play-by-play`, 15).catch(() => null),
     fetchStandings().catch(() => [] as StandingRow[]),
+    fetchShifts(gameId).catch(() => [] as PlayerShift[]),
   ]);
   const detail = buildGameDetail(landing, rail, box);
   const { game } = detail;
@@ -573,6 +629,7 @@ export async function fetchGameDetail(gameId: number): Promise<GameDetail> {
   if (game.away.id) teamIds[game.away.id] = game.away.abbrev;
   if (game.home.id) teamIds[game.home.id] = game.home.abbrev;
   detail.plays = normalizePlayByPlay(pbp, teamIds, game.home.id);
+  detail.shifts = shifts;
   const row = (abbrev: string) => standings.find(s => s.abbrev === abbrev);
   const away = row(game.away.abbrev);
   const home = row(game.home.abbrev);
