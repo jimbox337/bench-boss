@@ -50,6 +50,9 @@ USE_NEURAL = NEURAL_AVAILABLE
 # Fit stack weights, per-stat selection, the baseline blend and the interval scale on the
 # week-start validation frame (what the app sees) rather than the per-game one.
 FIT_WEEK_START = True
+# BenchBoss AI loss: "game" (per-game Poisson) or "week" (player-week totals, trained and
+# early-stopped on week-start frames so no input carries a result from the same week).
+NEURAL_LOSS = "game"
 # A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
 NEURAL_POSITION_TOLERANCE = 0.005
 
@@ -382,20 +385,30 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
               "test": feats[feats["season"] == split.test].copy(),
               "live": feats[feats["season"] == split.live].copy() if split.live else feats.iloc[0:0].copy()}
     frames = {k: v for k, v in frames.items() if not v.empty}
-    ws = {k: week_start_frame(v) for k, v in frames.items()}
-    for f in ws.values():
+    def frozen(frame: pd.DataFrame) -> pd.DataFrame:
+        f = week_start_frame(frame)
         for t in SKATER_TARGETS:
             sh = shrinkage[t]
             f[f"base_{t}"] = skater_baseline(f, t, fallback[t])
             f[f"shr_{t}"] = shrunk_baseline(f, t, sh["k"], sh["reference"], sh["priorWeight"], sh["seasonWeight"])
-    if USE_NEURAL:
-        ws = {k: add_inputs(v) for k, v in ws.items()}
+        return add_inputs(f) if USE_NEURAL else f
+
+    ws = {k: frozen(v) for k, v in frames.items()}
 
     neural: dict[str, Any] = {}
     if USE_NEURAL:
         from .neural import run_isolated
         print("  BenchBoss AI: training on train seasons, early stopping on validation (separate process)...", flush=True)
-        neural["run"] = run_isolated(train, frames["validation"], full, {**frames, **{f"{k}_ws": v for k, v in ws.items()}}, SEED)
+        predict_frames = {**frames, **{f"{k}_ws": v for k, v in ws.items()}}
+        if NEURAL_LOSS == "week":
+            from .neural import GROUP
+
+            def grouped(frame: pd.DataFrame) -> pd.DataFrame:
+                return frame.assign(**{GROUP: frame["playerId"].astype(str) + "|" + week_key(frame["gameDate"])})
+            neural["run"] = run_isolated(grouped(frozen(train)), grouped(ws["validation"]), grouped(frozen(full)),
+                                         predict_frames, SEED, loss="week")
+        else:
+            neural["run"] = run_isolated(train, frames["validation"], full, predict_frames, SEED)
         for split_name, frame in [*frames.items(), *((f"{k}_ws", v) for k, v in ws.items())]:
             preds = neural["run"]["predictions"][split_name]
             for i, t in enumerate(SKATER_TARGETS):
@@ -589,7 +602,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             **neural["run"]["export"],
             "stack": neural["stacks"], "blendWithProductionBaseline": 1 - neural["alpha"], "promoted": promoted,
         }
-        report["neural"] = {"bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
+        report["neural"] = {"loss": NEURAL_LOSS, "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
         print(f"  BenchBoss AI: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
@@ -781,9 +794,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--today", help="Override today's date (YYYY-MM-DD) for reproducible splits")
     parser.add_argument("--no-neural", action="store_true", help="Skip BenchBoss AI (the neural challenger)")
+    parser.add_argument("--neural-loss", choices=("game", "week"), default="game",
+                        help="BenchBoss AI loss: per game, or player-week totals on week-start frames")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
-    global USE_NEURAL, FIT_WEEK_START
+    global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS
+    NEURAL_LOSS = args.neural_loss
     USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural
     FIT_WEEK_START = not args.fit_per_game
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()

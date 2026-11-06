@@ -76,3 +76,27 @@ def test_isolated_run():
     result = neural.run_isolated(train, valid, pd.concat([train, valid]), {"validation": valid, "live": valid}, seed=3, export_sample="validation")
     assert result["predictions"]["validation"].shape == (1000, len(SKATER_TARGETS))
     assert result["export"]["parity"] and result["bestEpoch"] >= 1
+
+
+def test_week_loss_is_poisson_nll_on_weekly_totals():
+    log_rate = torch.log(torch.tensor([[0.5], [1.0], [2.0]]))
+    y = torch.tensor([[1.0], [0.0], [3.0]])
+    group = torch.tensor([0, 0, 1])
+    got = float(neural._week_loss(torch, log_rate, y, torch.ones(1), group, 2))
+    want = ((1.5 - 1 * math.log(1.5)) + (2.0 - 3 * math.log(2.0))) / 2
+    assert math.isclose(got, want, rel_tol=1e-6)
+
+
+def test_weekly_training_learns_and_runs_isolated():
+    train, valid = frame(6000, 1), frame(2000, 2)
+    for f in (train, valid):
+        f[neural.GROUP] = np.arange(len(f)) // 3  # three games per player-week
+    model = neural.train_network(train, valid, seed=3, loss="week")
+    assert model["loss"] == "week" and min(model["validationLoss"]) < model["validationLoss"][0] + 1e-9
+    base_mae = float(np.mean(np.abs(valid["goals"] - valid["shr_goals"])))
+    assert float(np.mean(np.abs(valid["goals"] - neural.predict_network(model, valid)[:, 0]))) < base_mae
+    result = neural.run_isolated(train, valid, pd.concat([train, valid]), {"validation": valid}, seed=3,
+                                 export_sample="validation", loss="week")
+    assert result["loss"] == "week" and result["predictions"]["validation"].shape == (2000, len(SKATER_TARGETS))
+    with pytest.raises(ValueError):
+        neural.train_network(train, None, seed=3, epochs=1, loss="season")
