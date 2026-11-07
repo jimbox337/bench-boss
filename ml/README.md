@@ -201,6 +201,15 @@ What this shows:
   With a half-life of 4, BenchSniper alone beats LightGBM (MAE 1.651, RMSE 2.238, start/sit 0.748, top-50 0.428) on all four test metrics. But choosing a setting by its test score would spend the untouched test season, and on validation, equal weighting is best. It barely shrinks the correction factors either (goals ×1.09, PP points ×1.11–1.15), so most of the bias is the jump to 2024-25, which no weighting of earlier seasons can learn. The default stays equal weights.
 - **Where this leaves BenchSniper:** level with LightGBM. Each setting fails a different single check by about 0.1%, on a different season, which is noise. The live shadow record (`neuralShadow` in the daily scoring, from 2026-11-06) will separate them better than more backtest tuning. The app artifact now carries the corrected network (equal weights, dropout 0.1) for that shadow; its LightGBM, goalie and availability parts are unchanged.
 
+- **Retrain with the live season (2026-11-07, `train --neural-refit-live`).** BenchSniper's training seasons and seeds are fixed, so a plain retrain rebuilds the same network. The only new information is the current season, which the export refit used to skip. The flag adds the live season's finished games (264 games, through 2026-11-06) to that refit. Early stopping, calibration and the stack still use only completed seasons. Backtest, one season back (`--today 2025-11-10 --live-from 2025-11-10`, scoring the rest of 2025-26 only):
+
+  | BenchSniper alone, 2025-26 after Nov 10 | Weekly MAE | Weekly RMSE | Bias (FP/week) | Rank corr. | Per-game deviance |
+  |---|---|---|---|---|---|
+  | Completed seasons only | **1.6252** | 2.2280 | −0.179 | 0.7071 | 5.2189 |
+  | Plus the season's first month | 1.6265 | **2.2218** | **−0.144** | **0.7076** | **5.2116** |
+
+  Four of five metrics improve and MAE slips by 0.001, so the shadow network in the app artifact is now the live-refit one. Its LightGBM, goalie and availability parts are unchanged. With the flag on, the report's live-season numbers include games the network trained on. The honest live record is the daily `neuralShadow` scoring from 2026-11-07 on.
+
 The exported weights ship in the app artifact (about 300 KB). `lib/model/neural.ts` reproduces PyTorch to 1e-4, and a week of projections for the whole league takes about 50 ms. The daily runner also writes shadow `nn_*` projections, scored as `neuralShadow` (the BenchSniper shadow) but never shown, so live evidence builds up for a future promotion.
 
 ## Daily track record

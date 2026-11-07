@@ -58,6 +58,11 @@ NEURAL_HALF_LIFE: float | None = None  # seasons; None weights every training se
 # Scale each BenchSniper stat so its validation total matches the actual total (fitted on the
 # same validation frame as the stack; test and live untouched). Folded into the exported bias.
 NEURAL_CALIBRATE = True
+# Add the live season's finished games (before TODAY) to BenchSniper's export refit. Live metrics
+# then include in-sample games, so backtest this with --today/--live-from first.
+NEURAL_REFIT_LIVE = False
+TODAY: dt.date | None = None
+LIVE_FROM: dt.date | None = None  # backtests: score the live season only from this date
 # A challenger must not cost more than this relative weekly MAE for forwards or defencemen.
 NEURAL_POSITION_TOLERANCE = 0.005
 
@@ -153,6 +158,10 @@ def probability_metrics(y: np.ndarray, p: np.ndarray, bins: int = 10) -> dict[st
         ece += mask.mean() * abs(mean_p - rate)
         table.append({"bin": f"{lo:.1f}-{hi:.1f}", "n": int(mask.sum()), "predicted": round(mean_p, 4), "observed": round(rate, 4)})
     return {"brier": brier, "logLoss": log_loss, "ece": float(ece), "n": int(len(y)), "reliability": table}
+
+
+def live_window(frame: pd.DataFrame) -> pd.Series:
+    return frame["gameDate"] >= pd.Timestamp(LIVE_FROM) if LIVE_FROM else pd.Series(True, index=frame.index)
 
 
 def week_key(dates: pd.Series) -> pd.Series:
@@ -388,7 +397,12 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
     full = feats[feats["season"].isin(split.train + [split.validation, split.test])]
     frames = {"validation": feats[feats["season"] == split.validation].copy(),
               "test": feats[feats["season"] == split.test].copy(),
-              "live": feats[feats["season"] == split.live].copy() if split.live else feats.iloc[0:0].copy()}
+              "live": feats[(feats["season"] == split.live) & live_window(feats)].copy() if split.live else feats.iloc[0:0].copy()}
+    neural_full = full
+    if NEURAL_REFIT_LIVE and split.live and TODAY:
+        played = feats[(feats["season"] == split.live) & (feats["gameDate"] < pd.Timestamp(TODAY))]
+        neural_full = pd.concat([full, played])
+        print(f"  BenchSniper: export refit adds {played['gameId'].nunique()} live-season games before {TODAY}", flush=True)
     frames = {k: v for k, v in frames.items() if not v.empty}
     def frozen(frame: pd.DataFrame) -> pd.DataFrame:
         f = week_start_frame(frame)
@@ -410,11 +424,11 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
 
             def grouped(frame: pd.DataFrame) -> pd.DataFrame:
                 return frame.assign(**{GROUP: frame["playerId"].astype(str) + "|" + week_key(frame["gameDate"])})
-            neural["run"] = run_isolated(grouped(frozen(train)), grouped(ws["validation"]), grouped(frozen(full)),
+            neural["run"] = run_isolated(grouped(frozen(train)), grouped(ws["validation"]), grouped(frozen(neural_full)),
                                          predict_frames, SEED, loss="week", dropout=NEURAL_DROPOUT,
                                          half_life=NEURAL_HALF_LIFE)
         else:
-            neural["run"] = run_isolated(train, frames["validation"], full, predict_frames, SEED, dropout=NEURAL_DROPOUT,
+            neural["run"] = run_isolated(train, frames["validation"], neural_full, predict_frames, SEED, dropout=NEURAL_DROPOUT,
                                          half_life=NEURAL_HALF_LIFE)
         for split_name, frame in [*frames.items(), *((f"{k}_ws", v) for k, v in ws.items())]:
             preds = neural["run"]["predictions"][split_name]
@@ -622,7 +636,7 @@ def train_skaters(feats: pd.DataFrame, split: Split) -> tuple[dict, dict]:
             **neural["run"]["export"],
             "stack": neural["stacks"], "blendWithProductionBaseline": 1 - neural["alpha"], "promoted": promoted,
         }
-        report["neural"] = {"loss": NEURAL_LOSS, "dropout": NEURAL_DROPOUT, "halfLife": NEURAL_HALF_LIFE, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
+        report["neural"] = {"loss": NEURAL_LOSS, "refitLiveBefore": str(TODAY) if NEURAL_REFIT_LIVE else None, "liveFrom": str(LIVE_FROM) if LIVE_FROM else None, "dropout": NEURAL_DROPOUT, "halfLife": NEURAL_HALF_LIFE, "calibration": neural["calibration"], "bestEpoch": neural["run"]["bestEpoch"], "validationLoss": neural["run"]["validationLoss"],
                             "stackWeights": neural["stacks"], "modelWeight": neural["alpha"], "validationWeeklyRmse": neural["weeklyRmse"],
                             "gate": gate, "gateBasis": "weekStart", "daily": daily, "promoted": promoted, "rule": NEURAL_RULE}
         print(f"  BenchSniper: {'PROMOTED (still behind the feature flag)' if promoted else 'not promoted'}; "
@@ -821,6 +835,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="Weight BenchSniper training rows by recency, halving every N seasons")
     parser.add_argument("--neural-calibrate", action=argparse.BooleanOptionalAction, default=True,
                         help="Scale each BenchSniper stat to match its validation total (default on)")
+    parser.add_argument("--neural-refit-live", action="store_true",
+                        help="Add the live season's games before --today to BenchSniper's export refit")
+    parser.add_argument("--live-from", help="Backtests: score the live season only from this date (YYYY-MM-DD)")
     parser.add_argument("--fit-per-game", action="store_true", help="Fit stack weights, selection and blend on per-game validation (previous behaviour)")
     args = parser.parse_args(argv)
     global USE_NEURAL, FIT_WEEK_START, NEURAL_LOSS, NEURAL_DROPOUT, NEURAL_CALIBRATE, NEURAL_HALF_LIFE
@@ -829,6 +846,9 @@ def main(argv: list[str] | None = None) -> int:
     USE_NEURAL = NEURAL_AVAILABLE and not args.no_neural
     FIT_WEEK_START = not args.fit_per_game
     today = dt.date.fromisoformat(args.today) if args.today else dt.date.today()
+    global NEURAL_REFIT_LIVE, TODAY, LIVE_FROM
+    NEURAL_REFIT_LIVE, TODAY = args.neural_refit_live, today
+    LIVE_FROM = dt.date.fromisoformat(args.live_from) if args.live_from else None
 
     tables = load_processed()
     split = choose_split(sorted(tables["skater_games"]["season"].unique()), today)
