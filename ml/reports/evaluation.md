@@ -1,10 +1,10 @@
-# Bench Boss model evaluation — `bench-boss-lgbm-20261106`
+# Bench Boss model evaluation — `bench-boss-lgbm-20261107`
 
-- Trained: 2026-11-06T00:49:52.931448+00:00
-- Data through: 2026-11-04 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-05T14:56:13.130795+00:00)
+- Trained: 2026-11-07T05:57:15.166185+00:00
+- Data through: 2026-11-06 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-07T05:57:12.597476+00:00)
 - Pipeline 2026.11.0, feature schema v1
 - Time-based split — train: 20152016, 20162017, 20172018, 20182019, 20192020, 20202021, 20212022, 20222023, 20232024; validation: 20242025; test: 20252026; live (in-progress, unseen by every fit): 20262027
-- Rows: 495,329 skater-games, 64,108 goalie start candidates
+- Rows: 495,833 skater-games, 64,174 goalie start candidates
 
 ## Promotion decision
 
@@ -46,20 +46,20 @@ Projections compared:
 | test | withXgOffline | 1.572 (-2.0% ✓) | 2.120 | -0.013 | 0.714 | 0.466 | 0.764 | — |
 | test | productionBaseline | 1.604 | 2.170 | 0.040 | 0.704 | 0.459 | 0.759 | — |
 | test | seasonAverageBaseline | 1.650 (+2.9% ✗) | 2.233 | 0.051 | 0.687 | 0.442 | 0.749 | — |
-| live | benchBossSelected | 1.425 (-4.1% ✓) | 1.998 | -0.048 | 0.681 | 0.490 | 0.772 | 0.812 |
-| live | directModelOnly | 1.489 (+0.2% ✗) | 2.073 | -0.134 | 0.652 | 0.453 | 0.761 | — |
-| live | residualModelOnly | 1.473 (-0.8% ✓) | 2.097 | -0.128 | 0.661 | 0.457 | 0.768 | — |
-| live | shrunkBaselineOnly | 1.450 (-2.4% ✓) | 2.011 | -0.013 | 0.672 | 0.480 | 0.768 | — |
-| live | residualOnShrunkOnly | 1.443 (-2.9% ✓) | 2.011 | -0.105 | 0.671 | 0.477 | 0.766 | — |
-| live | withXgOffline | 1.430 (-3.8% ✓) | 1.993 | -0.061 | 0.679 | 0.483 | 0.770 | — |
-| live | productionBaseline | 1.486 | 2.125 | -0.010 | 0.663 | 0.453 | 0.765 | — |
-| live | seasonAverageBaseline | 1.495 (+0.6% ✗) | 2.139 | -0.011 | 0.661 | 0.450 | 0.764 | — |
+| live | benchBossSelected | 1.466 (-3.8% ✓) | 2.043 | -0.052 | 0.707 | 0.523 | 0.775 | 0.806 |
+| live | directModelOnly | 1.539 (+0.9% ✗) | 2.128 | -0.145 | 0.674 | 0.483 | 0.765 | — |
+| live | residualModelOnly | 1.515 (-0.6% ✓) | 2.141 | -0.137 | 0.686 | 0.480 | 0.775 | — |
+| live | shrunkBaselineOnly | 1.492 (-2.2% ✓) | 2.056 | -0.015 | 0.698 | 0.513 | 0.773 | — |
+| live | residualOnShrunkOnly | 1.487 (-2.5% ✓) | 2.058 | -0.112 | 0.695 | 0.510 | 0.770 | — |
+| live | withXgOffline | 1.472 (-3.4% ✓) | 2.039 | -0.066 | 0.704 | 0.517 | 0.776 | — |
+| live | productionBaseline | 1.525 | 2.164 | -0.011 | 0.690 | 0.483 | 0.771 | — |
+| live | seasonAverageBaseline | 1.536 (+0.8% ✗) | 2.179 | -0.013 | 0.686 | 0.480 | 0.770 | — |
 
 Weekly fantasy-point MAE by position group (F = forwards, D = defence):
 
 - validation: benchBossSelected D 1.351 / F 1.647; productionBaseline D 1.386 / F 1.678
 - test: benchBossSelected D 1.376 / F 1.675; productionBaseline D 1.410 / F 1.703
-- live: benchBossSelected D 1.166 / F 1.560; productionBaseline D 1.229 / F 1.621
+- live: benchBossSelected D 1.211 / F 1.600; productionBaseline D 1.271 / F 1.657
 
 ## Skater statistics
 
@@ -109,22 +109,22 @@ Per-game accuracy:
 |---|---|---|---|---|---|---|---|---|---|---|
 | goals | validation | 0.261 | 0.256 | 0.255 | 0.422 | 0.407 | 0.419 | 0.206 | 0.261 | 0.207 |
 | goals | test | 0.266 | 0.258 | 0.260 | 0.429 | 0.414 | 0.427 | 0.200 | 0.258 | 0.200 |
-| goals | live | 0.274 | 0.267 | 0.269 | 0.468 | 0.425 | 0.464 | 0.146 | 0.250 | 0.141 |
+| goals | live | 0.274 | 0.267 | 0.269 | 0.466 | 0.425 | 0.462 | 0.149 | 0.248 | 0.143 |
 | assists | validation | 0.392 | 0.386 | 0.385 | 0.549 | 0.529 | 0.544 | 0.210 | 0.265 | 0.214 |
 | assists | test | 0.399 | 0.389 | 0.391 | 0.556 | 0.538 | 0.553 | 0.214 | 0.268 | 0.215 |
-| assists | live | 0.408 | 0.398 | 0.401 | 0.601 | 0.546 | 0.596 | 0.160 | 0.265 | 0.163 |
+| assists | live | 0.407 | 0.398 | 0.400 | 0.598 | 0.546 | 0.593 | 0.169 | 0.269 | 0.171 |
 | shots | validation | 1.052 | 1.019 | 1.048 | 1.363 | 1.323 | 1.360 | 0.395 | 0.428 | 0.397 |
 | shots | test | 1.044 | 1.008 | 1.040 | 1.357 | 1.316 | 1.353 | 0.394 | 0.428 | 0.395 |
-| shots | live | 1.079 | 1.000 | 1.086 | 1.413 | 1.294 | 1.415 | 0.338 | 0.419 | 0.335 |
+| shots | live | 1.074 | 0.999 | 1.081 | 1.407 | 1.293 | 1.409 | 0.342 | 0.419 | 0.339 |
 | ppPoints | validation | 0.151 | 0.148 | 0.145 | 0.316 | 0.306 | 0.313 | 0.295 | 0.320 | 0.278 |
 | ppPoints | test | 0.156 | 0.150 | 0.149 | 0.321 | 0.312 | 0.320 | 0.300 | 0.327 | 0.281 |
-| ppPoints | live | 0.172 | 0.170 | 0.168 | 0.378 | 0.347 | 0.370 | 0.278 | 0.349 | 0.218 |
+| ppPoints | live | 0.171 | 0.170 | 0.167 | 0.375 | 0.347 | 0.368 | 0.281 | 0.349 | 0.224 |
 | hits | validation | 0.909 | 0.909 | 0.909 | 1.225 | 1.202 | 1.223 | 0.496 | 0.512 | 0.498 |
 | hits | test | 0.869 | 0.868 | 0.870 | 1.182 | 1.151 | 1.179 | 0.515 | 0.532 | 0.518 |
-| hits | live | 0.955 | 0.903 | 0.946 | 1.305 | 1.208 | 1.292 | 0.479 | 0.528 | 0.481 |
+| hits | live | 0.949 | 0.899 | 0.940 | 1.298 | 1.204 | 1.286 | 0.480 | 0.527 | 0.482 |
 | blocks | validation | 0.759 | 0.751 | 0.761 | 1.001 | 0.968 | 1.000 | 0.384 | 0.419 | 0.385 |
 | blocks | test | 0.730 | 0.731 | 0.735 | 0.957 | 0.930 | 0.959 | 0.370 | 0.404 | 0.371 |
-| blocks | live | 0.747 | 0.720 | 0.750 | 1.017 | 0.927 | 1.018 | 0.323 | 0.408 | 0.321 |
+| blocks | live | 0.748 | 0.721 | 0.751 | 1.016 | 0.928 | 1.016 | 0.322 | 0.405 | 0.320 |
 
 Per-game MAE by position, test season (selected vs baseline):
 
@@ -145,8 +145,8 @@ Per-game MAE by position, test season (selected vs baseline):
 | validation | baseline | 0.1242 | 0.5440 | 0.0356 |
 | test | selected | 0.1221 | 0.4013 | 0.0178 |
 | test | baseline | 0.1263 | 0.5551 | 0.0382 |
-| live | selected | 0.1254 | 0.4108 | 0.0350 |
-| live | baseline | 0.1385 | 0.8919 | 0.0879 |
+| live | selected | 0.1257 | 0.4123 | 0.0339 |
+| live | baseline | 0.1383 | 0.8818 | 0.0858 |
 
 ## Goalie models
 
@@ -156,19 +156,19 @@ The app has no goalie projection today, so the comparison baseline is a simple u
 |---|---|---|---|---|---|
 | started | model | validation | 0.4658 | 0.7214 | logLoss · Brier 0.1512 vs 0.2094 · ECE 0.0314 vs 0.0571 |
 | started | model | test | 0.5024 | 0.7457 | logLoss · Brier 0.1665 vs 0.2242 · ECE 0.0160 vs 0.0678 |
-| started | model | live | 0.5159 | 1.1997 | logLoss · Brier 0.1727 vs 0.2634 · ECE 0.0424 vs 0.1178 |
+| started | model | live | 0.5251 | 1.1732 | logLoss · Brier 0.1768 vs 0.2657 · ECE 0.0355 vs 0.1242 |
 | saves | model | validation | 6.9321 | 7.1439 | rmse |
 | saves | model | test | 6.9030 | 7.1655 | rmse |
-| saves | model | live | 6.7577 | 7.2580 | rmse |
+| saves | model | live | 6.7127 | 7.2033 | rmse |
 | ga | model | validation | 1.5322 | 1.5509 | rmse |
 | ga | model | test | 1.4961 | 1.5062 | rmse |
-| ga | model | live | 1.5554 | 1.5743 | rmse |
+| ga | model | live | 1.5548 | 1.5705 | rmse |
 | win | model | validation | 0.6753 | 0.6978 | logLoss · Brier 0.2412 vs 0.2519 · ECE 0.0415 vs 0.0487 |
 | win | model | test | 0.6930 | 0.7028 | logLoss · Brier 0.2499 vs 0.2545 · ECE 0.0511 vs 0.0579 |
-| win | model | live | 0.6704 | 0.6991 | logLoss · Brier 0.2389 vs 0.2525 · ECE 0.0497 vs 0.0647 |
+| win | model | live | 0.6677 | 0.6949 | logLoss · Brier 0.2376 vs 0.2505 · ECE 0.0554 vs 0.0591 |
 | shutout | model | validation | 0.2170 | 0.2180 | logLoss · Brier 0.0534 vs 0.0535 · ECE 0.0014 vs 0.0001 |
 | shutout | model | test | 0.1762 | 0.1764 | logLoss · Brier 0.0404 vs 0.0404 · ECE 0.0156 vs 0.0150 |
-| shutout | model | live | 0.1558 | 0.1561 | logLoss · Brier 0.0340 vs 0.0340 · ECE 0.0200 vs 0.0222 |
+| shutout | model | live | 0.1497 | 0.1501 | logLoss · Brier 0.0321 vs 0.0321 · ECE 0.0221 vs 0.0243 |
 
 Expected weekly goalie fantasy points (P(start) × E[points | start]; default scoring):
 
@@ -180,9 +180,9 @@ Expected weekly goalie fantasy points (P(start) × E[points | start]; default sc
 | test | benchBossSelected | 2.363 | 3.362 | 0.435 | 0.277 |
 | test | usageBaseline | 2.357 | 3.415 | 0.351 | 0.224 |
 | test | confirmedStarter | 2.220 | 3.343 | 0.451 | 0.289 |
-| live | benchBossSelected | 2.240 | 3.254 | 0.408 | 0.126 |
-| live | usageBaseline | 2.298 | 3.257 | 0.646 | 0.149 |
-| live | confirmedStarter | 2.089 | 3.181 | 0.457 | 0.211 |
+| live | benchBossSelected | 2.356 | 3.338 | 0.458 | 0.129 |
+| live | usageBaseline | 2.417 | 3.336 | 0.700 | 0.167 |
+| live | confirmedStarter | 2.195 | 3.258 | 0.509 | 0.235 |
 
 Starter pick accuracy (top candidate per team-game started; team-games whose starter was a candidate):
 
@@ -190,7 +190,7 @@ Starter pick accuracy (top candidate per team-game started; team-games whose sta
 |---|---|---|---|
 | validation | 0.755 | 0.620 | 2,519 |
 | test | 0.729 | 0.586 | 2,527 |
-| live | 0.762 | 0.623 | 432 |
+| live | 0.752 | 0.607 | 460 |
 
 Goalie start-probability reliability (test season):
 
@@ -211,31 +211,31 @@ Goalie start-probability reliability (test season):
 
 One row per team game for every skater who played for that team in its previous 10 games; `played` is whether he dressed. Weekly fantasy points here **include missed games as 0**, and use the production per-game baseline as the projection when he plays, so the only difference between rows is how availability is handled.
 
-Play rate: validation 0.832, test 0.814, live 0.838. Top features: played_prev, last_toi, played_share_l5, played_share_l10, avg_toi_l5, miss_streak.
+Play rate: validation 0.832, test 0.814, live 0.836. Top features: played_prev, last_toi, played_share_l5, played_share_l10, avg_toi_l5, miss_streak.
 
 | Split | Availability approach | Weekly games MAE | Weekly FP MAE | Weekly FP RMSE | FP bias |
 |---|---|---|---|---|---|
 | validation | assumesPlaysEveryGame | 0.496 | 1.872 | 2.459 | 0.541 |
 | validation | recentShare | 0.418 | 1.684 | 2.285 | 0.045 |
-| validation | availabilityModel | 0.253 | 1.524 | 2.094 | 0.023 |
+| validation | availabilityModel | 0.253 | 1.525 | 2.095 | 0.023 |
 | test | assumesPlaysEveryGame | 0.567 | 1.939 | 2.547 | 0.625 |
 | test | recentShare | 0.456 | 1.712 | 2.326 | 0.060 |
 | test | availabilityModel | 0.266 | 1.532 | 2.119 | 0.042 |
-| live | assumesPlaysEveryGame | 0.396 | 1.747 | 2.424 | 0.381 |
-| live | recentShare | 0.304 | 1.577 | 2.247 | 0.029 |
-| live | availabilityModel | 0.212 | 1.484 | 2.146 | -0.019 |
+| live | assumesPlaysEveryGame | 0.423 | 1.808 | 2.478 | 0.404 |
+| live | recentShare | 0.325 | 1.629 | 2.292 | 0.028 |
+| live | availabilityModel | 0.224 | 1.530 | 2.188 | -0.024 |
 
 | Split | P(plays) | Brier | Log loss | ECE |
 |---|---|---|---|---|
-| validation | availabilityModel | 0.0587 | 0.2087 | 0.0037 |
+| validation | availabilityModel | 0.0587 | 0.2088 | 0.0040 |
 | validation | recentShare | 0.1035 | 0.4833 | 0.0549 |
 | validation | assumesPlaysEveryGame | 0.1684 | ∞ | — |
-| test | availabilityModel | 0.0623 | 0.2202 | 0.0026 |
+| test | availabilityModel | 0.0623 | 0.2203 | 0.0026 |
 | test | recentShare | 0.1101 | 0.5099 | 0.0564 |
 | test | assumesPlaysEveryGame | 0.1857 | ∞ | — |
-| live | availabilityModel | 0.0599 | 0.2097 | 0.0071 |
-| live | recentShare | 0.0950 | 0.4911 | 0.0513 |
-| live | assumesPlaysEveryGame | 0.1623 | ∞ | — |
+| live | availabilityModel | 0.0597 | 0.2091 | 0.0069 |
+| live | recentShare | 0.0957 | 0.4869 | 0.0506 |
+| live | assumesPlaysEveryGame | 0.1644 | ∞ | — |
 
 ## Known limitations
 

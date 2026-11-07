@@ -3,7 +3,7 @@
 An offline pipeline that collects free, public NHL game data, builds pre-game features,
 trains local LightGBM models, and compares them with the projection the app uses today.
 
-**Status: in the app (with fallback).** The latest model (`bench-boss-lgbm-20261106`) passed the
+**Status: in the app (with fallback).** The latest model (`bench-boss-lgbm-20261107`) passed the
 promotion gate on the validation and the untouched test season, so its artifact ships in
 `lib/model/artifacts/` and the app serves its projections, labelled as model estimates. Any model
 error, timeout or an artifact that fails the gate falls back to the schedule-aware engine. See
@@ -81,7 +81,7 @@ On **both** validation and test, the combined weekly fantasy-point projection mu
 1. beat the production baseline on weekly MAE **and** RMSE, and
 2. not lose more than 0.005 in start/sit accuracy or top-50 precision.
 
-### Results (`bench-boss-lgbm-20261106`, 12 seasons)
+### Results (`bench-boss-lgbm-20261107`, 12 seasons)
 
 | Weekly fantasy points, 2025-26 test | Production baseline | Previous model (20261105) | Bench Boss model |
 |---|---|---|---|
@@ -91,7 +91,7 @@ On **both** validation and test, the combined weekly fantasy-point projection mu
 | Top-50 precision | 0.459 | 0.463 | **0.466** |
 | Start/sit accuracy | 0.759 | 0.762 | 0.761 |
 
-On the in-progress 2026-27 season (unseen by every fit) weekly MAE is 1.425 vs 1.433 for the previous model and 1.486 for the baseline, and RMSE is 1.998 vs 2.019 and 2.125.
+With data through November 6, the in-progress 2026-27 live holdout has weekly MAE **1.466** versus 1.525 for the production baseline, and RMSE **2.043** versus 2.164. The model also leads in rank correlation (0.707 vs 0.690), top-50 precision (0.523 vs 0.483), and start/sit accuracy (0.775 vs 0.771).
 
 - **Stacking (new in 20261106):** instead of picking one projection per stat, each stat is a non-negative weighted sum of the production baseline, the shrunk baseline and the direct, residual and residual-on-shrunk boosters. Weights are fitted by NNLS on validation player-week sums, so test and live stay untouched. The direct model ranks single games best but is biased low, while the shrunk baseline is unbiased but blunter; stacking takes the strengths of both. Then 75% stack and 25% production baseline, chosen on validation ranking metrics.
 
