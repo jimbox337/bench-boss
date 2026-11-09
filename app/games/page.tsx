@@ -115,7 +115,7 @@ function ScoreboardView() {
           <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => go(board?.prevDate)} disabled={!board?.prevDate} aria-label="Previous day"><ChevronLeft className="h-5 w-5" /></button>
           <span className="min-w-0 flex-1 whitespace-nowrap rounded-full border border-rule bg-paper-2 px-4 py-2.5 text-center font-display text-lg font-bold sm:min-w-56 sm:flex-none">{board ? <><span className="sm:hidden">{shortDay(board.date)}</span><span className="hidden sm:inline">{formatDay(board.date)}</span></> : '…'}</span>
           <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => go(board?.nextDate)} disabled={!board?.nextDate} aria-label="Next day"><ChevronRight className="h-5 w-5" /></button>
-          {requestedDate && <button type="button" className="h-11 rounded-full border border-ink px-4 text-sm font-semibold hover:bg-ink hover:text-on-brand" onClick={() => go()}>Today</button>}
+          {requestedDate && <button type="button" className="h-11 rounded-full border border-field-border bg-paper-2 px-4 text-sm font-semibold text-accent transition-colors hover:border-accent hover:bg-paper-3" onClick={() => go()}>Today</button>}
           <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rule bg-paper-2 hover:border-field-border" onClick={() => setRefreshKey(k => k + 1)} aria-label="Refresh scores"><RefreshCw className="h-4 w-4" /></button>
         </div>
       </header>
