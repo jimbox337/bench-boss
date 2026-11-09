@@ -1,0 +1,349 @@
+[
+  {
+    "tag": "daily",
+    "madeAt": "2026-11-08T19:17:34.766940+00:00",
+    "games": [
+      2026020278,
+      2026020279,
+      2026020280,
+      2026020281,
+      2026020282
+    ],
+    "predictedSkaters": 180,
+    "dressed": 172,
+    "notDressed": [
+      "Chris Tanev",
+      "Morgan Rielly",
+      "Scott Sabourin",
+      "Anthony Mantha",
+      "Jack Roslovic",
+      "Sam Colangelo",
+      "Gage Goncalves",
+      "Ville Koivunen"
+    ],
+    "stats": {
+      "goals": {
+        "actualMean": 0.1744186046511628,
+        "modelMean": 0.17886453488372092,
+        "baselineMean": 0.19273895348837208,
+        "modelMae": 0.2793622093023256,
+        "baselineMae": 0.30177034883720927,
+        "modelRmse": 0.4402979408151331,
+        "baselineRmse": 0.46901606340567714
+      },
+      "assists": {
+        "actualMean": 0.3081395348837209,
+        "modelMean": 0.3019337209302325,
+        "baselineMean": 0.31382441860465116,
+        "modelMae": 0.43658604651162797,
+        "baselineMae": 0.4475837209302325,
+        "modelRmse": 0.597419793682567,
+        "baselineRmse": 0.6123193466856828
+      },
+      "shots": {
+        "actualMean": 1.5465116279069768,
+        "modelMean": 1.547639534883721,
+        "baselineMean": 1.6123662790697675,
+        "modelMae": 0.9888581395348837,
+        "baselineMae": 1.079989534883721,
+        "modelRmse": 1.3071476034516156,
+        "baselineRmse": 1.3950797937085724
+      },
+      "ppPoints": {
+        "actualMean": 0.1744186046511628,
+        "modelMean": 0.10942848837209303,
+        "baselineMean": 0.12822848837209302,
+        "modelMae": 0.2302156976744186,
+        "baselineMae": 0.2456796511627907,
+        "modelRmse": 0.44487197498595815,
+        "baselineRmse": 0.45655107262890604
+      },
+      "hits": {
+        "actualMean": 1.0930232558139534,
+        "modelMean": 1.0916383720930234,
+        "baselineMean": 1.1389982558139533,
+        "modelMae": 0.8422011627906978,
+        "baselineMae": 0.8522970930232558,
+        "modelRmse": 1.0918563147121256,
+        "baselineRmse": 1.1129554752737687
+      },
+      "blocks": {
+        "actualMean": 0.7965116279069767,
+        "modelMean": 0.7629191860465117,
+        "baselineMean": 0.7667697674418603,
+        "modelMae": 0.7015505813953488,
+        "baselineMae": 0.68265,
+        "modelRmse": 0.9367854629244157,
+        "baselineRmse": 0.931447187645168
+      },
+      "fp": {
+        "actualMean": 1.4936046511627905,
+        "modelMean": 1.4144651162790698,
+        "baselineMean": 1.486058139534884,
+        "modelMae": 1.1216976744186047,
+        "baselineMae": 1.2039534883720933,
+        "modelRmse": 1.5362997073154945,
+        "baselineRmse": 1.6016292903543348
+      }
+    },
+    "fpSpearman": {
+      "model": 0.2824381322121692,
+      "baseline": 0.15333304029615755
+    },
+    "neuralShadow": {
+      "fpMae": 1.118531976744186,
+      "fpRmse": 1.533104384198557,
+      "fpSpearman": 0.28377609538154014
+    },
+    "topPerformers": [
+      {
+        "name": "Cutter Gauthier",
+        "team": "ANA",
+        "fp": 9.6,
+        "model_fp": 2.75,
+        "base_fp": 3.75
+      },
+      {
+        "name": "Mikael Granlund",
+        "team": "ANA",
+        "fp": 8.3,
+        "model_fp": 2.24,
+        "base_fp": 2.36
+      },
+      {
+        "name": "Jackson LaCombe",
+        "team": "ANA",
+        "fp": 7.8,
+        "model_fp": 2.31,
+        "base_fp": 3.07
+      },
+      {
+        "name": "Cole Perfetti",
+        "team": "WPG",
+        "fp": 6.6,
+        "model_fp": 1.93,
+        "base_fp": 1.74
+      },
+      {
+        "name": "Mark Scheifele",
+        "team": "WPG",
+        "fp": 5.7,
+        "model_fp": 2.35,
+        "base_fp": 2.1
+      },
+      {
+        "name": "Timo Meier",
+        "team": "NJD",
+        "fp": 5.1,
+        "model_fp": 1.65,
+        "base_fp": 1.2
+      },
+      {
+        "name": "Nico Hischier",
+        "team": "NJD",
+        "fp": 5.1,
+        "model_fp": 2.0,
+        "base_fp": 1.86
+      },
+      {
+        "name": "Tomas Hertl",
+        "team": "VGK",
+        "fp": 4.8,
+        "model_fp": 1.9,
+        "base_fp": 2.19
+      }
+    ],
+    "biggestMisses": [
+      {
+        "name": "Nikita Kucherov",
+        "team": "TBL",
+        "fp": 0.1,
+        "model_fp": 2.98,
+        "base_fp": 2.77
+      },
+      {
+        "name": "Tage Thompson",
+        "team": "BUF",
+        "fp": 0.2,
+        "model_fp": 2.64,
+        "base_fp": 3.07
+      },
+      {
+        "name": "Mikael Granlund",
+        "team": "ANA",
+        "fp": 8.3,
+        "model_fp": 2.24,
+        "base_fp": 2.36
+      },
+      {
+        "name": "Cutter Gauthier",
+        "team": "ANA",
+        "fp": 9.6,
+        "model_fp": 2.75,
+        "base_fp": 3.75
+      }
+    ],
+    "goalies": [
+      {
+        "team": "BUF",
+        "modelPick": "Ukko-Pekka Luukkonen",
+        "modelProb": 0.529,
+        "usagePick": "Ukko-Pekka Luukkonen",
+        "actualStarter": 8481551,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.471,
+        "savesPred": 23.26,
+        "savesActual": 22.0,
+        "gaPred": 2.76,
+        "gaActual": 4.0,
+        "winProb": 0.514,
+        "won": 0
+      },
+      {
+        "team": "VGK",
+        "modelPick": "Adin Hill",
+        "modelProb": 0.709,
+        "usagePick": "Adin Hill",
+        "actualStarter": 8478499,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.709,
+        "savesPred": 23.12,
+        "savesActual": 28.0,
+        "gaPred": 2.65,
+        "gaActual": 1.0,
+        "winProb": 0.497,
+        "won": 1
+      },
+      {
+        "team": "NJD",
+        "modelPick": "Connor Hellebuyck",
+        "modelProb": 0.649,
+        "usagePick": "Jake Allen",
+        "actualStarter": 8476945,
+        "modelCorrect": true,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.649,
+        "savesPred": 23.73,
+        "savesActual": 23.0,
+        "gaPred": 2.84,
+        "gaActual": 0.0,
+        "winProb": 0.444,
+        "won": 1
+      },
+      {
+        "team": "TOR",
+        "modelPick": "Anthony Stolarz",
+        "modelProb": 0.943,
+        "usagePick": "Sergei Bobrovsky",
+        "actualStarter": 8476932,
+        "modelCorrect": true,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.943,
+        "savesPred": 27.52,
+        "savesActual": 25.0,
+        "gaPred": 2.8,
+        "gaActual": 3.0,
+        "winProb": 0.396,
+        "won": 0
+      },
+      {
+        "team": "TBL",
+        "modelPick": "Andrei Vasilevskiy",
+        "modelProb": 0.929,
+        "usagePick": "Andrei Vasilevskiy",
+        "actualStarter": 8476883,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.929,
+        "savesPred": 23.22,
+        "savesActual": 22.0,
+        "gaPred": 2.61,
+        "gaActual": 4.0,
+        "winProb": 0.622,
+        "won": 0
+      },
+      {
+        "team": "WPG",
+        "modelPick": "Stuart Skinner",
+        "modelProb": 0.791,
+        "usagePick": "Stuart Skinner",
+        "actualStarter": 8479973,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.791,
+        "savesPred": 24.34,
+        "savesActual": 18.0,
+        "gaPred": 2.81,
+        "gaActual": 3.0,
+        "winProb": 0.423,
+        "won": 1
+      },
+      {
+        "team": "CGY",
+        "modelPick": "Dustin Wolf",
+        "modelProb": 0.649,
+        "usagePick": "Devin Cooley",
+        "actualStarter": 8482445,
+        "modelCorrect": false,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.161,
+        "savesPred": 24.18,
+        "savesActual": 32.0,
+        "gaPred": 2.65,
+        "gaActual": 3.0,
+        "winProb": 0.636,
+        "won": 1
+      },
+      {
+        "team": "PHI",
+        "modelPick": "Dan Vladar",
+        "modelProb": 0.669,
+        "usagePick": "Dan Vladar",
+        "actualStarter": 8478435,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.669,
+        "savesPred": 24.08,
+        "savesActual": 22.0,
+        "gaPred": 2.74,
+        "gaActual": 4.0,
+        "winProb": 0.471,
+        "won": 0
+      },
+      {
+        "team": "ANA",
+        "modelPick": "Laurent Brossoit",
+        "modelProb": 0.603,
+        "usagePick": "Lukas Dostal",
+        "actualStarter": 8476316,
+        "modelCorrect": true,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.603,
+        "savesPred": 22.62,
+        "savesActual": 31.0,
+        "gaPred": 2.85,
+        "gaActual": 2.0,
+        "winProb": 0.531,
+        "won": 1
+      },
+      {
+        "team": "PIT",
+        "modelPick": "Arturs Silovs",
+        "modelProb": 0.91,
+        "usagePick": "Arturs Silovs",
+        "actualStarter": 8481668,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.91,
+        "savesPred": 22.27,
+        "savesActual": 20.0,
+        "gaPred": 2.88,
+        "gaActual": 4.0,
+        "winProb": 0.405,
+        "won": 0
+      }
+    ]
+  }
+]
