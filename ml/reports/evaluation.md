@@ -1,10 +1,10 @@
-# Bench Boss model evaluation — `bench-boss-lgbm-20261106-ws`
+# Bench Boss model evaluation — `bench-boss-lgbm-20261107`
 
-- Trained: 2026-11-06T04:57:15.364453+00:00
-- Data through: 2026-11-04 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-05T14:56:13.130795+00:00)
+- Trained: 2026-11-07T15:26:34.458438+00:00
+- Data through: 2026-11-06 (source: NHL public stats REST API (api.nhle.com/stats/rest), fetched 2026-11-07T15:18:36.294219+00:00)
 - Pipeline 2026.11.0, feature schema v1
 - Time-based split — train: 20152016, 20162017, 20172018, 20182019, 20192020, 20202021, 20212022, 20222023, 20232024; validation: 20242025; test: 20252026; live (in-progress, unseen by every fit): 20262027
-- Rows: 495,329 skater-games, 64,108 goalie start candidates
+- Rows: 495,833 skater-games, 64,174 goalie start candidates
 
 ## Promotion decision
 
@@ -12,7 +12,7 @@
 
 Rule: Selected projection must beat the production baseline on weekly fantasy-point MAE and RMSE, and not lose more than 0.005 in start/sit accuracy or top-50 precision, on both the validation and the untouched test season of the week-start weekly backtest.
 
-Per-game weekly gate (information only; it lets later games in a week see earlier results): validation failed, test failed, live passed
+Per-game weekly gate (information only; it lets later games in a week see earlier results): validation failed, test failed, live failed
 
 Week-start backtest gate:
 
@@ -44,7 +44,7 @@ Projections compared:
 | validation | withXgOffline | 1.590 (+0.8% ✗) | 2.138 | -0.021 | 0.689 | 0.422 | 0.748 | — |
 | validation | productionBaseline | 1.578 | 2.129 | 0.033 | 0.695 | 0.444 | 0.758 | — |
 | validation | seasonAverageBaseline | 1.624 (+2.9% ✗) | 2.189 | 0.051 | 0.678 | 0.423 | 0.750 | — |
-| validation | benchSniperOnly | 1.586 (+0.5% ✗) | 2.150 | -0.126 | 0.689 | 0.422 | 0.749 | — |
+| validation | benchSniperOnly | 1.597 (+1.2% ✗) | 2.141 | 0.036 | 0.689 | 0.426 | 0.750 | — |
 | validation | lightgbmPlusBenchSniper | 1.592 (+0.9% ✗) | 2.140 | -0.010 | 0.689 | 0.427 | 0.749 | — |
 | test | benchBossSelected | 1.611 (+0.5% ✗) | 2.181 | -0.047 | 0.698 | 0.448 | 0.757 | 0.805 |
 | test | directModelOnly | 1.615 (+0.7% ✗) | 2.202 | -0.116 | 0.696 | 0.445 | 0.757 | — |
@@ -54,24 +54,24 @@ Projections compared:
 | test | withXgOffline | 1.611 (+0.5% ✗) | 2.181 | -0.047 | 0.698 | 0.448 | 0.757 | — |
 | test | productionBaseline | 1.604 | 2.170 | 0.040 | 0.704 | 0.459 | 0.759 | — |
 | test | seasonAverageBaseline | 1.650 (+2.9% ✗) | 2.233 | 0.051 | 0.687 | 0.442 | 0.749 | — |
-| test | benchSniperOnly | 1.603 (-0.0% ✓) | 2.200 | -0.187 | 0.698 | 0.448 | 0.758 | — |
+| test | benchSniperOnly | 1.611 (+0.4% ✗) | 2.180 | -0.023 | 0.697 | 0.448 | 0.757 | — |
 | test | lightgbmPlusBenchSniper | 1.611 (+0.4% ✗) | 2.182 | -0.049 | 0.697 | 0.445 | 0.757 | — |
-| live | benchBossSelected | 1.484 (-0.1% ✓) | 2.054 | -0.069 | 0.654 | 0.463 | 0.763 | 0.821 |
-| live | directModelOnly | 1.489 (+0.2% ✗) | 2.073 | -0.134 | 0.652 | 0.453 | 0.761 | — |
-| live | residualModelOnly | 1.473 (-0.8% ✓) | 2.097 | -0.128 | 0.661 | 0.457 | 0.768 | — |
-| live | shrunkBaselineOnly | 1.450 (-2.4% ✓) | 2.011 | -0.013 | 0.672 | 0.480 | 0.768 | — |
-| live | residualOnShrunkOnly | 1.443 (-2.9% ✓) | 2.011 | -0.105 | 0.671 | 0.477 | 0.766 | — |
-| live | withXgOffline | 1.484 (-0.1% ✓) | 2.054 | -0.069 | 0.654 | 0.463 | 0.763 | — |
-| live | productionBaseline | 1.486 | 2.125 | -0.010 | 0.663 | 0.453 | 0.765 | — |
-| live | seasonAverageBaseline | 1.495 (+0.6% ✗) | 2.139 | -0.011 | 0.661 | 0.450 | 0.764 | — |
-| live | benchSniperOnly | 1.479 (-0.5% ✓) | 2.076 | -0.216 | 0.650 | 0.460 | 0.762 | — |
-| live | lightgbmPlusBenchSniper | 1.484 (-0.1% ✓) | 2.056 | -0.080 | 0.652 | 0.460 | 0.761 | — |
+| live | benchBossSelected | 1.533 (+0.5% ✗) | 2.107 | -0.076 | 0.677 | 0.493 | 0.767 | 0.815 |
+| live | directModelOnly | 1.539 (+0.9% ✗) | 2.128 | -0.145 | 0.674 | 0.483 | 0.765 | — |
+| live | residualModelOnly | 1.515 (-0.6% ✓) | 2.141 | -0.137 | 0.686 | 0.480 | 0.775 | — |
+| live | shrunkBaselineOnly | 1.492 (-2.2% ✓) | 2.056 | -0.015 | 0.698 | 0.513 | 0.773 | — |
+| live | residualOnShrunkOnly | 1.487 (-2.5% ✓) | 2.058 | -0.112 | 0.695 | 0.510 | 0.770 | — |
+| live | withXgOffline | 1.533 (+0.5% ✗) | 2.107 | -0.076 | 0.677 | 0.493 | 0.767 | — |
+| live | productionBaseline | 1.525 | 2.164 | -0.011 | 0.690 | 0.483 | 0.771 | — |
+| live | seasonAverageBaseline | 1.536 (+0.8% ✗) | 2.179 | -0.013 | 0.686 | 0.480 | 0.770 | — |
+| live | benchSniperOnly | 1.536 (+0.7% ✗) | 2.104 | -0.020 | 0.672 | 0.490 | 0.760 | — |
+| live | lightgbmPlusBenchSniper | 1.533 (+0.6% ✗) | 2.106 | -0.069 | 0.675 | 0.493 | 0.766 | — |
 
 Weekly fantasy-point MAE by position group (F = forwards, D = defence):
 
-- validation: benchBossSelected D 1.380 / F 1.699; productionBaseline D 1.386 / F 1.678; benchSniperOnly D 1.385 / F 1.691; lightgbmPlusBenchSniper D 1.384 / F 1.701
-- test: benchBossSelected D 1.411 / F 1.714; productionBaseline D 1.410 / F 1.703; benchSniperOnly D 1.406 / F 1.705; lightgbmPlusBenchSniper D 1.410 / F 1.714
-- live: benchBossSelected D 1.223 / F 1.621; productionBaseline D 1.229 / F 1.621; benchSniperOnly D 1.226 / F 1.612; lightgbmPlusBenchSniper D 1.225 / F 1.620
+- validation: benchBossSelected D 1.380 / F 1.699; productionBaseline D 1.386 / F 1.678; benchSniperOnly D 1.394 / F 1.702; lightgbmPlusBenchSniper D 1.384 / F 1.701
+- test: benchBossSelected D 1.411 / F 1.714; productionBaseline D 1.410 / F 1.703; benchSniperOnly D 1.410 / F 1.714; lightgbmPlusBenchSniper D 1.410 / F 1.714
+- live: benchBossSelected D 1.276 / F 1.668; productionBaseline D 1.271 / F 1.657; benchSniperOnly D 1.277 / F 1.671; lightgbmPlusBenchSniper D 1.277 / F 1.667
 
 ## Week-start backtest (how the app projects a week)
 
@@ -82,18 +82,21 @@ The per-game table above updates features before every game, so a later game in 
 | validation | benchBossSelected | 1.627 (-7.2% ✓) | 2.191 | -0.030 | 0.672 | 0.404 | 0.738 | ✓ |
 | validation | shrunkBaselineOnly | 1.683 (-4.0% ✓) | 2.263 | 0.053 | 0.651 | 0.384 | 0.734 |  |
 | validation | productionBaseline | 1.753 | 2.382 | 0.029 | 0.629 | 0.376 | 0.727 |  |
-| validation | benchSniperOnly | 1.623 (-7.5% ✓) | 2.205 | -0.159 | 0.670 | 0.404 | 0.739 |  |
+| validation | benchSniperOnly | 1.633 (-6.8% ✓) | 2.196 | 0.000 | 0.670 | 0.412 | 0.739 |  |
+| validation | neuralUncalibrated | 1.623 (-7.5% ✓) | 2.205 | -0.159 | 0.670 | 0.404 | 0.739 |  |
 | validation | lightgbmPlusBenchSniper | 1.627 (-7.2% ✓) | 2.190 | -0.028 | 0.672 | 0.410 | 0.740 |  |
 | test | benchBossSelected | 1.651 (-7.8% ✓) | 2.238 | -0.057 | 0.679 | 0.428 | 0.748 | ✓ |
 | test | shrunkBaselineOnly | 1.712 (-4.4% ✓) | 2.307 | 0.045 | 0.657 | 0.409 | 0.740 |  |
 | test | productionBaseline | 1.790 | 2.443 | 0.043 | 0.634 | 0.393 | 0.730 |  |
-| test | benchSniperOnly | 1.642 (-8.3% ✓) | 2.259 | -0.222 | 0.678 | 0.436 | 0.748 |  |
+| test | benchSniperOnly | 1.649 (-7.9% ✓) | 2.239 | -0.061 | 0.678 | 0.435 | 0.747 |  |
+| test | neuralUncalibrated | 1.642 (-8.3% ✓) | 2.259 | -0.222 | 0.678 | 0.436 | 0.748 |  |
 | test | lightgbmPlusBenchSniper | 1.648 (-8.0% ✓) | 2.236 | -0.068 | 0.679 | 0.429 | 0.747 |  |
-| live | benchBossSelected | 1.535 (-14.9% ✓) | 2.129 | -0.074 | 0.629 | 0.433 | 0.752 | ✓ |
-| live | shrunkBaselineOnly | 1.594 (-11.6% ✓) | 2.230 | -0.016 | 0.605 | 0.390 | 0.738 |  |
-| live | productionBaseline | 1.804 | 2.630 | -0.022 | 0.536 | 0.350 | 0.712 |  |
-| live | benchSniperOnly | 1.522 (-15.6% ✓) | 2.145 | -0.253 | 0.629 | 0.440 | 0.747 |  |
-| live | lightgbmPlusBenchSniper | 1.530 (-15.2% ✓) | 2.125 | -0.097 | 0.630 | 0.433 | 0.754 |  |
+| live | benchBossSelected | 1.586 (-14.4% ✓) | 2.183 | -0.083 | 0.650 | 0.467 | 0.756 | ✓ |
+| live | shrunkBaselineOnly | 1.643 (-11.3% ✓) | 2.282 | -0.019 | 0.626 | 0.403 | 0.743 |  |
+| live | productionBaseline | 1.852 | 2.673 | -0.025 | 0.556 | 0.377 | 0.717 |  |
+| live | benchSniperOnly | 1.581 (-14.7% ✓) | 2.169 | -0.032 | 0.651 | 0.480 | 0.754 |  |
+| live | neuralUncalibrated | 1.570 (-15.2% ✓) | 2.178 | -0.192 | 0.652 | 0.473 | 0.757 |  |
+| live | lightgbmPlusBenchSniper | 1.581 (-14.6% ✓) | 2.174 | -0.078 | 0.651 | 0.467 | 0.759 |  |
 
 ## Skater statistics
 
@@ -141,26 +144,26 @@ Daily (single-game) accuracy, per-game features as at puck drop. Poisson devianc
 | Split | Projection | Poisson deviance | FP MAE | FP ρ |
 |---|---|---|---|---|
 | validation | benchBossSelected | 5.2571 | 0.9534 | 0.358 |
-| validation | benchSniperOnly | 5.2753 | 0.9459 | 0.359 |
+| validation | benchSniperOnly | 5.2692 | 0.9564 | 0.357 |
 | validation | lightgbmPlusBenchSniper | 5.2544 | 0.9535 | 0.358 |
 | validation | productionBaseline | 8.1406 | 0.9827 | 0.317 |
 | test | benchBossSelected | 5.2083 | 0.9559 | 0.349 |
-| test | benchSniperOnly | 5.2313 | 0.9474 | 0.351 |
+| test | benchSniperOnly | 5.2182 | 0.9567 | 0.348 |
 | test | lightgbmPlusBenchSniper | 5.2049 | 0.9552 | 0.350 |
 | test | productionBaseline | 8.0720 | 0.9852 | 0.306 |
-| live | benchBossSelected | 5.3124 | 0.9908 | 0.323 |
-| live | benchSniperOnly | 5.3320 | 0.9788 | 0.325 |
-| live | lightgbmPlusBenchSniper | 5.3094 | 0.9886 | 0.324 |
-| live | productionBaseline | 15.8228 | 1.0695 | 0.232 |
+| live | benchBossSelected | 5.3120 | 0.9905 | 0.324 |
+| live | benchSniperOnly | 5.3053 | 0.9884 | 0.327 |
+| live | lightgbmPlusBenchSniper | 5.3010 | 0.9882 | 0.326 |
+| live | productionBaseline | 15.4217 | 1.0652 | 0.237 |
 
 Stack weights with BenchSniper as a component (validation NNLS):
 
-- goals: direct 0.708, BenchSniper 0.362
-- assists: direct 0.624, BenchSniper 0.448
-- shots: direct 0.767, BenchSniper 0.242
-- ppPoints: direct 0.712, BenchSniper 0.190, shrunk 0.146
-- hits: BenchSniper 0.453, direct 0.396, residual 0.070, residualShrunk 0.026, baseline 0.024
-- blocks: direct 0.584, BenchSniper 0.387
+- goals: direct 0.708, BenchSniper 0.332
+- assists: direct 0.624, BenchSniper 0.411
+- shots: direct 0.767, BenchSniper 0.238
+- ppPoints: direct 0.712, BenchSniper 0.166, shrunk 0.146
+- hits: BenchSniper 0.478, direct 0.396, residual 0.070, residualShrunk 0.026, baseline 0.024
+- blocks: direct 0.584, BenchSniper 0.389
 
 ## Expected goals (xG)
 
@@ -180,22 +183,22 @@ Per-game accuracy:
 |---|---|---|---|---|---|---|---|---|---|---|
 | goals | validation | 0.261 | 0.256 | 0.255 | 0.422 | 0.407 | 0.419 | 0.206 | 0.261 | 0.207 |
 | goals | test | 0.266 | 0.258 | 0.260 | 0.429 | 0.414 | 0.427 | 0.200 | 0.258 | 0.200 |
-| goals | live | 0.274 | 0.267 | 0.269 | 0.468 | 0.425 | 0.464 | 0.146 | 0.250 | 0.141 |
+| goals | live | 0.274 | 0.267 | 0.269 | 0.466 | 0.425 | 0.462 | 0.149 | 0.248 | 0.143 |
 | assists | validation | 0.392 | 0.386 | 0.385 | 0.549 | 0.529 | 0.544 | 0.210 | 0.265 | 0.214 |
 | assists | test | 0.399 | 0.389 | 0.391 | 0.556 | 0.538 | 0.553 | 0.214 | 0.268 | 0.215 |
-| assists | live | 0.408 | 0.398 | 0.401 | 0.601 | 0.546 | 0.596 | 0.160 | 0.265 | 0.163 |
+| assists | live | 0.407 | 0.398 | 0.400 | 0.598 | 0.546 | 0.593 | 0.169 | 0.269 | 0.171 |
 | shots | validation | 1.052 | 1.019 | 1.048 | 1.363 | 1.323 | 1.360 | 0.395 | 0.428 | 0.397 |
 | shots | test | 1.044 | 1.008 | 1.040 | 1.357 | 1.316 | 1.353 | 0.394 | 0.428 | 0.395 |
-| shots | live | 1.079 | 1.000 | 1.086 | 1.413 | 1.294 | 1.415 | 0.338 | 0.419 | 0.335 |
+| shots | live | 1.074 | 0.999 | 1.081 | 1.407 | 1.293 | 1.409 | 0.342 | 0.419 | 0.339 |
 | ppPoints | validation | 0.151 | 0.148 | 0.145 | 0.316 | 0.306 | 0.313 | 0.295 | 0.320 | 0.278 |
 | ppPoints | test | 0.156 | 0.150 | 0.149 | 0.321 | 0.312 | 0.320 | 0.300 | 0.327 | 0.281 |
-| ppPoints | live | 0.172 | 0.170 | 0.168 | 0.378 | 0.347 | 0.370 | 0.278 | 0.349 | 0.218 |
+| ppPoints | live | 0.171 | 0.170 | 0.167 | 0.375 | 0.347 | 0.368 | 0.281 | 0.349 | 0.224 |
 | hits | validation | 0.909 | 0.909 | 0.909 | 1.225 | 1.202 | 1.223 | 0.496 | 0.512 | 0.498 |
 | hits | test | 0.869 | 0.868 | 0.870 | 1.182 | 1.151 | 1.179 | 0.515 | 0.532 | 0.518 |
-| hits | live | 0.955 | 0.903 | 0.946 | 1.305 | 1.208 | 1.292 | 0.479 | 0.528 | 0.481 |
+| hits | live | 0.949 | 0.899 | 0.940 | 1.298 | 1.204 | 1.286 | 0.480 | 0.527 | 0.482 |
 | blocks | validation | 0.759 | 0.751 | 0.761 | 1.001 | 0.968 | 1.000 | 0.384 | 0.419 | 0.385 |
 | blocks | test | 0.730 | 0.731 | 0.735 | 0.957 | 0.930 | 0.959 | 0.370 | 0.404 | 0.371 |
-| blocks | live | 0.747 | 0.720 | 0.750 | 1.017 | 0.927 | 1.018 | 0.323 | 0.408 | 0.321 |
+| blocks | live | 0.748 | 0.721 | 0.751 | 1.016 | 0.928 | 1.016 | 0.322 | 0.405 | 0.320 |
 
 Per-game MAE by position, test season (selected vs baseline):
 
@@ -216,8 +219,8 @@ Per-game MAE by position, test season (selected vs baseline):
 | validation | baseline | 0.1242 | 0.5440 | 0.0356 |
 | test | selected | 0.1198 | 0.3916 | 0.0062 |
 | test | baseline | 0.1263 | 0.5551 | 0.0382 |
-| live | selected | 0.1210 | 0.3951 | 0.0071 |
-| live | baseline | 0.1385 | 0.8919 | 0.0879 |
+| live | selected | 0.1216 | 0.3971 | 0.0078 |
+| live | baseline | 0.1383 | 0.8818 | 0.0858 |
 
 ## Goalie models
 
@@ -227,19 +230,19 @@ The app has no goalie projection today, so the comparison baseline is a simple u
 |---|---|---|---|---|---|
 | started | model | validation | 0.4658 | 0.7214 | logLoss · Brier 0.1512 vs 0.2094 · ECE 0.0314 vs 0.0571 |
 | started | model | test | 0.5024 | 0.7457 | logLoss · Brier 0.1665 vs 0.2242 · ECE 0.0160 vs 0.0678 |
-| started | model | live | 0.5159 | 1.1997 | logLoss · Brier 0.1727 vs 0.2634 · ECE 0.0424 vs 0.1178 |
+| started | model | live | 0.5251 | 1.1732 | logLoss · Brier 0.1768 vs 0.2657 · ECE 0.0355 vs 0.1242 |
 | saves | model | validation | 6.9321 | 7.1439 | rmse |
 | saves | model | test | 6.9030 | 7.1655 | rmse |
-| saves | model | live | 6.7577 | 7.2580 | rmse |
+| saves | model | live | 6.7127 | 7.2033 | rmse |
 | ga | model | validation | 1.5322 | 1.5509 | rmse |
 | ga | model | test | 1.4961 | 1.5062 | rmse |
-| ga | model | live | 1.5554 | 1.5743 | rmse |
+| ga | model | live | 1.5548 | 1.5705 | rmse |
 | win | model | validation | 0.6753 | 0.6978 | logLoss · Brier 0.2412 vs 0.2519 · ECE 0.0415 vs 0.0487 |
 | win | model | test | 0.6930 | 0.7028 | logLoss · Brier 0.2499 vs 0.2545 · ECE 0.0511 vs 0.0579 |
-| win | model | live | 0.6704 | 0.6991 | logLoss · Brier 0.2389 vs 0.2525 · ECE 0.0497 vs 0.0647 |
+| win | model | live | 0.6677 | 0.6949 | logLoss · Brier 0.2376 vs 0.2505 · ECE 0.0554 vs 0.0591 |
 | shutout | model | validation | 0.2170 | 0.2180 | logLoss · Brier 0.0534 vs 0.0535 · ECE 0.0014 vs 0.0001 |
 | shutout | model | test | 0.1762 | 0.1764 | logLoss · Brier 0.0404 vs 0.0404 · ECE 0.0156 vs 0.0150 |
-| shutout | model | live | 0.1558 | 0.1561 | logLoss · Brier 0.0340 vs 0.0340 · ECE 0.0200 vs 0.0222 |
+| shutout | model | live | 0.1497 | 0.1501 | logLoss · Brier 0.0321 vs 0.0321 · ECE 0.0221 vs 0.0243 |
 
 Expected weekly goalie fantasy points (P(start) × E[points | start]; default scoring):
 
@@ -251,9 +254,9 @@ Expected weekly goalie fantasy points (P(start) × E[points | start]; default sc
 | test | benchBossSelected | 2.363 | 3.362 | 0.435 | 0.277 |
 | test | usageBaseline | 2.357 | 3.415 | 0.351 | 0.224 |
 | test | confirmedStarter | 2.220 | 3.343 | 0.451 | 0.289 |
-| live | benchBossSelected | 2.240 | 3.254 | 0.408 | 0.126 |
-| live | usageBaseline | 2.298 | 3.257 | 0.646 | 0.149 |
-| live | confirmedStarter | 2.089 | 3.181 | 0.457 | 0.211 |
+| live | benchBossSelected | 2.356 | 3.338 | 0.458 | 0.129 |
+| live | usageBaseline | 2.417 | 3.336 | 0.700 | 0.167 |
+| live | confirmedStarter | 2.195 | 3.258 | 0.509 | 0.235 |
 
 Starter pick accuracy (top candidate per team-game started; team-games whose starter was a candidate):
 
@@ -261,7 +264,7 @@ Starter pick accuracy (top candidate per team-game started; team-games whose sta
 |---|---|---|---|
 | validation | 0.755 | 0.620 | 2,519 |
 | test | 0.729 | 0.586 | 2,527 |
-| live | 0.762 | 0.623 | 432 |
+| live | 0.752 | 0.607 | 460 |
 
 Goalie start-probability reliability (test season):
 
@@ -282,31 +285,31 @@ Goalie start-probability reliability (test season):
 
 One row per team game for every skater who played for that team in its previous 10 games; `played` is whether he dressed. Weekly fantasy points here **include missed games as 0**, and use the production per-game baseline as the projection when he plays, so the only difference between rows is how availability is handled.
 
-Play rate: validation 0.832, test 0.814, live 0.838. Top features: played_prev, last_toi, played_share_l5, played_share_l10, avg_toi_l5, miss_streak.
+Play rate: validation 0.832, test 0.814, live 0.836. Top features: played_prev, last_toi, played_share_l5, played_share_l10, avg_toi_l5, miss_streak.
 
 | Split | Availability approach | Weekly games MAE | Weekly FP MAE | Weekly FP RMSE | FP bias |
 |---|---|---|---|---|---|
 | validation | assumesPlaysEveryGame | 0.496 | 1.872 | 2.459 | 0.541 |
 | validation | recentShare | 0.418 | 1.684 | 2.285 | 0.045 |
-| validation | availabilityModel | 0.253 | 1.524 | 2.094 | 0.023 |
+| validation | availabilityModel | 0.253 | 1.525 | 2.095 | 0.023 |
 | test | assumesPlaysEveryGame | 0.567 | 1.939 | 2.547 | 0.625 |
 | test | recentShare | 0.456 | 1.712 | 2.326 | 0.060 |
 | test | availabilityModel | 0.266 | 1.532 | 2.119 | 0.042 |
-| live | assumesPlaysEveryGame | 0.396 | 1.747 | 2.424 | 0.381 |
-| live | recentShare | 0.304 | 1.577 | 2.247 | 0.029 |
-| live | availabilityModel | 0.212 | 1.484 | 2.146 | -0.019 |
+| live | assumesPlaysEveryGame | 0.423 | 1.808 | 2.478 | 0.404 |
+| live | recentShare | 0.325 | 1.629 | 2.292 | 0.028 |
+| live | availabilityModel | 0.224 | 1.530 | 2.188 | -0.024 |
 
 | Split | P(plays) | Brier | Log loss | ECE |
 |---|---|---|---|---|
-| validation | availabilityModel | 0.0587 | 0.2087 | 0.0037 |
+| validation | availabilityModel | 0.0587 | 0.2088 | 0.0040 |
 | validation | recentShare | 0.1035 | 0.4833 | 0.0549 |
 | validation | assumesPlaysEveryGame | 0.1684 | ∞ | — |
-| test | availabilityModel | 0.0623 | 0.2202 | 0.0026 |
+| test | availabilityModel | 0.0623 | 0.2203 | 0.0026 |
 | test | recentShare | 0.1101 | 0.5099 | 0.0564 |
 | test | assumesPlaysEveryGame | 0.1857 | ∞ | — |
-| live | availabilityModel | 0.0599 | 0.2097 | 0.0071 |
-| live | recentShare | 0.0950 | 0.4911 | 0.0513 |
-| live | assumesPlaysEveryGame | 0.1623 | ∞ | — |
+| live | availabilityModel | 0.0597 | 0.2091 | 0.0069 |
+| live | recentShare | 0.0957 | 0.4869 | 0.0506 |
+| live | assumesPlaysEveryGame | 0.1644 | ∞ | — |
 
 ## Known limitations
 
