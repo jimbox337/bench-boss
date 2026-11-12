@@ -1,0 +1,388 @@
+[
+  {
+    "tag": "daily",
+    "madeAt": "2026-11-11T21:42:31.301640+00:00",
+    "games": [
+      2026020293,
+      2026020294,
+      2026020295,
+      2026020296,
+      2026020297,
+      2026020298
+    ],
+    "predictedSkaters": 216,
+    "dressed": 202,
+    "notDressed": [
+      "Luke Glendening",
+      "Brayden Point",
+      "Frank Vatrano",
+      "Noah Hanifin",
+      "Max Jones",
+      "Max Crozier",
+      "Hendrix Lapierre",
+      "Dylan Guenther",
+      "William Stromgren",
+      "Logan Cooley",
+      "David Jiricek",
+      "Jiri Kulich",
+      "Andrei Kuzmenko",
+      "Nico Myatovic"
+    ],
+    "stats": {
+      "goals": {
+        "actualMean": 0.18316831683168316,
+        "modelMean": 0.17815346534653467,
+        "baselineMean": 0.17907326732673268,
+        "modelMae": 0.2809346534653466,
+        "baselineMae": 0.28168217821782177,
+        "modelRmse": 0.4444745169721474,
+        "baselineRmse": 0.46817325990185377
+      },
+      "assists": {
+        "actualMean": 0.33663366336633666,
+        "modelMean": 0.30968861386138613,
+        "baselineMean": 0.31296386138613863,
+        "modelMae": 0.4181450495049504,
+        "baselineMae": 0.4279826732673268,
+        "modelRmse": 0.6381170386378976,
+        "baselineRmse": 0.6691578868064304
+      },
+      "shots": {
+        "actualMean": 1.5841584158415842,
+        "modelMean": 1.521409900990099,
+        "baselineMean": 1.5546589108910893,
+        "modelMae": 1.0143049504950494,
+        "baselineMae": 1.0349816831683167,
+        "modelRmse": 1.3097154436618423,
+        "baselineRmse": 1.3367382504987784
+      },
+      "ppPoints": {
+        "actualMean": 0.14356435643564355,
+        "modelMean": 0.11522326732673266,
+        "baselineMean": 0.14195841584158417,
+        "modelMae": 0.1973311881188119,
+        "baselineMae": 0.22166732673267325,
+        "modelRmse": 0.3770744691662772,
+        "baselineRmse": 0.41444087648180883
+      },
+      "hits": {
+        "actualMean": 1.1633663366336633,
+        "modelMean": 1.1601965346534653,
+        "baselineMean": 1.216091584158416,
+        "modelMae": 0.8009410891089108,
+        "baselineMae": 0.8295014851485148,
+        "modelRmse": 1.0798560932497965,
+        "baselineRmse": 1.1098280717130813
+      },
+      "blocks": {
+        "actualMean": 0.6336633663366337,
+        "modelMean": 0.7925321782178217,
+        "baselineMean": 0.8042633663366338,
+        "modelMae": 0.7121678217821784,
+        "baselineMae": 0.7028138613861387,
+        "modelRmse": 0.8857168769359139,
+        "baselineRmse": 0.8903527169021554
+      },
+      "fp": {
+        "actualMean": 1.438118811881188,
+        "modelMean": 1.4456237623762378,
+        "baselineMean": 1.4922871287128714,
+        "modelMae": 1.0475544554455445,
+        "baselineMae": 1.1048217821782178,
+        "modelRmse": 1.4557192635454907,
+        "baselineRmse": 1.5370902593363003
+      }
+    },
+    "fpSpearman": {
+      "model": 0.38096067999684,
+      "baseline": 0.31294202840243296
+    },
+    "neuralShadow": {
+      "fpMae": 1.0455747524752474,
+      "fpRmse": 1.4562240199186793,
+      "fpSpearman": 0.38215319900864453
+    },
+    "topPerformers": [
+      {
+        "name": "John Carlson",
+        "team": "TBL",
+        "fp": 9.6,
+        "model_fp": 1.72,
+        "base_fp": 1.8
+      },
+      {
+        "name": "Nikita Kucherov",
+        "team": "TBL",
+        "fp": 8.5,
+        "model_fp": 3.01,
+        "base_fp": 2.62
+      },
+      {
+        "name": "Mika Zibanejad",
+        "team": "NYR",
+        "fp": 6.2,
+        "model_fp": 2.25,
+        "base_fp": 1.8
+      },
+      {
+        "name": "Jake Guentzel",
+        "team": "TBL",
+        "fp": 6.2,
+        "model_fp": 2.45,
+        "base_fp": 2.61
+      },
+      {
+        "name": "Victor Olofsson",
+        "team": "VGK",
+        "fp": 5.6,
+        "model_fp": 1.26,
+        "base_fp": 2.3
+      },
+      {
+        "name": "Brandon Hagel",
+        "team": "TBL",
+        "fp": 5.6,
+        "model_fp": 2.2,
+        "base_fp": 2.28
+      },
+      {
+        "name": "Zach Hyman",
+        "team": "EDM",
+        "fp": 5.4,
+        "model_fp": 1.78,
+        "base_fp": 0.71
+      },
+      {
+        "name": "Jack McBain",
+        "team": "UTA",
+        "fp": 5.3,
+        "model_fp": 1.08,
+        "base_fp": 0.92
+      }
+    ],
+    "biggestMisses": [
+      {
+        "name": "Nick Schmaltz",
+        "team": "UTA",
+        "fp": 0.0,
+        "model_fp": 2.12,
+        "base_fp": 2.85
+      },
+      {
+        "name": "Leon Draisaitl",
+        "team": "EDM",
+        "fp": 1.4,
+        "model_fp": 3.44,
+        "base_fp": 4.11
+      },
+      {
+        "name": "Nikita Kucherov",
+        "team": "TBL",
+        "fp": 8.5,
+        "model_fp": 3.01,
+        "base_fp": 2.62
+      },
+      {
+        "name": "John Carlson",
+        "team": "TBL",
+        "fp": 9.6,
+        "model_fp": 1.72,
+        "base_fp": 1.8
+      }
+    ],
+    "goalies": [
+      {
+        "team": "BUF",
+        "modelPick": "Ukko-Pekka Luukkonen",
+        "modelProb": 0.742,
+        "usagePick": "Ukko-Pekka Luukkonen",
+        "actualStarter": 8480045,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.742,
+        "savesPred": 23.64,
+        "savesActual": 9.0,
+        "gaPred": 2.78,
+        "gaActual": 5.0,
+        "winProb": 0.497,
+        "won": 0
+      },
+      {
+        "team": "TBL",
+        "modelPick": "Andrei Vasilevskiy",
+        "modelProb": 0.743,
+        "usagePick": "Andrei Vasilevskiy",
+        "actualStarter": 8476883,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.743,
+        "savesPred": 22.86,
+        "savesActual": 28.0,
+        "gaPred": 2.69,
+        "gaActual": 3.0,
+        "winProb": 0.543,
+        "won": 1
+      },
+      {
+        "team": "CGY",
+        "modelPick": "Dustin Wolf",
+        "modelProb": 0.562,
+        "usagePick": "Devin Cooley",
+        "actualStarter": 8482445,
+        "modelCorrect": false,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.36,
+        "savesPred": 24.28,
+        "savesActual": 21.0,
+        "gaPred": 2.66,
+        "gaActual": 2.0,
+        "winProb": 0.514,
+        "won": 0
+      },
+      {
+        "team": "NYR",
+        "modelPick": "Dylan Garand",
+        "modelProb": 0.557,
+        "usagePick": "Dylan Garand",
+        "actualStarter": 8476914,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.297,
+        "savesPred": 23.86,
+        "savesActual": 29.0,
+        "gaPred": 2.61,
+        "gaActual": 1.0,
+        "winProb": 0.565,
+        "won": 1
+      },
+      {
+        "team": "EDM",
+        "modelPick": "Devon Levi",
+        "modelProb": 0.483,
+        "usagePick": "Tristan Jarry",
+        "actualStarter": 8477465,
+        "modelCorrect": false,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.34,
+        "savesPred": 21.72,
+        "savesActual": 31.0,
+        "gaPred": 2.49,
+        "gaActual": 2.0,
+        "winProb": 0.642,
+        "won": 1
+      },
+      {
+        "team": "PHI",
+        "modelPick": "Dan Vladar",
+        "modelProb": 0.542,
+        "usagePick": "Dan Vladar",
+        "actualStarter": 8478435,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.542,
+        "savesPred": 23.26,
+        "savesActual": 21.0,
+        "gaPred": 2.84,
+        "gaActual": 3.0,
+        "winProb": 0.403,
+        "won": 0
+      },
+      {
+        "team": "UTA",
+        "modelPick": "Karel Vejmelka",
+        "modelProb": 0.615,
+        "usagePick": "Karel Vejmelka",
+        "actualStarter": 8482657,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.385,
+        "savesPred": 23.13,
+        "savesActual": 23.0,
+        "gaPred": 2.82,
+        "gaActual": 5.0,
+        "winProb": 0.48,
+        "won": 0
+      },
+      {
+        "team": "VGK",
+        "modelPick": "Carter Hart",
+        "modelProb": 0.517,
+        "usagePick": "Adin Hill",
+        "actualStarter": 8479394,
+        "modelCorrect": true,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.517,
+        "savesPred": 22.6,
+        "savesActual": 14.0,
+        "gaPred": 2.72,
+        "gaActual": 3.0,
+        "winProb": 0.562,
+        "won": 1
+      },
+      {
+        "team": "ANA",
+        "modelPick": "Laurent Brossoit",
+        "modelProb": 0.6,
+        "usagePick": "Laurent Brossoit",
+        "actualStarter": 8476316,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.6,
+        "savesPred": 22.0,
+        "savesActual": 18.0,
+        "gaPred": 2.72,
+        "gaActual": 4.0,
+        "winProb": 0.564,
+        "won": 0
+      },
+      {
+        "team": "NSH",
+        "modelPick": "Justus Annunen",
+        "modelProb": 0.868,
+        "usagePick": "Juuse Saros",
+        "actualStarter": 8481020,
+        "modelCorrect": true,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.868,
+        "savesPred": 24.05,
+        "savesActual": 27.0,
+        "gaPred": 2.81,
+        "gaActual": 2.0,
+        "winProb": 0.487,
+        "won": 1
+      },
+      {
+        "team": "PIT",
+        "modelPick": "Arturs Silovs",
+        "modelProb": 0.59,
+        "usagePick": "Arturs Silovs",
+        "actualStarter": 8483703,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.41,
+        "savesPred": 23.77,
+        "savesActual": 34.0,
+        "gaPred": 2.72,
+        "gaActual": 2.0,
+        "winProb": 0.557,
+        "won": 1
+      },
+      {
+        "team": "SJS",
+        "modelPick": "Yaroslav Askarov",
+        "modelProb": 0.694,
+        "usagePick": "Yaroslav Askarov",
+        "actualStarter": 8482137,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.694,
+        "savesPred": 23.07,
+        "savesActual": 34.0,
+        "gaPred": 2.88,
+        "gaActual": 2.0,
+        "winProb": 0.502,
+        "won": 0
+      }
+    ]
+  }
+]
