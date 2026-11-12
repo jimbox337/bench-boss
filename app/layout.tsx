@@ -12,10 +12,27 @@ const saira = Saira({ subsets: ["latin"], axes: ["wdth"], variable: "--font-app"
 
 export const viewport: Viewport = { themeColor: "#0d121b", colorScheme: "dark" };
 
+const SITE_URL = "https://www.benchboss.pro";
+const TITLE = "Bench Boss: Free NHL Fantasy Hockey Projections & Tools";
+const DESCRIPTION = "Free NHL fantasy hockey projections and tools: start/sit calls, trade analyzer, waiver wire and lineup optimizer. Works with ESPN and Yahoo leagues.";
+
 export const metadata: Metadata = {
-  title: "Bench Boss - Fantasy Hockey Assistant",
-  description: "Optimize your fantasy hockey lineup",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "Bench Boss",
+  openGraph: { type: "website", siteName: "Bench Boss", title: TITLE, description: DESCRIPTION, images: ["/logo.png"] },
+  twitter: { card: "summary", title: TITLE, description: DESCRIPTION, images: ["/logo.png"] },
 };
+
+// Tells Google the site's name, so results read "Bench Boss" instead of the bare domain.
+const SITE_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Bench Boss",
+  alternateName: ["BenchBoss", "Bench Boss Fantasy Hockey"],
+  url: `${SITE_URL}/`,
+});
 
 export default function RootLayout({
   children,
@@ -25,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${saira.variable}`}>
       <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SITE_JSON_LD }} />
         <AuthProvider>
           <DataProvider>
             <PlayerCardProvider>
