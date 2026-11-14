@@ -1,0 +1,245 @@
+[
+  {
+    "tag": "daily",
+    "madeAt": "2026-11-13T21:09:17.335560+00:00",
+    "games": [
+      2026020310,
+      2026020311
+    ],
+    "predictedSkaters": 72,
+    "dressed": 69,
+    "notDressed": [
+      "Luke Schenn",
+      "Guillaume Brisebois",
+      "Arshdeep Bains"
+    ],
+    "stats": {
+      "goals": {
+        "actualMean": 0.14492753623188406,
+        "modelMean": 0.16959710144927537,
+        "baselineMean": 0.1796463768115942,
+        "modelMae": 0.26311594202898547,
+        "baselineMae": 0.25947826086956516,
+        "modelRmse": 0.42618202343769646,
+        "baselineRmse": 0.4325973537075587
+      },
+      "assists": {
+        "actualMean": 0.2608695652173913,
+        "modelMean": 0.2906884057971015,
+        "baselineMean": 0.2910623188405797,
+        "modelMae": 0.3454217391304348,
+        "baselineMae": 0.33238405797101456,
+        "modelRmse": 0.43331098364883924,
+        "baselineRmse": 0.4457372305469358
+      },
+      "shots": {
+        "actualMean": 1.855072463768116,
+        "modelMean": 1.4609623188405796,
+        "baselineMean": 1.4651579710144926,
+        "modelMae": 0.9584521739130435,
+        "baselineMae": 0.9819144927536232,
+        "modelRmse": 1.2628549920772745,
+        "baselineRmse": 1.3062581707115652
+      },
+      "ppPoints": {
+        "actualMean": 0.043478260869565216,
+        "modelMean": 0.10968985507246376,
+        "baselineMean": 0.12463768115942031,
+        "modelMae": 0.13423478260869565,
+        "baselineMae": 0.15275362318840582,
+        "modelRmse": 0.2300112914682637,
+        "baselineRmse": 0.2749235435218466
+      },
+      "hits": {
+        "actualMean": 1.2608695652173914,
+        "modelMean": 1.2183724637681157,
+        "baselineMean": 1.275398550724638,
+        "modelMae": 1.0632246376811594,
+        "baselineMae": 1.1058101449275362,
+        "modelRmse": 1.3457077354055875,
+        "baselineRmse": 1.4020706018630786
+      },
+      "blocks": {
+        "actualMean": 0.8260869565217391,
+        "modelMean": 0.7724347826086957,
+        "baselineMean": 0.798236231884058,
+        "modelMae": 0.6423275362318841,
+        "baselineMae": 0.6787608695652174,
+        "modelRmse": 0.8859669624487837,
+        "baselineRmse": 0.9374443435459925
+      },
+      "fp": {
+        "actualMean": 1.318840579710145,
+        "modelMean": 1.393753623188406,
+        "baselineMean": 1.4482463768115943,
+        "modelMae": 0.7963043478260871,
+        "baselineMae": 0.8576376811594203,
+        "modelRmse": 1.02844769053847,
+        "baselineRmse": 1.1017366462458984
+      }
+    },
+    "fpSpearman": {
+      "model": 0.3875888100854972,
+      "baseline": 0.29554447194340916
+    },
+    "neuralShadow": {
+      "fpMae": 0.7965855072463768,
+      "fpRmse": 1.0338797003436178,
+      "fpSpearman": 0.3845116646383193
+    },
+    "topPerformers": [
+      {
+        "name": "Ryan O'Reilly",
+        "team": "NSH",
+        "fp": 4.4,
+        "model_fp": 2.06,
+        "base_fp": 2.46
+      },
+      {
+        "name": "Glenn Gawdin",
+        "team": "NYR",
+        "fp": 4.3,
+        "model_fp": 0.69,
+        "base_fp": 0.7
+      },
+      {
+        "name": "J.T. Miller",
+        "team": "NYR",
+        "fp": 3.7,
+        "model_fp": 1.8,
+        "base_fp": 1.63
+      },
+      {
+        "name": "Gabe Perreault",
+        "team": "NYR",
+        "fp": 3.7,
+        "model_fp": 1.43,
+        "base_fp": 1.36
+      },
+      {
+        "name": "Rasmus Andersson",
+        "team": "VGK",
+        "fp": 3.4,
+        "model_fp": 1.61,
+        "base_fp": 1.39
+      },
+      {
+        "name": "Alexis Lafreni\u00e8re",
+        "team": "NYR",
+        "fp": 3.2,
+        "model_fp": 1.93,
+        "base_fp": 2.15
+      },
+      {
+        "name": "Oliver Bjorkstrand",
+        "team": "NYR",
+        "fp": 3.1,
+        "model_fp": 1.12,
+        "base_fp": 1.34
+      },
+      {
+        "name": "Mika Zibanejad",
+        "team": "NYR",
+        "fp": 3.0,
+        "model_fp": 2.32,
+        "base_fp": 2.17
+      }
+    ],
+    "biggestMisses": [
+      {
+        "name": "Filip Forsberg",
+        "team": "NSH",
+        "fp": 0.3,
+        "model_fp": 2.27,
+        "base_fp": 2.63
+      },
+      {
+        "name": "Jack Eichel",
+        "team": "VGK",
+        "fp": 0.7,
+        "model_fp": 2.63,
+        "base_fp": 2.63
+      },
+      {
+        "name": "Ryan O'Reilly",
+        "team": "NSH",
+        "fp": 4.4,
+        "model_fp": 2.06,
+        "base_fp": 2.46
+      },
+      {
+        "name": "Glenn Gawdin",
+        "team": "NYR",
+        "fp": 4.3,
+        "model_fp": 0.69,
+        "base_fp": 0.7
+      }
+    ],
+    "goalies": [
+      {
+        "team": "NYR",
+        "modelPick": "Dylan Garand",
+        "modelProb": 0.577,
+        "usagePick": "Dylan Garand",
+        "actualStarter": 8482193,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.577,
+        "savesPred": 22.38,
+        "savesActual": 27.0,
+        "gaPred": 2.62,
+        "gaActual": 1.0,
+        "winProb": 0.592,
+        "won": 1
+      },
+      {
+        "team": "VAN",
+        "modelPick": "Leevi Merilainen",
+        "modelProb": 0.773,
+        "usagePick": "Leevi Merilainen",
+        "actualStarter": 8482447,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.773,
+        "savesPred": 23.31,
+        "savesActual": 25.0,
+        "gaPred": 2.78,
+        "gaActual": 5.0,
+        "winProb": 0.436,
+        "won": 0
+      },
+      {
+        "team": "NSH",
+        "modelPick": "Juuse Saros",
+        "modelProb": 0.838,
+        "usagePick": "Juuse Saros",
+        "actualStarter": 8477424,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.838,
+        "savesPred": 25.99,
+        "savesActual": 40.0,
+        "gaPred": 2.72,
+        "gaActual": 2.0,
+        "winProb": 0.469,
+        "won": 1
+      },
+      {
+        "team": "VGK",
+        "modelPick": "Adin Hill",
+        "modelProb": 0.813,
+        "usagePick": "Adin Hill",
+        "actualStarter": 8478499,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.813,
+        "savesPred": 20.98,
+        "savesActual": 31.0,
+        "gaPred": 2.56,
+        "gaActual": 2.0,
+        "winProb": 0.573,
+        "won": 0
+      }
+    ]
+  }
+]
