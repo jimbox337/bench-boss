@@ -1,0 +1,240 @@
+[
+  {
+    "tag": "daily",
+    "madeAt": "2026-11-16T23:37:22.534222+00:00",
+    "games": [
+      2026020331,
+      2026020332
+    ],
+    "predictedSkaters": 72,
+    "dressed": 68,
+    "notDressed": [
+      "Josh Anderson",
+      "Pavel Dorofeyev",
+      "Ben McCartney",
+      "Artem Duda"
+    ],
+    "stats": {
+      "goals": {
+        "actualMean": 0.1323529411764706,
+        "modelMean": 0.16388235294117648,
+        "baselineMean": 0.18112352941176474,
+        "modelMae": 0.24264999999999995,
+        "baselineMae": 0.272814705882353,
+        "modelRmse": 0.3713788932518125,
+        "baselineRmse": 0.43184760145490325
+      },
+      "assists": {
+        "actualMean": 0.20588235294117646,
+        "modelMean": 0.28589852941176475,
+        "baselineMean": 0.2868426470588235,
+        "modelMae": 0.3311632352941177,
+        "baselineMae": 0.30473088235294116,
+        "modelRmse": 0.4438373385467194,
+        "baselineRmse": 0.4259646476286639
+      },
+      "shots": {
+        "actualMean": 1.6176470588235294,
+        "modelMean": 1.43445,
+        "baselineMean": 1.4905382352941177,
+        "modelMae": 1.0515558823529414,
+        "baselineMae": 1.0766823529411762,
+        "modelRmse": 1.3232361361672464,
+        "baselineRmse": 1.3481001533748938
+      },
+      "ppPoints": {
+        "actualMean": 0.11764705882352941,
+        "modelMean": 0.09699705882352941,
+        "baselineMean": 0.0938529411764706,
+        "modelMae": 0.1728529411764706,
+        "baselineMae": 0.16194117647058826,
+        "modelRmse": 0.408108800732469,
+        "baselineRmse": 0.39993243069004425
+      },
+      "hits": {
+        "actualMean": 1.3676470588235294,
+        "modelMean": 1.3059588235294117,
+        "baselineMean": 1.3736161764705885,
+        "modelMae": 0.9044676470588235,
+        "baselineMae": 0.9282102941176471,
+        "modelRmse": 1.1749210088592439,
+        "baselineRmse": 1.1827638935113456
+      },
+      "blocks": {
+        "actualMean": 0.7794117647058824,
+        "modelMean": 0.7942426470588235,
+        "baselineMean": 0.8011029411764707,
+        "modelMae": 0.748389705882353,
+        "baselineMae": 0.7748088235294118,
+        "modelRmse": 1.0000028753635133,
+        "baselineRmse": 1.0276360784372465
+      },
+      "fp": {
+        "actualMean": 1.2764705882352936,
+        "modelMean": 1.381735294117647,
+        "baselineMean": 1.43,
+        "modelMae": 1.0095,
+        "baselineMae": 1.1071470588235297,
+        "modelRmse": 1.3379592889260603,
+        "baselineRmse": 1.4465962179015466
+      }
+    },
+    "fpSpearman": {
+      "model": 0.44331483037876407,
+      "baseline": 0.2819937356527199
+    },
+    "neuralShadow": {
+      "fpMae": 1.005110294117647,
+      "fpRmse": 1.335042982949811,
+      "fpSpearman": 0.4428473806471292
+    },
+    "topPerformers": [
+      {
+        "name": "Brock Boeser",
+        "team": "VAN",
+        "fp": 6.4,
+        "model_fp": 1.94,
+        "base_fp": 2.39
+      },
+      {
+        "name": "Jake DeBrusk",
+        "team": "VAN",
+        "fp": 6.1,
+        "model_fp": 1.7,
+        "base_fp": 1.35
+      },
+      {
+        "name": "Will Cuylle",
+        "team": "NYR",
+        "fp": 5.0,
+        "model_fp": 1.69,
+        "base_fp": 1.39
+      },
+      {
+        "name": "Vincent Trocheck",
+        "team": "UTA",
+        "fp": 4.1,
+        "model_fp": 1.83,
+        "base_fp": 1.3
+      },
+      {
+        "name": "Jonathan Lekkerimaki",
+        "team": "VAN",
+        "fp": 4.1,
+        "model_fp": 1.46,
+        "base_fp": 1.74
+      },
+      {
+        "name": "Adam Fox",
+        "team": "NYR",
+        "fp": 3.7,
+        "model_fp": 2.4,
+        "base_fp": 2.52
+      },
+      {
+        "name": "Filip Chytil",
+        "team": "VAN",
+        "fp": 3.3,
+        "model_fp": 1.43,
+        "base_fp": 1.32
+      },
+      {
+        "name": "Lane Hutson",
+        "team": "MTL",
+        "fp": 3.3,
+        "model_fp": 2.13,
+        "base_fp": 2.17
+      }
+    ],
+    "biggestMisses": [
+      {
+        "name": "Nick Suzuki",
+        "team": "MTL",
+        "fp": 0.3,
+        "model_fp": 2.47,
+        "base_fp": 2.64
+      },
+      {
+        "name": "Mika Zibanejad",
+        "team": "NYR",
+        "fp": 0.2,
+        "model_fp": 2.21,
+        "base_fp": 2.3
+      },
+      {
+        "name": "Jake DeBrusk",
+        "team": "VAN",
+        "fp": 6.1,
+        "model_fp": 1.7,
+        "base_fp": 1.35
+      },
+      {
+        "name": "Brock Boeser",
+        "team": "VAN",
+        "fp": 6.4,
+        "model_fp": 1.94,
+        "base_fp": 2.39
+      }
+    ],
+    "goalies": [
+      {
+        "team": "MTL",
+        "modelPick": "Jacob Fowler",
+        "modelProb": 0.861,
+        "usagePick": "Jacob Fowler",
+        "actualStarter": 8484170,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.861,
+        "savesPred": 23.17,
+        "savesActual": 23.0,
+        "gaPred": 2.7,
+        "gaActual": 3.0,
+        "winProb": 0.531,
+        "won": 0
+      },
+      {
+        "team": "NYR",
+        "modelPick": "Dylan Garand",
+        "modelProb": 0.579,
+        "usagePick": "Dylan Garand",
+        "actualStarter": 8476914,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.354,
+        "savesPred": 23.27,
+        "savesActual": 24.0,
+        "gaPred": 2.66,
+        "gaActual": 1.0,
+        "winProb": 0.574,
+        "won": 1
+      },
+      {
+        "team": "UTA",
+        "modelPick": "Karel Vejmelka",
+        "modelProb": 0.521,
+        "usagePick": "Karel Vejmelka",
+        "actualStarter": 8478872,
+        "modelCorrect": true,
+        "usageCorrect": true,
+        "probOnActualStarter": 0.521,
+        "savesPred": 20.65,
+        "savesActual": 21.0,
+        "gaPred": 2.73,
+        "gaActual": 3.0,
+        "winProb": 0.629,
+        "won": 0
+      },
+      {
+        "team": "VAN",
+        "modelPick": "Kevin Lankinen",
+        "modelProb": 0.752,
+        "usagePick": "Leevi Merilainen",
+        "actualStarter": 8484268,
+        "modelCorrect": false,
+        "usageCorrect": false,
+        "probOnActualStarter": 0.0
+      }
+    ]
+  }
+]
